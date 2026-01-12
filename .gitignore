@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+my-ui/node_modules/
+
+# Variables de entorno
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Build del frontend
+my-ui/build/
+
+# IDE
+.vscode/
+.idea/
