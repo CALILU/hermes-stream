@@ -173,7 +173,11 @@ app.get('/api/videos', async (req, res) => {
     const client = new ftp.Client();
     client.ftp.timeout = 10000; // Timeout de 10 segundos
     try {
-        await client.access(FTP_CONFIG);
+        await client.access({
+            ...FTP_CONFIG,
+            secure: false,
+            passive: true  // Forzar modo pasivo para compatibilidad con cloud
+        });
         const list = await client.list("/volume-1");
         const videoFiles = list.filter(file => file.name.match(/\.(mp4|mkv|avi|mov)$/i));
 
@@ -432,8 +436,12 @@ app.put('/api/rename', async (req, res) => {
     try {
         console.log(`📝 Renombrando: "${oldName}" → "${newName}"`);
 
-        // Conectar al FTP
-        await client.access(FTP_CONFIG);
+        // Conectar al FTP en modo pasivo
+        await client.access({
+            ...FTP_CONFIG,
+            secure: false,
+            passive: true
+        });
 
         // Renombrar archivo en el FTP
         await client.rename(`/volume-1/${oldName}`, `/volume-1/${newName}`);
