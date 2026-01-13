@@ -479,11 +479,17 @@ app.put('/api/rename', async (req, res) => {
 
 // Servir archivos estáticos del frontend en producción
 if (process.env.NODE_ENV === 'production') {
+    // Servir archivos estáticos
     app.use(express.static(path.join(__dirname, 'my-ui/build')));
 
-    // Ruta catch-all para SPA (debe ir al final, después de las rutas de API)
-    app.get('/*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'my-ui/build', 'index.html'));
+    // Middleware catch-all para SPA (debe ir al final, después de las rutas de API)
+    app.use((req, res, next) => {
+        // Si no es una ruta de API, servir index.html
+        if (!req.path.startsWith('/api') && !req.path.startsWith('/stream')) {
+            res.sendFile(path.join(__dirname, 'my-ui/build', 'index.html'));
+        } else {
+            next();
+        }
     });
 }
 
