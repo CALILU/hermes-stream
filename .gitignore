@@ -18,6 +18,9 @@ Thumbs.db
 # Build del frontend
 my-ui/build/
 
+# Cache
+cache.json
+
 # IDE
 .vscode/
 .idea/
