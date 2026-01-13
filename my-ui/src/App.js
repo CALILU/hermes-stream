@@ -117,6 +117,7 @@ export default function HermesApp() {
     if (videos.length > 0) {
       enrichMovies();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videos.length]);
 
   // Filtrado combinado con useMemo para performance
