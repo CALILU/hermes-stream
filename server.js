@@ -168,11 +168,6 @@ async function getMovieMetadata(filename) {
     return metadata;
 }
 
-// Servir archivos estáticos del frontend (solo en producción)
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'my-ui/build')));
-}
-
 // 1. Listar archivos para la interfaz
 app.get('/api/videos', async (req, res) => {
     const client = new ftp.Client();
@@ -482,9 +477,12 @@ app.put('/api/rename', async (req, res) => {
     }
 });
 
-// Ruta catch-all para SPA (debe ir al final, después de las rutas de API)
+// Servir archivos estáticos del frontend en producción
 if (process.env.NODE_ENV === 'production') {
-    app.get('*', (req, res) => {
+    app.use(express.static(path.join(__dirname, 'my-ui/build')));
+
+    // Ruta catch-all para SPA (debe ir al final, después de las rutas de API)
+    app.get('/*', (req, res) => {
         res.sendFile(path.join(__dirname, 'my-ui/build', 'index.html'));
     });
 }
