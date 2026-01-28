@@ -1,44 +1,102 @@
-# Contexto del Proyecto PLEX
+# Contexto del Proyecto IsiPrime (PLEX)
 
-Este directorio contiene documentación portable para configurar despliegues de aplicaciones web en GitHub y Railway.
+Aplicación de streaming de películas con backend Node.js y frontend React.
 
 ## Información general
 
 - **Directorio**: F:\plex
-- **Propósito**: Almacenar guías de configuración reutilizables para nuevos proyectos
+- **Nombre**: IsiPrime / HermesStream
+- **Backend**: Node.js + Express (server.js) - Puerto 8080
+- **Frontend**: React (my-ui/) - Compilado en my-ui/build/
+- **Almacenamiento**: FTP (NAS Synology)
+- **APIs externas**: TMDB (metadatos de películas)
 - **Usuario GitHub**: CALILU
-- **Plataforma de despliegue**: Railway
-- **Flujo**: Local → GitHub → Railway (auto-deploy)
 
-## Archivos importantes
+## Estructura del proyecto
 
-- `SETUP_GITHUB_RAILWAY.md` - Guía completa paso a paso para conectar cualquier app a GitHub y Railway
-- `QUICKSTART_DEPLOY.md` - Guía rápida de 5 minutos para despliegue
+```
+F:\plex\
+├── server.js              # Backend principal
+├── my-ui/                 # Frontend React
+│   ├── src/               # Código fuente
+│   └── build/             # Build compilado (CRÍTICO)
+├── backups/               # Backups del build
+├── chrome-extension/      # Extensión para OK.ru
+├── .env                   # Variables de entorno
+├── HermesStream.vbs       # Launcher de la aplicación
+└── restore-build.bat      # Script para restaurar build
+```
 
-## Uso
+## Troubleshooting
 
-Cuando crees un nuevo proyecto web:
+### Pantalla negra / App no carga
 
-1. Copia las guías de este directorio al nuevo proyecto
-2. Sigue los pasos de `SETUP_GITHUB_RAILWAY.md`
-3. El despliegue será automático con cada `git push`
+**Causa**: El directorio `my-ui/build/` no existe o está corrupto.
 
-## CLIs necesarias
+**Solución automática**:
+```bash
+# Opción 1: Restaurar desde backup
+# En Windows: doble clic en restore-build.bat
+# O desde terminal:
+cp -r backups/build-backup-20260128/* my-ui/build/
 
-- GitHub CLI (`gh`) - Para crear repositorios
-- Railway CLI (`railway`) - Para gestionar despliegues
-- Git - Para control de versiones
+# Opción 2: Recompilar
+cd my-ui && npm run build
+```
 
-## Autenticación
+**Backup disponible**: `F:\plex\backups\build-backup-20260128`
 
-Una vez autenticado `gh` y `railway` (con `gh auth login` y `railway login`), la sesión es global para todos los proyectos.
+### Errores de conexión (FTP/TMDB timeout)
 
-## Proyecto de referencia
+**Causa**: Problema de DNS en WSL.
 
-Ver: `/mnt/f/profes` (ausencias-profesores) - ejemplo completo funcionando
+**Solución**: Ejecutar el servidor desde Windows PowerShell en lugar de WSL:
+```powershell
+cd F:\plex
+node server.js
+```
+
+O reiniciar WSL:
+```powershell
+wsl --shutdown
+```
+
+### Tor Browser no se maximiza
+
+El código usa `AppActivate` + `SendKeys('% x')` para traer al frente y maximizar después de 4 segundos.
+
+## Iniciar la aplicación
+
+**Método 1 - Acceso directo**: Doble clic en `HermesStream.vbs`
+
+**Método 2 - Manual desde PowerShell**:
+```powershell
+cd F:\plex
+node server.js
+# Abrir http://localhost:8080
+```
+
+**Método 3 - Desde WSL** (si hay conexión):
+```bash
+cd /mnt/f/plex && node server.js
+```
+
+## APIs y Endpoints importantes
+
+- `GET /api/videos` - Lista de películas
+- `GET /api/requests` - Peticiones de usuarios
+- `POST /api/search-torrents` - Buscar en TodoTorrents (abre Tor)
+- `POST /api/download-queue` - Añadir URL a cola de descargas
+- `GET /stream/:filename` - Streaming de película
+
+## Integraciones
+
+- **Chrome Extension**: Añade videos de OK.ru a la cola de descargas
+- **Python Downloader**: `F:\Utiles de python para videos\descarga_youtube\YouTubeDownloader.exe`
+- **Tor Browser**: `C:\Users\isidr\Desktop\Tor Browser\` para buscar en TodoTorrents
 
 ## Desarrollador
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Fecha creación: 31/12/2024
+- Última actualización: 28/01/2026
