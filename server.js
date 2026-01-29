@@ -1226,6 +1226,9 @@ const isWindows = process.platform === 'win32';
 const TOR_BROWSER_PATH = isWindows ? TOR_BROWSER_PATH_WIN : TOR_BROWSER_PATH_WSL;
 
 // Verificar si Tor Browser está corriendo
+let torLaunchInProgress = false;
+let lastTorLaunch = 0;
+
 function isTorBrowserRunning() {
     return new Promise((resolve) => {
         const { exec } = require('child_process');
@@ -1242,7 +1245,7 @@ function isTorBrowserRunning() {
 }
 
 // POST /api/search-torrents - Buscar película en todotorrents.org con Tor Browser
-// Abre la página principal y copia el título al portapapeles (Ctrl+V para pegar)
+// Abre la página, copia al portapapeles, y usa SendKeys para pegar y buscar
 app.post('/api/search-torrents', async (req, res) => {
     try {
         const { movieTitle } = req.body;
@@ -1252,89 +1255,59 @@ app.post('/api/search-torrents', async (req, res) => {
         }
 
         const fsSync = require('fs');
-        // Verificar que Tor Browser existe
         if (!fsSync.existsSync(TOR_BROWSER_PATH)) {
             console.log('⚠️ Tor Browser no encontrado en:', TOR_BROWSER_PATH);
             return res.status(404).json({ error: 'Tor Browser no encontrado' });
         }
 
         const { exec } = require('child_process');
+        const psCmd = isWindows ? 'powershell' : 'powershell.exe';
 
         // Copiar título al portapapeles
-        const safeTitle = movieTitle.replace(/"/g, '\\"');
+        const safeTitle = movieTitle.replace(/"/g, '').replace(/'/g, '');
         const clipCmd = isWindows
             ? `echo ${safeTitle}| clip`
             : `cmd.exe /c echo ${safeTitle}| clip.exe`;
+
         exec(clipCmd, (error) => {
             if (error) {
                 console.log('⚠️ Error al copiar al portapapeles:', error.message);
             } else {
-                console.log(`📋 Título copiado al portapapeles: ${movieTitle}`);
+                console.log(`📋 Título copiado: ${safeTitle}`);
             }
         });
 
         console.log(`🔍 Buscando en TodoTorrents: ${movieTitle}`);
-        console.log(`📋 Título copiado al portapapeles - usa Ctrl+V para pegar`);
 
-        // Verificar si Tor Browser ya está abierto
         const torRunning = await isTorBrowserRunning();
+        const now = Date.now();
 
         if (torRunning) {
-            // Tor ya está abierto: abrir nueva pestaña y traer al frente
-            console.log(`🧅 Tor Browser ya está abierto, abriendo nueva pestaña...`);
-
-            // Abrir URL en nueva pestaña
-            const openTabCmd = isWindows
-                ? `"${TOR_BROWSER_PATH}" "${TODOTORRENTS_URL}"`
-                : `cmd.exe /c "${TOR_BROWSER_PATH_WIN}" "${TODOTORRENTS_URL}"`;
-            exec(openTabCmd, (error) => {
-                if (error) {
-                    console.log('⚠️ Error al abrir pestaña:', error.message);
-                }
-            });
-
-            // Traer ventana al frente con PowerShell
-            const psCmd = isWindows ? 'powershell' : 'powershell.exe';
-            exec(`${psCmd} -Command "(New-Object -ComObject WScript.Shell).AppActivate('Tor Browser')"`, (error) => {
-                if (error) {
-                    console.log('⚠️ Error al activar ventana:', error.message);
-                }
-            });
+            // Tor ya está abierto: solo copiar al portapapeles, el usuario abre la pestaña
+            console.log(`🧅 Tor Browser ya está abierto. Título copiado al portapapeles.`);
+            // No abrimos nada nuevo, el usuario puede hacer Ctrl+T, Ctrl+V, Enter
         } else {
-            // Tor no está abierto: iniciarlo, esperar, y traer al frente maximizado
+            // Protección anti-doble clic (10 segundos)
+            if (now - lastTorLaunch < 10000) {
+                console.log(`⏳ Tor Browser iniciándose, espera...`);
+                return res.json({
+                    success: true,
+                    message: `Tor Browser ya se está iniciando, espera unos segundos...`,
+                    torWasRunning: false
+                });
+            }
+            lastTorLaunch = now;
+
+            // Tor no está abierto: iniciarlo
             console.log(`🧅 Iniciando Tor Browser...`);
-            const psCmd = isWindows ? 'powershell' : 'powershell.exe';
-
-            // Paso 1: Iniciar Tor Browser
             exec(`${psCmd} -Command "Start-Process -FilePath '${TOR_BROWSER_PATH_WIN}' -ArgumentList '${TODOTORRENTS_URL}'"`, (error) => {
-                if (error) {
-                    console.log('⚠️ Error al abrir Tor Browser:', error.message);
-                    return;
-                }
-
-                // Paso 2: Esperar 4 segundos y traer al frente maximizado
-                setTimeout(() => {
-                    const bringToFront = `
-                        $wsh = New-Object -ComObject WScript.Shell;
-                        $wsh.AppActivate('Tor Browser');
-                        Start-Sleep -Milliseconds 200;
-                        $wsh.SendKeys('% x')
-                    `.replace(/\n/g, ' ');
-                    exec(`${psCmd} -Command "${bringToFront}"`, (err) => {
-                        if (err) {
-                            console.log('⚠️ Error al maximizar:', err.message);
-                        } else {
-                            console.log('✅ Tor Browser traído al frente');
-                        }
-                    });
-                }, 4000);
+                if (error) console.log('⚠️ Error al abrir Tor Browser:', error.message);
             });
         }
 
         res.json({
             success: true,
-            message: `Título "${movieTitle}" copiado al portapapeles. Pega (Ctrl+V) en el buscador de TodoTorrents.`,
-            url: TODOTORRENTS_URL,
+            message: `Buscando "${movieTitle}" en TodoTorrents (automático)...`,
             torWasRunning: torRunning
         });
     } catch (error) {
