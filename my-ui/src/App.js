@@ -310,6 +310,37 @@ export default function HermesApp() {
       .catch(err => console.error('Error cargando config almacenamiento:', err));
   }, []);
 
+  // SSE para actualizaciones de peticiones en tiempo real
+  useEffect(() => {
+    if (!requestsAdminModal) return;
+
+    const eventSource = new EventSource(`${API_BASE}/api/requests/events`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'update' && data.request) {
+          // Actualizar la petición específica en el array
+          setAllRequests(prev => prev.map(req =>
+            req.id === data.request.id ? { ...req, ...data.request } : req
+          ));
+          console.log(`📡 Petición #${data.request.id} actualizada a: ${data.request.status}`);
+        }
+      } catch (err) {
+        console.error('Error procesando evento SSE:', err);
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.log('📡 Conexión SSE cerrada');
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [requestsAdminModal]);
+
   // Cambiar modo de almacenamiento
   const handleStorageModeChange = async (newMode) => {
     if (changingMode || newMode === storageMode) return;
@@ -3793,6 +3824,14 @@ export default function HermesApp() {
                     <span className="text-green-600">{requestsStats.downloaded}</span>
                   </span>
                   <span className="text-sm">
+                    <span className="font-medium text-purple-600">Convertidas:</span>{' '}
+                    <span className="text-purple-600">{requestsStats.mp4 || 0}</span>
+                  </span>
+                  <span className="text-sm">
+                    <span className="font-medium text-emerald-600">En servidor:</span>{' '}
+                    <span className="text-emerald-600">{requestsStats.server || 0}</span>
+                  </span>
+                  <span className="text-sm">
                     <span className="font-medium text-red-600">Rechazadas:</span>{' '}
                     <span className="text-red-600">{requestsStats.rejected}</span>
                   </span>
@@ -3891,11 +3930,15 @@ export default function HermesApp() {
                               request.status === 'pending' ? 'bg-amber-700/40 text-amber-300' :
                               request.status === 'downloading' ? 'bg-blue-700/40 text-blue-300' :
                               request.status === 'downloaded' ? 'bg-green-700/40 text-green-300' :
+                              request.status === 'mp4' ? 'bg-purple-700/40 text-purple-300' :
+                              request.status === 'server' ? 'bg-emerald-700/40 text-emerald-300' :
                               'bg-red-700/40 text-red-300'
                             }`}>
                               {request.status === 'pending' ? 'Pendiente' :
                                request.status === 'downloading' ? 'Descargando' :
-                               request.status === 'downloaded' ? 'Descargada' : 'Rechazada'}
+                               request.status === 'downloaded' ? 'Descargada' :
+                               request.status === 'mp4' ? 'Convertida' :
+                               request.status === 'server' ? 'En servidor' : 'Rechazada'}
                             </span>
                           ) : (
                             /* Modo normal: select editable */
@@ -3906,6 +3949,8 @@ export default function HermesApp() {
                                 request.status === 'pending' ? 'bg-amber-600 text-white' :
                                 request.status === 'downloading' ? 'bg-blue-600 text-white' :
                                 request.status === 'downloaded' ? 'bg-green-600 text-white' :
+                                request.status === 'mp4' ? 'bg-purple-600 text-white' :
+                                request.status === 'server' ? 'bg-emerald-600 text-white' :
                                 'bg-red-600 text-white'
                               }`}
                               style={{ colorScheme: 'dark' }}
@@ -3913,6 +3958,8 @@ export default function HermesApp() {
                               <option value="pending" className="bg-slate-800 text-amber-300 font-medium">⏳ Pendiente</option>
                               <option value="downloading" className="bg-slate-800 text-blue-300 font-medium">⬇️ Descargando</option>
                               <option value="downloaded" className="bg-slate-800 text-green-300 font-medium">✅ Descargada</option>
+                              <option value="mp4" className="bg-slate-800 text-purple-300 font-medium">🎬 Convertida</option>
+                              <option value="server" className="bg-slate-800 text-emerald-300 font-medium">📁 En servidor</option>
                               <option value="rejected" className="bg-slate-800 text-red-300 font-medium">❌ Rechazada</option>
                             </select>
                           )}

@@ -17,6 +17,7 @@ const app = express();
 
 const USERS_FILE = path.join(__dirname, 'users.json');
 const sessions = new Map(); // Almacén de sesiones en memoria
+const requestsSSEClients = new Set(); // Clientes SSE para actualizaciones de peticiones
 
 // Crear archivo de usuarios si no existe (con admin por defecto)
 async function initUsers() {
@@ -696,6 +697,8 @@ async function writeRequests(data) {
 function normalizeText(str) {
     return (str || '')
         .toLowerCase()
+        // Reemplazar fracciones unicode por números
+        .replace(/⅓/g, '1 3').replace(/⅔/g, '2 3').replace(/½/g, '1 2').replace(/¼/g, '1 4').replace(/¾/g, '3 4')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
         .replace(/[''´`]/g, '')          // Quitar apóstrofes
@@ -748,6 +751,38 @@ app.get('/api/requests/readonly', (req, res) => {
     res.json({ readonly: REQUESTS_READONLY });
 });
 
+// SSE endpoint para actualizaciones en tiempo real de peticiones
+app.get('/api/requests/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Añadir cliente a la lista
+    requestsSSEClients.add(res);
+    console.log(`📡 Cliente SSE conectado (${requestsSSEClients.size} activos)`);
+
+    // Enviar heartbeat cada 30 segundos para mantener conexión
+    const heartbeat = setInterval(() => {
+        res.write(':heartbeat\n\n');
+    }, 30000);
+
+    // Limpiar cuando se desconecta
+    req.on('close', () => {
+        clearInterval(heartbeat);
+        requestsSSEClients.delete(res);
+        console.log(`📡 Cliente SSE desconectado (${requestsSSEClients.size} activos)`);
+    });
+});
+
+// Función para notificar a todos los clientes SSE
+function notifyRequestUpdate(request) {
+    const data = JSON.stringify({ type: 'update', request });
+    requestsSSEClients.forEach(client => {
+        client.write(`data: ${data}\n\n`);
+    });
+}
+
 // Obtener todas las peticiones (con auto-detección leyendo del disco)
 app.get('/api/requests', async (req, res) => {
     try {
@@ -779,19 +814,45 @@ app.get('/api/requests', async (req, res) => {
                 console.log(`📂 Verificando ${diskFiles.length} archivos en disco para auto-detección`);
             }
         } else {
-            // Modo FTP - usar archivos del cache
-            diskFiles = Object.keys(cache).map(filename => {
-                const nameWithoutExt = filename.replace(/\.(mp4|mkv|avi|mov)$/i, '');
-                const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
-                const year = yearMatch ? yearMatch[1] : '';
-                const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-                return {
-                    filename: filename,
-                    title: title,
-                    year: year,
-                    titleNorm: normalizeText(title)
-                };
-            });
+            // Modo FTP - consultar servidor FTP directamente
+            const client = new ftp.Client();
+            client.ftp.verbose = false;
+            try {
+                await client.access({ ...FTP_CONFIG, secure: false, passive: true });
+                const ftpFiles = await client.list("/volume-1");
+                diskFiles = ftpFiles
+                    .filter(f => f.name.match(/\.(mp4|mkv|avi|mov)$/i))
+                    .map(f => {
+                        const nameWithoutExt = f.name.replace(/\.(mp4|mkv|avi|mov)$/i, '');
+                        const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
+                        const year = yearMatch ? yearMatch[1] : '';
+                        const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+                        return {
+                            filename: f.name,
+                            title: title,
+                            year: year,
+                            titleNorm: normalizeText(title)
+                        };
+                    });
+                console.log(`📂 Verificando ${diskFiles.length} archivos en FTP para auto-detección`);
+            } catch (ftpErr) {
+                console.error('❌ Error consultando FTP:', ftpErr.message);
+                // Fallback al cache si falla FTP
+                diskFiles = Object.keys(cache).map(filename => {
+                    const nameWithoutExt = filename.replace(/\.(mp4|mkv|avi|mov)$/i, '');
+                    const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
+                    const year = yearMatch ? yearMatch[1] : '';
+                    const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+                    return {
+                        filename: filename,
+                        title: title,
+                        year: year,
+                        titleNorm: normalizeText(title)
+                    };
+                });
+            } finally {
+                client.close();
+            }
         }
 
         // Obtener todos los tmdb_ids de películas en la biblioteca
@@ -804,12 +865,21 @@ app.get('/api/requests', async (req, res) => {
         const now = new Date();
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+        console.log(`📋 Verificando ${data.requests.length} peticiones contra ${diskFiles.length} archivos en servidor`);
+        if (diskFiles.length > 0) {
+            console.log(`   Ejemplos de archivos: ${diskFiles.slice(0, 3).map(f => f.filename).join(', ')}...`);
+        }
+
         // Filtrar y actualizar peticiones
         data.requests = data.requests.filter(request => {
-            // Auto-actualizar estado a "downloaded" si la película está en la biblioteca
-            if (request.status !== 'downloaded' && request.status !== 'rejected') {
+            // Auto-actualizar estado a "server" si la película está en el servidor FTP
+            // Verificar todas las peticiones excepto las ya marcadas como 'server' o 'rejected'
+            if (request.status !== 'server' && request.status !== 'rejected') {
                 let found = false;
                 let foundBy = '';
+
+                const reqTitleNorm = normalizeText(request.title);
+                console.log(`   🔍 Buscando: "${request.title}" → "${reqTitleNorm}" (${request.year || '-'}) [${request.status}]`);
 
                 // 1. Buscar por TMDB ID (más preciso)
                 if (libraryTmdbIds.has(request.tmdbId)) {
@@ -869,18 +939,23 @@ app.get('/api/requests', async (req, res) => {
                 }
 
                 if (found) {
-                    console.log(`📥 Auto-detectado: "${request.title}" está en la biblioteca (por ${foundBy})`);
-                    request.status = 'downloaded';
+                    console.log(`      ✅ Encontrado por ${foundBy}`);
+                    request.status = 'server';
                     request.updatedAt = now.toISOString();
                     modified = true;
+
+                    // Notificar a clientes SSE
+                    notifyRequestUpdate(request);
+                } else {
+                    console.log(`      ❌ No encontrado en servidor`);
                 }
             }
 
-            // Eliminar peticiones descargadas hace más de 7 días
-            if (request.status === 'downloaded') {
+            // Eliminar peticiones completadas hace más de 7 días
+            if (request.status === 'downloaded' || request.status === 'server') {
                 const updatedAt = new Date(request.updatedAt);
                 if (updatedAt < sevenDaysAgo) {
-                    console.log(`🗑️ Auto-eliminando petición antigua: "${request.title}" (descargada hace más de 7 días)`);
+                    console.log(`🗑️ Auto-eliminando petición antigua: "${request.title}" (completada hace más de 7 días)`);
                     modified = true;
                     return false; // Eliminar del array
                 }
@@ -935,7 +1010,7 @@ app.post('/api/requests', async (req, res) => {
                 poster: movie.poster || (movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : null),
                 overview: movie.overview,
                 rating: movie.rating || movie.vote_average,
-                status: 'pending', // pending, downloading, downloaded, rejected
+                status: 'pending', // pending, downloading, downloaded, rejected, mp4, server
                 requestedBy: requestedBy || 'Usuario',
                 requestedAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
@@ -980,7 +1055,7 @@ app.put('/api/requests/:id', async (req, res) => {
         }
 
         if (status) {
-            if (!['pending', 'downloading', 'downloaded', 'rejected'].includes(status)) {
+            if (!['pending', 'downloading', 'downloaded', 'rejected', 'mp4', 'server'].includes(status)) {
                 return res.status(400).json({ error: 'Estado inválido' });
             }
             request.status = status;
@@ -993,6 +1068,9 @@ app.put('/api/requests/:id', async (req, res) => {
         request.updatedAt = new Date().toISOString();
 
         await writeRequests(data);
+
+        // Notificar a clientes SSE
+        notifyRequestUpdate(request);
 
         console.log(`📝 Petición #${id} actualizada: ${status || 'sin cambio de estado'}`);
         res.json({
@@ -1043,6 +1121,8 @@ app.get('/api/requests/stats', async (req, res) => {
             pending: data.requests.filter(r => r.status === 'pending').length,
             downloading: data.requests.filter(r => r.status === 'downloading').length,
             downloaded: data.requests.filter(r => r.status === 'downloaded').length,
+            mp4: data.requests.filter(r => r.status === 'mp4').length,
+            server: data.requests.filter(r => r.status === 'server').length,
             rejected: data.requests.filter(r => r.status === 'rejected').length
         };
         res.json(stats);
