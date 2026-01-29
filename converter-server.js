@@ -116,14 +116,38 @@ async function updateRequestStatus(movieTitle, movieYear, newStatus, tmdbId = nu
   }
 }
 
+// Formatear bytes a tamaño legible
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Subir archivo convertido al servidor FTP
 async function uploadToFTP(localFilePath, filename) {
   const client = new ftp.Client();
   client.ftp.verbose = false;
+  currentFtpClient = client;
+
+  // Obtener tamaño del archivo
+  const fileStats = fs.statSync(localFilePath);
+  const totalBytes = fileStats.size;
+
+  // Inicializar estado de subida
+  conversionState.upload = {
+    isUploading: true,
+    fileName: filename,
+    progress: 0,
+    bytesTransferred: 0,
+    totalBytes: totalBytes,
+    cancelled: false
+  };
+  broadcastUpdate();
+  console.log(`📤 Iniciando subida a FTP: ${filename} (${formatBytes(totalBytes)})`);
 
   try {
-    console.log(`📤 Subiendo a FTP: ${filename}`);
-
     await client.access({
       ...FTP_CONFIG,
       secure: false,
@@ -136,19 +160,57 @@ async function uploadToFTP(localFilePath, filename) {
 
     if (exists) {
       console.log(`⚠️ Ya existe en servidor: ${filename}`);
+      conversionState.upload.isUploading = false;
+      broadcastUpdate();
       return { success: true, alreadyExists: true };
+    }
+
+    // Configurar tracking de progreso
+    client.trackProgress(info => {
+      if (conversionState.upload.cancelled) {
+        client.close();
+        return;
+      }
+      const progress = Math.round((info.bytesOverall / totalBytes) * 100);
+      conversionState.upload.bytesTransferred = info.bytesOverall;
+      conversionState.upload.progress = progress;
+      broadcastUpdate();
+
+      // Log cada 10%
+      if (progress % 10 === 0 && progress !== conversionState.upload.lastLoggedProgress) {
+        console.log(`📤 Subiendo ${filename}: ${progress}% (${formatBytes(info.bytesOverall)} / ${formatBytes(totalBytes)})`);
+        conversionState.upload.lastLoggedProgress = progress;
+      }
+    });
+
+    // Verificar cancelación antes de subir
+    if (conversionState.upload.cancelled) {
+      throw new Error('Subida cancelada por el usuario');
     }
 
     // Subir el archivo
     await client.uploadFrom(localFilePath, `${FTP_DEST_PATH}/${filename}`);
+
+    client.trackProgress(); // Desactivar tracking
     console.log(`✅ Subido a FTP: ${filename}`);
+
+    conversionState.upload.isUploading = false;
+    conversionState.upload.progress = 100;
+    broadcastUpdate();
 
     return { success: true, alreadyExists: false };
   } catch (error) {
-    console.error(`❌ Error subiendo a FTP: ${error.message}`);
-    return { success: false, error: error.message };
+    const wasCancelled = conversionState.upload.cancelled;
+    console.error(`❌ ${wasCancelled ? 'Subida cancelada' : 'Error subiendo a FTP'}: ${error.message}`);
+
+    conversionState.upload.isUploading = false;
+    conversionState.upload.progress = 0;
+    broadcastUpdate();
+
+    return { success: false, error: wasCancelled ? 'Cancelado' : error.message, cancelled: wasCancelled };
   } finally {
     client.close();
+    currentFtpClient = null;
   }
 }
 
@@ -391,11 +453,23 @@ let conversionState = {
     totalSize: 0,
     savedBytes: 0,
     startTime: null
+  },
+  // Estado de subida FTP
+  upload: {
+    isUploading: false,
+    fileName: null,
+    progress: 0,
+    bytesTransferred: 0,
+    totalBytes: 0,
+    cancelled: false
   }
 };
 
 // Proceso FFmpeg actual (para poder matarlo)
 let currentFFmpegProcess = null;
+
+// Cliente FTP actual (para poder cancelar subida)
+let currentFtpClient = null;
 
 // Clientes SSE conectados
 let sseClients = [];
@@ -1079,6 +1153,33 @@ app.post('/api/stop', (req, res) => {
 
   broadcastUpdate();
   res.json({ success: true });
+});
+
+// Cancelar subida FTP
+app.post('/api/cancel-upload', (req, res) => {
+  console.log('[Cancel] Cancelando subida FTP...');
+
+  if (!conversionState.upload.isUploading) {
+    return res.status(400).json({ error: 'No hay subida en progreso' });
+  }
+
+  conversionState.upload.cancelled = true;
+
+  // Cerrar conexión FTP si existe
+  if (currentFtpClient) {
+    try {
+      currentFtpClient.close();
+      console.log('[Cancel] Conexión FTP cerrada');
+    } catch (e) {
+      console.log('[Cancel] Error al cerrar FTP:', e.message);
+    }
+    currentFtpClient = null;
+  }
+
+  conversionState.upload.isUploading = false;
+  broadcastUpdate();
+
+  res.json({ success: true, message: 'Subida cancelada' });
 });
 
 // Detectar GPUs

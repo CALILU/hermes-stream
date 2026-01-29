@@ -1172,6 +1172,47 @@ export default function HermesApp() {
     // Mostrar indicador de carga
     setLoadingVideo(video);
 
+    // Si no tiene cast, cargar los actores (por tmdb_id o por título)
+    let videoWithCast = video;
+    if (!video.cast || video.cast.length === 0) {
+      try {
+        console.log(`🎭 Cargando actores para: ${video.title}`);
+        let castData;
+
+        if (video.tmdb_id) {
+          // Si tiene tmdb_id, buscar directamente
+          const castRes = await authFetch(`${API_BASE}/api/tmdb/cast/${video.tmdb_id}?filename=${encodeURIComponent(video.filename)}`);
+          castData = await castRes.json();
+        } else {
+          // Si no tiene tmdb_id, buscar por título
+          console.log(`🔍 Sin tmdb_id, buscando por título: ${video.title}`);
+          const title = video.title || video.filename.replace(/\.(mp4|mkv|avi)$/i, '');
+          const yearMatch = title.match(/\((\d{4})\)/);
+          const year = yearMatch ? yearMatch[1] : '';
+          const cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+
+          const castRes = await authFetch(
+            `${API_BASE}/api/tmdb/cast-by-title?title=${encodeURIComponent(cleanTitle)}&year=${year}&filename=${encodeURIComponent(video.filename)}`
+          );
+          castData = await castRes.json();
+
+          // Si encontró la película, también actualizar el tmdb_id local
+          if (castData.success && castData.tmdb_id) {
+            video.tmdb_id = castData.tmdb_id;
+          }
+        }
+
+        if (castData.success && castData.cast?.length > 0) {
+          videoWithCast = { ...video, cast: castData.cast };
+          // Actualizar en el estado global de videos
+          setVideos(prev => prev.map(v => v.filename === video.filename ? { ...v, cast: castData.cast, tmdb_id: castData.tmdb_id || v.tmdb_id } : v));
+          console.log(`✅ ${castData.cast.length} actores cargados`);
+        }
+      } catch (castError) {
+        console.error('Error cargando actores:', castError);
+      }
+    }
+
     // Detectar pistas de audio para TODOS los formatos (MP4, MKV, AVI, etc.)
     try {
       const response = await authFetch(`${API_BASE}/api/audio-tracks/${encodeURIComponent(video.filename)}`);
@@ -1193,14 +1234,14 @@ export default function HermesApp() {
 
         // Si hay múltiples pistas y NO se encontró español, mostrar selector
         if (data.tracks.length > 1 && spanishIndex < 0) {
-          setAudioSelectionModal({ video, tracks: data.tracks, loading: false });
+          setAudioSelectionModal({ video: videoWithCast, tracks: data.tracks, loading: false });
           setLoadingVideo(null);
           console.log(`🎬 Múltiples pistas de audio detectadas - mostrando selector`);
           return; // No reproducir aún, esperar selección del usuario
         }
 
         // Si solo hay una pista o se encontró español, reproducir directamente
-        setSelectedVideo({ ...video, audioTrack: trackToUse, availableTracks: data.tracks });
+        setSelectedVideo({ ...videoWithCast, audioTrack: trackToUse, availableTracks: data.tracks });
 
         if (spanishIndex >= 0) {
           console.log(`🎬 Audio español detectado (pista ${spanishIndex + 1})`);
@@ -1209,12 +1250,12 @@ export default function HermesApp() {
         }
       } else {
         // No se detectaron pistas, reproducir con la predeterminada
-        setSelectedVideo({ ...video, audioTrack: 0 });
+        setSelectedVideo({ ...videoWithCast, audioTrack: 0 });
       }
     } catch (error) {
       console.error('Error detectando pistas de audio:', error);
       // En caso de error, reproducir con la predeterminada
-      setSelectedVideo({ ...video, audioTrack: 0 });
+      setSelectedVideo({ ...videoWithCast, audioTrack: 0 });
     } finally {
       // Ocultar indicador de carga
       setLoadingVideo(null);

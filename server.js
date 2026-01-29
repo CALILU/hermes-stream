@@ -522,7 +522,7 @@ const REQUESTS_FILE = path.join(__dirname, 'movie-requests.json');
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_API_KEY_BACKUP = process.env.TMDB_API_KEY_BACKUP;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342'; // w342 es más rápido que w500
 let usingBackupKey = false; // Flag para saber qué key estamos usando
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 días en milisegundos
 
@@ -1834,6 +1834,34 @@ app.get('/api/videos', async (req, res) => {
         });
 
         console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: ${storageConfig.mode.toUpperCase()}]`);
+
+        // Buscar películas sin metadatos de TMDB para actualizar en background
+        const moviesWithoutMetadata = videosWithMetadata.filter(v => !v.tmdb_id);
+        if (moviesWithoutMetadata.length > 0) {
+            console.log(`🔍 ${moviesWithoutMetadata.length} películas sin metadatos TMDB, buscando en background...`);
+
+            // Ejecutar en background (no bloqueante)
+            (async () => {
+                let updated = 0;
+                for (const movie of moviesWithoutMetadata) {
+                    try {
+                        const metadata = await getMovieMetadata(movie.filename);
+                        if (metadata && metadata.tmdb_id) {
+                            updated++;
+                            console.log(`✅ Metadatos encontrados: ${movie.filename} -> ${metadata.title}`);
+                        }
+                        // Pequeña pausa para no saturar TMDB API
+                        await new Promise(r => setTimeout(r, 300));
+                    } catch (err) {
+                        console.error(`❌ Error buscando metadatos para ${movie.filename}:`, err.message);
+                    }
+                }
+                if (updated > 0) {
+                    console.log(`✅ Metadatos actualizados para ${updated} películas nuevas`);
+                }
+            })();
+        }
+
         res.json(videosWithMetadata);
     } catch (err) {
         console.error('Error al listar videos:', err);
@@ -1983,6 +2011,130 @@ app.get('/api/tmdb/search', async (req, res) => {
 
     } catch (error) {
         console.error('Error en búsqueda TMDB:', error.message);
+        res.status(500).json({ error: 'Error al buscar en TMDB' });
+    }
+});
+
+// Obtener cast de una película por TMDB ID
+app.get('/api/tmdb/cast/:tmdbId', async (req, res) => {
+    try {
+        const { tmdbId } = req.params;
+
+        if (!tmdbId) {
+            return res.status(400).json({ error: 'Se requiere TMDB ID' });
+        }
+
+        console.log(`🎭 Obteniendo cast para TMDB ID: ${tmdbId}`);
+
+        const response = await tmdbFetch(`${TMDB_BASE_URL}/movie/${tmdbId}/credits`, {
+            params: { language: 'es-ES' }
+        });
+
+        if (response.data.cast) {
+            const cast = response.data.cast
+                .slice(0, 20)
+                .map(actor => ({
+                    id: actor.id,
+                    name: actor.name,
+                    character: actor.character,
+                    photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
+                }));
+
+            // Actualizar cache si tenemos el filename
+            const { filename } = req.query;
+            if (filename) {
+                const cache = await readCache();
+                if (cache[filename]) {
+                    cache[filename].cast = cast;
+                    await writeCache(cache);
+                    console.log(`✅ Cast guardado en cache para: ${filename}`);
+                }
+            }
+
+            res.json({ success: true, cast });
+        } else {
+            res.json({ success: true, cast: [] });
+        }
+    } catch (error) {
+        console.error('Error obteniendo cast:', error.message);
+        res.status(500).json({ error: 'Error al obtener cast de TMDB' });
+    }
+});
+
+// Obtener cast buscando por título (cuando no hay tmdb_id)
+app.get('/api/tmdb/cast-by-title', async (req, res) => {
+    try {
+        const { title, year, filename } = req.query;
+
+        if (!title) {
+            return res.status(400).json({ error: 'Se requiere título' });
+        }
+
+        console.log(`🎭 Buscando cast por título: "${title}" (${year || 'sin año'})`);
+
+        // Buscar película en TMDB
+        const searchParams = {
+            params: {
+                language: 'es-ES',
+                query: title
+            }
+        };
+        if (year) {
+            searchParams.params.year = year;
+        }
+
+        const searchResponse = await tmdbFetch(`${TMDB_BASE_URL}/search/movie`, searchParams);
+        const results = searchResponse.data.results;
+
+        if (!results || results.length === 0) {
+            console.log(`❌ No se encontró película: "${title}"`);
+            return res.json({ success: false, error: 'Película no encontrada en TMDB', cast: [] });
+        }
+
+        const movie = results[0];
+        const tmdbId = movie.id;
+        console.log(`✅ Encontrado: "${movie.title}" (${movie.release_date?.substring(0, 4)}) - ID: ${tmdbId}`);
+
+        // Obtener cast
+        const creditsResponse = await tmdbFetch(`${TMDB_BASE_URL}/movie/${tmdbId}/credits`, {
+            params: { language: 'es-ES' }
+        });
+
+        const cast = (creditsResponse.data.cast || [])
+            .slice(0, 20)
+            .map(actor => ({
+                id: actor.id,
+                name: actor.name,
+                character: actor.character,
+                photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
+            }));
+
+        // Actualizar cache con los metadatos completos
+        if (filename) {
+            const cache = await readCache();
+            if (cache[filename]) {
+                cache[filename].tmdb_id = tmdbId;
+                cache[filename].cast = cast;
+                cache[filename].title = movie.title;
+                cache[filename].year = movie.release_date?.substring(0, 4);
+                cache[filename].overview = movie.overview;
+                if (movie.poster_path) {
+                    cache[filename].poster = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
+                }
+                await writeCache(cache);
+                console.log(`✅ Metadatos actualizados en cache para: ${filename}`);
+            }
+        }
+
+        res.json({
+            success: true,
+            cast,
+            tmdb_id: tmdbId,
+            title: movie.title,
+            year: movie.release_date?.substring(0, 4)
+        });
+    } catch (error) {
+        console.error('Error buscando cast por título:', error.message);
         res.status(500).json({ error: 'Error al buscar en TMDB' });
     }
 });
