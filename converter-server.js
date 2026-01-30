@@ -711,7 +711,7 @@ function getEncoder(gpuType, quality = 'balanced') {
 
 // Escanear directorio
 function scanDirectory(directory) {
-  const extensions = ['.avi', '.mkv'];
+  const extensions = ['.avi', '.mkv', '.mp4'];
   const files = [];
 
   function scan(dir) {
@@ -734,15 +734,33 @@ function scanDirectory(directory) {
           } else if (stat.isFile()) {
             const ext = path.extname(item).toLowerCase();
             if (extensions.includes(ext)) {
-              const mp4Path = fullPath.replace(/\.(avi|mkv)$/i, '.mp4');
-              if (!fs.existsSync(mp4Path)) {
-                files.push({
-                  path: fullPath,
-                  name: item,
-                  size: stat.size,
-                  sizeHuman: formatSize(stat.size),
-                  status: 'pending'
-                });
+              // Para AVI/MKV: incluir solo si no existe MP4
+              if (ext === '.avi' || ext === '.mkv') {
+                const mp4Path = fullPath.replace(/\.(avi|mkv)$/i, '.mp4');
+                if (!fs.existsSync(mp4Path)) {
+                  files.push({
+                    path: fullPath,
+                    name: item,
+                    size: stat.size,
+                    sizeHuman: formatSize(stat.size),
+                    status: 'pending'
+                  });
+                }
+              }
+              // Para MP4: incluir solo si codec NO es compatible con navegadores
+              else if (ext === '.mp4') {
+                const videoCodec = getVideoCodec(fullPath);
+                if (!videoCodec.isCompatible) {
+                  files.push({
+                    path: fullPath,
+                    name: item,
+                    size: stat.size,
+                    sizeHuman: formatSize(stat.size),
+                    status: 'pending',
+                    needsReencode: true,
+                    codec: videoCodec.codec
+                  });
+                }
               }
             }
           }
@@ -891,8 +909,16 @@ async function getVideoInfo(filePath) {
 async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
   const inputPath = file.path;
   const inputDir = path.dirname(inputPath);
-  let outputPath = inputPath.replace(/\.(avi|mkv)$/i, '.mp4');
-  let finalName = file.name.replace(/\.(avi|mkv)$/i, '.mp4');
+  const inputExt = path.extname(inputPath).toLowerCase();
+  const isMP4Input = inputExt === '.mp4';
+
+  // Para MP4 con codec incompatible: usar sufijo temporal, luego reemplazar
+  let outputPath = isMP4Input
+    ? inputPath.replace(/\.mp4$/i, '.reencoded.mp4')
+    : inputPath.replace(/\.(avi|mkv)$/i, '.mp4');
+  let finalName = isMP4Input
+    ? file.name  // Mantener nombre original para MP4
+    : file.name.replace(/\.(avi|mkv)$/i, '.mp4');
   let tmdbInfo = null;
 
   // Usar el match de TMDB si existe y está habilitado el renombrado
@@ -903,10 +929,13 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
     console.log(`[TMDB] Usando match guardado: "${file.tmdbMatch.title}" (${file.tmdbMatch.year})`);
 
     // Verificar si ya existe un archivo con ese nombre
-    if (fs.existsSync(outputPath) && outputPath !== inputPath.replace(/\.(avi|mkv)$/i, '.mp4')) {
+    const defaultOutput = isMP4Input
+      ? inputPath.replace(/\.mp4$/i, '.reencoded.mp4')
+      : inputPath.replace(/\.(avi|mkv)$/i, '.mp4');
+    if (fs.existsSync(outputPath) && outputPath !== defaultOutput) {
       console.log(`[TMDB] Ya existe: ${finalName}, usando nombre original`);
-      outputPath = inputPath.replace(/\.(avi|mkv)$/i, '.mp4');
-      finalName = file.name.replace(/\.(avi|mkv)$/i, '.mp4');
+      outputPath = defaultOutput;
+      finalName = isMP4Input ? file.name : file.name.replace(/\.(avi|mkv)$/i, '.mp4');
       tmdbInfo = null;
     }
   } else if (renameWithTMDB && !file.tmdbMatch) {
