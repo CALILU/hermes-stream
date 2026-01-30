@@ -793,29 +793,15 @@ function getAudioMapping(filePath) {
     const maps = [];
 
     if (spanishIdx >= 0) {
-      // Español como pista principal
+      // Solo español
       maps.push('-map', `0:a:${spanishIdx}`);
-
-      // Añadir inglés como backup si existe y es diferente
-      if (englishIdx >= 0 && englishIdx !== spanishIdx) {
-        maps.push('-map', `0:a:${englishIdx}`);
-        console.log(`[Audio] Español (pista ${spanishIdx + 1}) + Inglés (pista ${englishIdx + 1})`);
-      } else {
-        console.log(`[Audio] Español encontrado (pista ${spanishIdx + 1}) - única pista seleccionada`);
-      }
-
-      return { maps, spanishFound: true, totalTracks: audioTracks.length, selectedTracks: maps.length / 2 };
+      console.log(`[Audio] Español seleccionado (pista ${spanishIdx + 1})`);
+      return { maps, spanishFound: true, totalTracks: audioTracks.length, selectedTracks: 1 };
     }
 
-    // Sin español: usar inglés si existe, sino la primera pista
-    if (englishIdx >= 0) {
-      maps.push('-map', `0:a:${englishIdx}`);
-      console.log(`[Audio] Inglés seleccionado (pista ${englishIdx + 1}) - no hay español`);
-    } else {
-      maps.push('-map', '0:a:0');
-      console.log(`[Audio] Primera pista seleccionada - no hay español ni inglés`);
-    }
-
+    // Sin español: usar primera pista
+    maps.push('-map', '0:a:0');
+    console.log(`[Audio] Primera pista seleccionada (no hay español)`);
     return { maps, spanishFound: false, totalTracks: audioTracks.length, selectedTracks: 1 };
 
   } catch (e) {
