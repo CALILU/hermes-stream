@@ -620,14 +620,28 @@ let requestsCache = null;
 let requestsCacheTime = 0;
 const REQUESTS_CACHE_TTL = 30000; // 30 segundos de cache
 
-// Leer peticiones desde FTP (SIEMPRE centralizado, independiente del modo de almacenamiento)
+// Leer peticiones (LOCAL: archivo local, FTP: servidor FTP)
 async function readRequests() {
     // Usar cache si es reciente
     if (requestsCache && (Date.now() - requestsCacheTime) < REQUESTS_CACHE_TTL) {
         return requestsCache;
     }
 
-    // SIEMPRE leer desde FTP (peticiones centralizadas para todos los usuarios)
+    // ========== MODO LOCAL: leer desde archivo local ==========
+    if (storageConfig.mode === 'local') {
+        try {
+            const content = await fs.readFile(REQUESTS_FILE, 'utf8');
+            requestsCache = JSON.parse(content);
+            requestsCacheTime = Date.now();
+            console.log(`📋 Peticiones cargadas desde disco local: ${requestsCache.requests?.length || 0}`);
+            return requestsCache;
+        } catch (error) {
+            console.log('📋 Archivo de peticiones no existe localmente, creando nuevo');
+            return { requests: [], nextId: 1 };
+        }
+    }
+
+    // ========== MODO FTP: leer desde servidor FTP ==========
     const client = new ftp.Client();
     client.ftp.verbose = false;
 
@@ -650,7 +664,6 @@ async function readRequests() {
         console.log(`📋 Peticiones cargadas desde FTP: ${requestsCache.requests?.length || 0}`);
         return requestsCache;
     } catch (error) {
-        // Si el archivo no existe en FTP, devolver estructura vacía
         console.log('📋 Archivo de peticiones no existe en FTP:', error.message);
         return { requests: [], nextId: 1 };
     } finally {
@@ -658,13 +671,24 @@ async function readRequests() {
     }
 }
 
-// Escribir peticiones en FTP (SIEMPRE centralizado, independiente del modo de almacenamiento)
+// Escribir peticiones (LOCAL: archivo local, FTP: servidor FTP)
 async function writeRequests(data) {
     // Actualizar cache local
     requestsCache = data;
     requestsCacheTime = Date.now();
 
-    // SIEMPRE escribir en FTP (peticiones centralizadas para todos los usuarios)
+    // ========== MODO LOCAL: escribir en archivo local ==========
+    if (storageConfig.mode === 'local') {
+        try {
+            await fs.writeFile(REQUESTS_FILE, JSON.stringify(data, null, 2));
+            console.log('📋 Peticiones guardadas en disco local');
+        } catch (error) {
+            console.error('❌ Error guardando peticiones localmente:', error.message);
+        }
+        return;
+    }
+
+    // ========== MODO FTP: escribir en servidor FTP ==========
     const client = new ftp.Client();
     client.ftp.verbose = false;
 
