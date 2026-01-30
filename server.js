@@ -2018,15 +2018,33 @@ app.get('/api/videos', async (req, res) => {
             };
         });
 
-        // Contar películas con/sin metadatos
-        const withMetadata = videosWithMetadata.filter(v => v.tmdb_id).length;
-        const withoutMetadata = videosWithMetadata.length - withMetadata;
-        console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${withMetadata} con metadatos, ${withoutMetadata} sin) [Modo: ${storageConfig.mode.toUpperCase()}]`);
+        console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: ${storageConfig.mode.toUpperCase()}]`);
 
-        // NOTA: La búsqueda automática en background está desactivada.
-        // Usar rebuild-cache.py para regenerar el cache completo si es necesario.
-        if (withoutMetadata > 0) {
-            console.log(`ℹ️  ${withoutMetadata} películas sin metadatos. Ejecuta rebuild-cache.py para actualizar.`);
+        // Buscar películas sin metadatos de TMDB para actualizar en background
+        const moviesWithoutMetadata = videosWithMetadata.filter(v => !v.tmdb_id);
+        if (moviesWithoutMetadata.length > 0) {
+            console.log(`🔍 ${moviesWithoutMetadata.length} películas sin metadatos TMDB, buscando en background...`);
+
+            // Ejecutar en background (no bloqueante) - usa updateCacheEntry que es seguro
+            (async () => {
+                let updated = 0;
+                for (const movie of moviesWithoutMetadata) {
+                    try {
+                        const metadata = await getMovieMetadata(movie.filename);
+                        if (metadata && metadata.tmdb_id) {
+                            updated++;
+                            console.log(`✅ Metadatos encontrados: ${movie.filename} -> ${metadata.title}`);
+                        }
+                        // Pequeña pausa para no saturar TMDB API
+                        await new Promise(r => setTimeout(r, 300));
+                    } catch (err) {
+                        console.error(`❌ Error buscando metadatos para ${movie.filename}:`, err.message);
+                    }
+                }
+                if (updated > 0) {
+                    console.log(`✅ Metadatos actualizados para ${updated} películas nuevas`);
+                }
+            })();
         }
 
         res.json(videosWithMetadata);
