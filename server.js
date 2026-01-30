@@ -1560,6 +1560,7 @@ async function readCache() {
 }
 
 // Escribir caché de películas (normaliza poster_path → poster)
+// IMPORTANTE: Esta función sobrescribe TODO el cache. Para actualizar una sola entrada, usar updateCacheEntry.
 async function writeCache(cache) {
     // Normalizar campos para consistencia
     for (const data of Object.values(cache)) {
@@ -1570,6 +1571,27 @@ async function writeCache(cache) {
             data.backdrop = data.backdrop_path;
         }
     }
+    await fs.writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));
+}
+
+// Actualizar una sola entrada del cache sin sobrescribir las demás
+// Si merge=true, combina con datos existentes; si merge=false, reemplaza completamente
+async function updateCacheEntry(filename, data, merge = false) {
+    const cache = await readCache();
+
+    // Si merge está activo, combinar con datos existentes
+    if (merge && cache[filename]) {
+        data = { ...cache[filename], ...data };
+    }
+
+    // Normalizar
+    if (data.poster_path && !data.poster) {
+        data.poster = data.poster_path;
+    }
+    if (data.backdrop_path && !data.backdrop) {
+        data.backdrop = data.backdrop_path;
+    }
+    cache[filename] = data;
     await fs.writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));
 }
 
@@ -1901,13 +1923,14 @@ async function getMovieMetadata(filename) {
     console.log(`🔍 Buscando en TMDB: ${filename}`);
     const metadata = await searchTMDB(filename);
 
-    // Guardar en caché con timestamp
+    // Guardar en caché usando updateCacheEntry (no sobrescribe todo el cache)
     if (metadata) {
-        cache[filename] = {
+        const entryData = {
             ...metadata,
             cached_at: Date.now()
         };
-        await writeCache(cache);
+        await updateCacheEntry(filename, entryData);
+        return entryData;
     }
 
     return metadata;
@@ -1995,33 +2018,15 @@ app.get('/api/videos', async (req, res) => {
             };
         });
 
-        console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: ${storageConfig.mode.toUpperCase()}]`);
+        // Contar películas con/sin metadatos
+        const withMetadata = videosWithMetadata.filter(v => v.tmdb_id).length;
+        const withoutMetadata = videosWithMetadata.length - withMetadata;
+        console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${withMetadata} con metadatos, ${withoutMetadata} sin) [Modo: ${storageConfig.mode.toUpperCase()}]`);
 
-        // Buscar películas sin metadatos de TMDB para actualizar en background
-        const moviesWithoutMetadata = videosWithMetadata.filter(v => !v.tmdb_id);
-        if (moviesWithoutMetadata.length > 0) {
-            console.log(`🔍 ${moviesWithoutMetadata.length} películas sin metadatos TMDB, buscando en background...`);
-
-            // Ejecutar en background (no bloqueante)
-            (async () => {
-                let updated = 0;
-                for (const movie of moviesWithoutMetadata) {
-                    try {
-                        const metadata = await getMovieMetadata(movie.filename);
-                        if (metadata && metadata.tmdb_id) {
-                            updated++;
-                            console.log(`✅ Metadatos encontrados: ${movie.filename} -> ${metadata.title}`);
-                        }
-                        // Pequeña pausa para no saturar TMDB API
-                        await new Promise(r => setTimeout(r, 300));
-                    } catch (err) {
-                        console.error(`❌ Error buscando metadatos para ${movie.filename}:`, err.message);
-                    }
-                }
-                if (updated > 0) {
-                    console.log(`✅ Metadatos actualizados para ${updated} películas nuevas`);
-                }
-            })();
+        // NOTA: La búsqueda automática en background está desactivada.
+        // Usar rebuild-cache.py para regenerar el cache completo si es necesario.
+        if (withoutMetadata > 0) {
+            console.log(`ℹ️  ${withoutMetadata} películas sin metadatos. Ejecuta rebuild-cache.py para actualizar.`);
         }
 
         res.json(videosWithMetadata);
@@ -2202,15 +2207,11 @@ app.get('/api/tmdb/cast/:tmdbId', async (req, res) => {
                     photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
                 }));
 
-            // Actualizar cache si tenemos el filename
+            // Actualizar cache si tenemos el filename (merge para no perder otros datos)
             const { filename } = req.query;
             if (filename) {
-                const cache = await readCache();
-                if (cache[filename]) {
-                    cache[filename].cast = cast;
-                    await writeCache(cache);
-                    console.log(`✅ Cast guardado en cache para: ${filename}`);
-                }
+                await updateCacheEntry(filename, { cast }, true);
+                console.log(`✅ Cast guardado en cache para: ${filename}`);
             }
 
             res.json({ success: true, cast });
@@ -2271,21 +2272,20 @@ app.get('/api/tmdb/cast-by-title', async (req, res) => {
                 photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
             }));
 
-        // Actualizar cache con los metadatos completos
+        // Actualizar cache con los metadatos completos (merge para no perder otros datos)
         if (filename) {
-            const cache = await readCache();
-            if (cache[filename]) {
-                cache[filename].tmdb_id = tmdbId;
-                cache[filename].cast = cast;
-                cache[filename].title = movie.title;
-                cache[filename].year = movie.release_date?.substring(0, 4);
-                cache[filename].overview = movie.overview;
-                if (movie.poster_path) {
-                    cache[filename].poster = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
-                }
-                await writeCache(cache);
-                console.log(`✅ Metadatos actualizados en cache para: ${filename}`);
+            const updateData = {
+                tmdb_id: tmdbId,
+                cast,
+                title: movie.title,
+                year: movie.release_date?.substring(0, 4),
+                overview: movie.overview
+            };
+            if (movie.poster_path) {
+                updateData.poster = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
             }
+            await updateCacheEntry(filename, updateData, true);
+            console.log(`✅ Metadatos actualizados en cache para: ${filename}`);
         }
 
         res.json({
