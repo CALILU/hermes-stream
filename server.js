@@ -1334,6 +1334,43 @@ app.get('/api/download-queue', async (req, res) => {
     }
 });
 
+// DELETE /api/download-queue/completed - Limpiar descargas completadas
+app.delete('/api/download-queue/completed', async (req, res) => {
+    try {
+        const queue = await readDownloadQueue();
+        const before = queue.length;
+        const filtered = queue.filter(q => q.status !== 'completed');
+        const removed = before - filtered.length;
+
+        await writeDownloadQueue(filtered);
+
+        // Limpiar también del estado en memoria
+        for (const item of queue) {
+            if (item.status === 'completed') {
+                lastQueueState.delete(item.url);
+            }
+        }
+
+        console.log(`🗑️ Cola limpiada: ${removed} descargas completadas eliminadas`);
+        res.json({ success: true, removed, remaining: filtered.length });
+    } catch (error) {
+        console.error('Error limpiando cola:', error);
+        res.status(500).json({ error: 'Error al limpiar la cola' });
+    }
+});
+
+// DELETE /api/download-queue/all - Limpiar toda la cola
+app.delete('/api/download-queue/all', async (req, res) => {
+    try {
+        await writeDownloadQueue([]);
+        lastQueueState.clear();
+        console.log('🗑️ Cola de descargas vaciada completamente');
+        res.json({ success: true, message: 'Cola vaciada' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al vaciar la cola' });
+    }
+});
+
 // ============================================
 // MONITOR DE DESCARGAS COMPLETADAS
 // ============================================
