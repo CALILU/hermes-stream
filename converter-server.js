@@ -755,6 +755,25 @@ function scanDirectory(directory) {
   return files;
 }
 
+// Codecs de video compatibles con navegadores web
+const BROWSER_COMPATIBLE_CODECS = ['h264', 'avc1', 'avc', 'hevc', 'h265', 'hvc1', 'hev1'];
+
+// Detectar codec de video y verificar compatibilidad con navegadores
+function getVideoCodec(filePath) {
+  try {
+    const result = execSync(
+      `ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${filePath}"`,
+      { stdio: 'pipe', maxBuffer: 10 * 1024 * 1024 }
+    ).toString().trim().toLowerCase();
+
+    const isCompatible = BROWSER_COMPATIBLE_CODECS.includes(result);
+    return { codec: result, isCompatible };
+  } catch (e) {
+    console.log('[Video] Error detectando codec:', e.message);
+    return { codec: 'unknown', isCompatible: false };
+  }
+}
+
 // Detectar pistas de audio y priorizar español
 function getAudioMapping(filePath) {
   try {
@@ -904,10 +923,20 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
     broadcastUpdate();
 
     const ffmpegArgs = ['-y', '-hide_banner', '-loglevel', 'error', '-stats'];
-    const isRemuxMode = conversionState.settings.mode === 'remux';
+    let isRemuxMode = conversionState.settings.mode === 'remux';
 
     // Determinar si es MKV (puede tener subtítulos problemáticos como PGS y audio DTS)
     const isMKV = inputPath.toLowerCase().endsWith('.mkv');
+
+    // Detectar codec de video para verificar compatibilidad con navegadores
+    const videoCodec = getVideoCodec(inputPath);
+    console.log(`[Video] Codec: ${videoCodec.codec} - Compatible con navegadores: ${videoCodec.isCompatible ? 'SÍ' : 'NO'}`);
+
+    // Si modo remux pero codec no compatible, forzar conversión
+    if (isRemuxMode && !videoCodec.isCompatible) {
+      console.log(`[!] Codec "${videoCodec.codec}" no compatible con navegadores → Forzando CONVERSIÓN`);
+      isRemuxMode = false; // Cambiar a modo convert
+    }
 
     if (isRemuxMode) {
       // ========== MODO REMUX (copiar video, convertir audio a AAC) ==========
