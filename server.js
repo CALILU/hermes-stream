@@ -1443,9 +1443,21 @@ async function checkCompletedDownloads() {
     }
 }
 
-// Iniciar monitor de descargas (cada 5 segundos)
+// Inicializar estado de la cola al arrancar (evita detectar "completed" antiguos como nuevos)
+(async () => {
+    try {
+        const queue = await readDownloadQueue();
+        for (const item of queue) {
+            lastQueueState.set(item.url, item.status);
+        }
+        console.log(`👀 Monitor de descargas iniciado (${queue.length} items en cola, ${queue.filter(q => q.status === 'completed').length} completados)`);
+    } catch (e) {
+        console.log('👀 Monitor de descargas completadas iniciado');
+    }
+})();
+
+// Monitorear cada 5 segundos
 setInterval(checkCompletedDownloads, 5000);
-console.log('👀 Monitor de descargas completadas iniciado');
 
 // ============================================
 // BÚSQUEDA EN TODOTORRENTS (Tor Browser)
