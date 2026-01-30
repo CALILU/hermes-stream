@@ -1740,7 +1740,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Iniciar servidor (solo localhost para evitar bloqueos de firewall)
-const CONVERTER_VERSION = '2.1.0'; // 2.1.0 = solo 1 pista audio (español o primera)
+const CONVERTER_VERSION = '2.2.0'; // 2.2.0 = detecta MP4 con codecs incompatibles
 
 const server = app.listen(PORT, '127.0.0.1', () => {
   console.log(`\n  IsiPrime Batch Converter v${CONVERTER_VERSION}`);
