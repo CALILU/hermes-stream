@@ -1682,9 +1682,11 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Iniciar servidor (solo localhost para evitar bloqueos de firewall)
+const CONVERTER_VERSION = '2.1.0'; // 2.1.0 = solo 1 pista audio (español o primera)
+
 const server = app.listen(PORT, '127.0.0.1', () => {
-  console.log(`\n  IsiPrime Batch Converter`);
-  console.log(`  ========================`);
+  console.log(`\n  IsiPrime Batch Converter v${CONVERTER_VERSION}`);
+  console.log(`  ================================`);
   console.log(`  Servidor: http://localhost:${PORT}`);
   console.log(`  Modo: ${storageConfig.mode === 'local' ? 'LOCAL (' + storageConfig.localPath + ')' : 'FTP (' + FTP_CONFIG.host + ')'}`);
   console.log(`  \n  Abre el navegador en la URL anterior\n`);
