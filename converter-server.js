@@ -20,6 +20,73 @@ const FTP_CONFIG = {
 };
 const FTP_DEST_PATH = '/volume-1';
 
+// Archivo de configuración de almacenamiento (compartido con IsiPrime)
+const STORAGE_SETTINGS_FILE = path.join(__dirname, 'storage-settings.json');
+
+// Configuración de almacenamiento
+let storageConfig = {
+  mode: 'ftp',      // 'ftp' o 'local'
+  localPath: ''     // Ruta local cuando mode='local'
+};
+
+// Cargar configuración de almacenamiento con AUTO-DETECCIÓN
+function loadStorageSettings() {
+  try {
+    if (fs.existsSync(STORAGE_SETTINGS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(STORAGE_SETTINGS_FILE, 'utf8'));
+      storageConfig.localPath = data.localPath || '';
+
+      // AUTO-DETECCIÓN: verificar si la ruta local existe y es accesible
+      if (storageConfig.localPath) {
+        const localExists = fs.existsSync(storageConfig.localPath);
+        const previousMode = data.mode || 'ftp';
+
+        if (localExists) {
+          // La ruta local existe → usar modo LOCAL
+          storageConfig.mode = 'local';
+          if (previousMode !== 'local') {
+            console.log(`🔍 Auto-detectado: Disco local conectado`);
+            saveStorageSettings();
+          }
+        } else {
+          // La ruta local NO existe → usar modo FTP
+          storageConfig.mode = 'ftp';
+          if (previousMode !== 'ftp') {
+            console.log(`🔍 Auto-detectado: Disco local no disponible`);
+            saveStorageSettings();
+          }
+        }
+      } else {
+        storageConfig.mode = 'ftp';
+      }
+
+      console.log(`📁 Modo almacenamiento: ${storageConfig.mode.toUpperCase()}`);
+      if (storageConfig.mode === 'local') {
+        console.log(`   Ruta local: ${storageConfig.localPath}`);
+      }
+    }
+  } catch (e) {
+    console.log('📁 Usando configuración de almacenamiento por defecto (FTP)');
+  }
+}
+
+// Guardar configuración de almacenamiento
+function saveStorageSettings() {
+  try {
+    const data = {
+      mode: storageConfig.mode,
+      localPath: storageConfig.localPath,
+      ftpPath: '/volume-1'
+    };
+    fs.writeFileSync(STORAGE_SETTINGS_FILE, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error('Error guardando configuración:', e.message);
+  }
+}
+
+// Cargar al iniciar
+loadStorageSettings();
+
 const app = express();
 const PORT = 4000;
 
@@ -212,6 +279,79 @@ async function uploadToFTP(localFilePath, filename) {
     client.close();
     currentFtpClient = null;
   }
+}
+
+// Copiar archivo a ruta local (cuando está en modo local)
+async function copyToLocal(localFilePath, filename, destPath) {
+  const destFilePath = path.join(destPath, filename);
+
+  // Verificar si origen y destino son el mismo
+  if (path.dirname(localFilePath) === destPath) {
+    console.log(`📂 Archivo ya está en destino: ${filename}`);
+    return { success: true, alreadyInPlace: true };
+  }
+
+  // Verificar si ya existe en el destino
+  if (fs.existsSync(destFilePath)) {
+    console.log(`⚠️ Ya existe en destino: ${filename}`);
+    return { success: true, alreadyExists: true };
+  }
+
+  // Obtener tamaño del archivo
+  const fileStats = fs.statSync(localFilePath);
+  const totalBytes = fileStats.size;
+
+  // Inicializar estado de copia
+  conversionState.upload = {
+    isUploading: true,
+    fileName: filename,
+    progress: 0,
+    bytesTransferred: 0,
+    totalBytes: totalBytes,
+    cancelled: false,
+    isLocalCopy: true  // Indicador de que es copia local
+  };
+  broadcastUpdate();
+  console.log(`📂 Copiando localmente: ${filename} (${formatBytes(totalBytes)})`);
+
+  return new Promise((resolve) => {
+    const readStream = fs.createReadStream(localFilePath);
+    const writeStream = fs.createWriteStream(destFilePath);
+    let bytesWritten = 0;
+
+    readStream.on('data', (chunk) => {
+      bytesWritten += chunk.length;
+      const progress = Math.round((bytesWritten / totalBytes) * 100);
+      conversionState.upload.bytesTransferred = bytesWritten;
+      conversionState.upload.progress = progress;
+
+      // Broadcast menos frecuente para no saturar
+      if (progress % 5 === 0 || progress === 100) {
+        broadcastUpdate();
+      }
+    });
+
+    writeStream.on('finish', () => {
+      console.log(`✅ Copiado localmente: ${filename}`);
+      conversionState.upload.isUploading = false;
+      conversionState.upload.progress = 100;
+      broadcastUpdate();
+      resolve({ success: true });
+    });
+
+    writeStream.on('error', (error) => {
+      console.error(`❌ Error copiando: ${error.message}`);
+      conversionState.upload.isUploading = false;
+      broadcastUpdate();
+      // Limpiar archivo parcial
+      if (fs.existsSync(destFilePath)) {
+        try { fs.unlinkSync(destFilePath); } catch (e) {}
+      }
+      resolve({ success: false, error: error.message });
+    });
+
+    readStream.pipe(writeStream);
+  });
 }
 
 // Función para hacer peticiones a TMDB con fallback
@@ -446,7 +586,8 @@ let conversionState = {
     deleteOriginals: false,
     gpu: 'auto',
     quality: 'balanced',  // fast, balanced, quality
-    renameWithTMDB: true  // Renombrar con nombre de TMDB
+    renameWithTMDB: true,  // Renombrar con nombre de TMDB
+    mode: 'convert'  // 'convert' (recodificar) o 'remux' (solo cambiar contenedor)
   },
   stats: {
     totalFiles: 0,
@@ -758,52 +899,75 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
     broadcastUpdate();
 
     const ffmpegArgs = ['-y', '-hide_banner', '-loglevel', 'error', '-stats'];
-
-    if (encoder.hwaccel) {
-      ffmpegArgs.push('-hwaccel', encoder.hwaccel);
-    }
+    const isRemuxMode = conversionState.settings.mode === 'remux';
 
     // Determinar si es MKV (puede tener subtítulos problemáticos como PGS y audio DTS)
     const isMKV = inputPath.toLowerCase().endsWith('.mkv');
 
-    ffmpegArgs.push(
-      '-i', inputPath,
-      '-c:v', encoder.video,
-      ...(encoder.extraArgs || []),
-      '-movflags', '+faststart',
-      '-map', '0:v:0'
-    );
+    if (isRemuxMode) {
+      // ========== MODO REMUX (copiar video, convertir audio a AAC) ==========
+      console.log(`\n[REMUX] ${file.name} (video copiado, audio → AAC)`);
 
-    // Detectar pistas de audio y priorizar español
-    const audioInfo = getAudioMapping(inputPath);
-    console.log(`[Audio] ${audioInfo.totalTracks} pista(s) detectada(s), español: ${audioInfo.spanishFound ? 'SÍ' : 'NO'}`);
+      // Detectar pistas de audio y priorizar español
+      const audioInfo = getAudioMapping(inputPath);
+      console.log(`[Audio] ${audioInfo.totalTracks} pista(s) detectada(s), español: ${audioInfo.spanishFound ? 'SÍ' : 'NO'}`);
 
-    // Añadir mapeo de audio (español primero si existe)
-    ffmpegArgs.push(...audioInfo.maps);
-
-    // Configuración de audio
-    ffmpegArgs.push(
-      '-c:a', 'aac',
-      '-b:a', '192k'
-    );
-
-    if (isMKV) {
-      // Para MKV: forzar stereo y sin subtítulos bitmap
       ffmpegArgs.push(
-        '-ac', '2',            // Forzar stereo (evita problemas con 7.1/5.1)
-        '-sn'                  // Sin subtítulos (PGS/VobSub no son compatibles con MP4)
+        '-i', inputPath,
+        '-map', '0:v:0',       // Video principal
+        ...audioInfo.maps,     // Pistas de audio (español primero si existe)
+        '-c:v', 'copy',        // Copiar video sin recodificar (RÁPIDO)
+        '-c:a', 'aac',         // Convertir audio a AAC (compatible con navegadores)
+        '-b:a', '192k',        // Bitrate de audio
+        '-ac', '2',            // Forzar stereo (evita problemas con 5.1/7.1)
+        '-movflags', '+faststart',  // Índice al principio para streaming
+        '-sn'                  // Sin subtítulos (pueden ser incompatibles)
       );
     } else {
-      // Para AVI: intentar copiar subtítulos
+      // ========== MODO CONVERSIÓN (recodificar) ==========
+      if (encoder.hwaccel) {
+        ffmpegArgs.push('-hwaccel', encoder.hwaccel);
+      }
+
       ffmpegArgs.push(
-        '-map', '0:s?',
-        '-c:s', 'mov_text'
+        '-i', inputPath,
+        '-c:v', encoder.video,
+        ...(encoder.extraArgs || []),
+        '-movflags', '+faststart',
+        '-map', '0:v:0'
       );
+
+      // Detectar pistas de audio y priorizar español
+      const audioInfo = getAudioMapping(inputPath);
+      console.log(`[Audio] ${audioInfo.totalTracks} pista(s) detectada(s), español: ${audioInfo.spanishFound ? 'SÍ' : 'NO'}`);
+
+      // Añadir mapeo de audio (español primero si existe)
+      ffmpegArgs.push(...audioInfo.maps);
+
+      // Configuración de audio
+      ffmpegArgs.push(
+        '-c:a', 'aac',
+        '-b:a', '192k'
+      );
+
+      if (isMKV) {
+        // Para MKV: forzar stereo y sin subtítulos bitmap
+        ffmpegArgs.push(
+          '-ac', '2',            // Forzar stereo (evita problemas con 7.1/5.1)
+          '-sn'                  // Sin subtítulos (PGS/VobSub no son compatibles con MP4)
+        );
+      } else {
+        // Para AVI: intentar copiar subtítulos
+        ffmpegArgs.push(
+          '-map', '0:s?',
+          '-c:s', 'mov_text'
+        );
+      }
     }
 
     ffmpegArgs.push('-f', 'mp4', tempPath);
 
-    console.log(`\n[Convirtiendo] ${file.name}`);
+    console.log(`\n[${isRemuxMode ? 'REMUX' : 'Convirtiendo'}] ${file.name}`);
     console.log(`[Comando] ffmpeg ${ffmpegArgs.join(' ')}\n`);
 
     const ffmpeg = spawn('ffmpeg', ffmpegArgs);
@@ -863,6 +1027,7 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
             fs.unlinkSync(inputPath);
           }
 
+          const modeUsed = isRemuxMode ? 'remux' : 'convert';
           resolve({
             success: true,
             newSize,
@@ -871,7 +1036,8 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
             savedBytesHuman: formatSize(savedBytes),
             finalName,
             outputPath,
-            tmdbInfo
+            tmdbInfo,
+            mode: modeUsed
           });
         } catch (e) {
           resolve({ success: false, error: e.message });
@@ -880,8 +1046,31 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
         if (fs.existsSync(tempPath)) {
           try { fs.unlinkSync(tempPath); } catch(e) {}
         }
-        console.error(`[Error] Conversion failed for ${file.name}:`, errorOutput.slice(-500));
-        resolve({ success: false, error: `FFmpeg error (code ${code}): ${errorOutput.slice(-200)}` });
+
+        // Analizar el error para dar mejor feedback
+        let errorMsg = `FFmpeg error (code ${code})`;
+        const errorLower = errorOutput.toLowerCase();
+
+        if (isRemuxMode) {
+          // Errores comunes en modo remux
+          if (errorLower.includes('dts') || errorLower.includes('dca')) {
+            errorMsg = 'REMUX FALLIDO: Audio DTS no compatible con MP4. Usa modo "Convertir" en su lugar.';
+          } else if (errorLower.includes('truehd')) {
+            errorMsg = 'REMUX FALLIDO: Audio TrueHD no compatible con MP4. Usa modo "Convertir" en su lugar.';
+          } else if (errorLower.includes('hdmv_pgs') || errorLower.includes('pgs')) {
+            errorMsg = 'REMUX FALLIDO: Subtítulos PGS no compatibles. Usa modo "Convertir" en su lugar.';
+          } else if (errorLower.includes('codec') || errorLower.includes('incompatible')) {
+            errorMsg = 'REMUX FALLIDO: Codec incompatible con MP4. Usa modo "Convertir" en su lugar.';
+          } else {
+            errorMsg = `REMUX FALLIDO: ${errorOutput.slice(-150)}. Prueba con modo "Convertir".`;
+          }
+          console.error(`[REMUX Error] ${file.name}: ${errorMsg}`);
+        } else {
+          console.error(`[Error] Conversion failed for ${file.name}:`, errorOutput.slice(-500));
+          errorMsg = `Error de conversión: ${errorOutput.slice(-150)}`;
+        }
+
+        resolve({ success: false, error: errorMsg, mode: isRemuxMode ? 'remux' : 'convert' });
       }
     });
 
@@ -904,6 +1093,15 @@ async function runConversion() {
 
   while (conversionState.pending.length > 0 && conversionState.isRunning) {
     const file = conversionState.pending.shift();
+
+    // Saltar archivos excluidos
+    console.log(`🔍 Verificando exclusión: "${file.name}" - Excluidos: ${excludedFiles.size} - ¿Está excluido?: ${excludedFiles.has(file.name)}`);
+    if (excludedFiles.has(file.name)) {
+      console.log(`⏭️  Saltando (excluido): ${file.name}`);
+      file.status = 'skipped';
+      continue;
+    }
+
     file.status = 'converting';
     conversionState.currentFile = file.name;
     broadcastUpdate();
@@ -926,8 +1124,52 @@ async function runConversion() {
       // Actualizar estado de la petición a 'mp4'
       updateRequestStatus(movieTitle, movieYear, 'mp4', tmdbId);
 
-      // Subir a FTP si está configurado
-      if (FTP_CONFIG.user && FTP_CONFIG.password) {
+      // Recargar configuración de almacenamiento (puede haber cambiado)
+      loadStorageSettings();
+
+      // Transferir al destino según modo de almacenamiento
+      if (storageConfig.mode === 'local' && storageConfig.localPath) {
+        // MODO LOCAL: copiar al destino local (o no hacer nada si ya está ahí)
+        const outputDir = path.dirname(result.outputPath);
+        const normalizedOutputDir = path.normalize(outputDir).toLowerCase();
+        const normalizedLocalPath = path.normalize(storageConfig.localPath).toLowerCase();
+
+        // Verificar si el archivo ya está en la ruta de destino
+        if (normalizedOutputDir === normalizedLocalPath || normalizedOutputDir.startsWith(normalizedLocalPath + path.sep)) {
+          // El archivo ya está en el destino local, no hay que copiarlo
+          console.log(`📂 Archivo ya está en destino local: ${result.finalName}`);
+          file.status = 'uploaded';
+          file.localMode = true;
+          // Actualizar estado de la petición a 'server' (ya está en destino)
+          updateRequestStatus(movieTitle, movieYear, 'server', tmdbId);
+        } else {
+          // El archivo está en otra ubicación, copiarlo al destino local
+          file.status = 'uploading';
+          broadcastUpdate();
+
+          const copyResult = await copyToLocal(result.outputPath, result.finalName, storageConfig.localPath);
+          if (copyResult.success) {
+            file.status = 'uploaded';
+            file.localMode = true;
+            // Actualizar estado de la petición a 'server'
+            updateRequestStatus(movieTitle, movieYear, 'server', tmdbId);
+
+            // Borrar archivo original después de copiar exitosamente
+            if (!copyResult.alreadyInPlace && !copyResult.alreadyExists) {
+              try {
+                fs.unlinkSync(result.outputPath);
+                console.log(`🗑️ Borrado origen: ${result.finalName}`);
+              } catch (delErr) {
+                console.error(`⚠️ No se pudo borrar origen ${result.finalName}: ${delErr.message}`);
+              }
+            }
+          } else {
+            file.uploadError = copyResult.error;
+            console.error(`❌ No se pudo copiar ${result.finalName}: ${copyResult.error}`);
+          }
+        }
+      } else if (FTP_CONFIG.user && FTP_CONFIG.password) {
+        // MODO FTP: subir al servidor FTP
         file.status = 'uploading';
         broadcastUpdate();
 
@@ -948,6 +1190,9 @@ async function runConversion() {
           file.uploadError = uploadResult.error;
           console.error(`❌ No se pudo subir ${result.finalName}: ${uploadResult.error}`);
         }
+      } else {
+        // Sin configuración de transferencia, mantener archivo donde está
+        console.log(`📁 Sin destino configurado, archivo conservado: ${result.finalName}`);
       }
     } else {
       file.status = 'failed';
@@ -986,6 +1231,23 @@ app.get('/api/events', (req, res) => {
   });
 });
 
+// Estado de escaneo para SSE
+let scanProgress = {
+  isScanning: false,
+  phase: '',
+  current: 0,
+  total: 0,
+  currentFile: ''
+};
+
+// Enviar progreso de escaneo a todos los clientes
+function broadcastScanProgress() {
+  const data = JSON.stringify({ type: 'scan-progress', ...scanProgress });
+  sseClients.forEach(client => {
+    client.write(`data: ${data}\n\n`);
+  });
+}
+
 // Escanear carpeta
 app.post('/api/scan', async (req, res) => {
   const { directory } = req.body;
@@ -994,13 +1256,30 @@ app.post('/api/scan', async (req, res) => {
     return res.status(400).json({ error: 'Directorio no valido' });
   }
 
+  // Iniciar progreso de escaneo
+  scanProgress = { isScanning: true, phase: 'scanning', current: 0, total: 0, currentFile: '' };
+  broadcastScanProgress();
+
   const files = scanDirectory(directory);
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
 
+  // Actualizar progreso - fase de archivos encontrados
+  scanProgress.phase = 'tmdb';
+  scanProgress.total = files.length;
+  scanProgress.current = 0;
+  broadcastScanProgress();
+
   // Buscar en TMDB para cada archivo (vista previa)
   console.log(`[Scan] Buscando ${files.length} archivos en TMDB...`);
-  for (const file of files) {
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     const { name, year } = cleanFilenameForSearch(file.name);
+
+    // Actualizar progreso
+    scanProgress.current = i + 1;
+    scanProgress.currentFile = file.name.substring(0, 40) + (file.name.length > 40 ? '...' : '');
+    broadcastScanProgress();
+
     const tmdbResult = await searchTMDB(name, year);
 
     if (tmdbResult.found) {
@@ -1019,6 +1298,11 @@ app.post('/api/scan', async (req, res) => {
   }
   console.log(`[Scan] Búsqueda TMDB completada`);
 
+  // Finalizar escaneo
+  scanProgress.isScanning = false;
+  scanProgress.phase = 'done';
+  broadcastScanProgress();
+
   conversionState.settings.directory = directory;
   conversionState.pending = files;
   conversionState.completed = [];
@@ -1026,6 +1310,9 @@ app.post('/api/scan', async (req, res) => {
   conversionState.stats.totalFiles = files.length;
   conversionState.stats.totalSize = totalSize;
   conversionState.stats.savedBytes = 0;
+
+  // Limpiar archivos excluidos del escaneo anterior
+  excludedFiles.clear();
 
   broadcastUpdate();
 
@@ -1100,9 +1387,23 @@ app.post('/api/files/update-match', (req, res) => {
   res.json({ success: true });
 });
 
+// Lista de archivos excluidos de la conversión
+let excludedFiles = new Set();
+
+// Establecer archivos excluidos
+app.post('/api/exclude', (req, res) => {
+  const { excludedFiles: files } = req.body;
+  excludedFiles = new Set(files || []);
+  console.log(`⏭️  Archivos excluidos: ${excludedFiles.size}`);
+  if (excludedFiles.size > 0) {
+    console.log(`   Lista: ${Array.from(excludedFiles).join(', ')}`);
+  }
+  res.json({ success: true, count: excludedFiles.size });
+});
+
 // Configurar opciones
 app.post('/api/settings', (req, res) => {
-  const { deleteOriginals, gpu, quality, renameWithTMDB } = req.body;
+  const { deleteOriginals, gpu, quality, renameWithTMDB, mode } = req.body;
 
   if (deleteOriginals !== undefined) {
     conversionState.settings.deleteOriginals = deleteOriginals;
@@ -1115,6 +1416,9 @@ app.post('/api/settings', (req, res) => {
   }
   if (renameWithTMDB !== undefined) {
     conversionState.settings.renameWithTMDB = renameWithTMDB;
+  }
+  if (mode !== undefined) {
+    conversionState.settings.mode = mode;
   }
 
   broadcastUpdate();
@@ -1186,6 +1490,18 @@ app.post('/api/cancel-upload', (req, res) => {
 app.get('/api/gpus', (req, res) => {
   const gpus = detectGPU();
   res.json(gpus);
+});
+
+// Obtener configuración de almacenamiento
+app.get('/api/storage/config', (req, res) => {
+  // Recargar configuración por si ha cambiado
+  loadStorageSettings();
+  res.json({
+    mode: storageConfig.mode,
+    localPath: storageConfig.localPath,
+    ftpConfigured: !!(FTP_CONFIG.user && FTP_CONFIG.password),
+    ftpHost: FTP_CONFIG.host
+  });
 });
 
 // Abrir diálogo de selección de carpeta (Windows 11 moderno)
@@ -1365,6 +1681,7 @@ const server = app.listen(PORT, '127.0.0.1', () => {
   console.log(`\n  IsiPrime Batch Converter`);
   console.log(`  ========================`);
   console.log(`  Servidor: http://localhost:${PORT}`);
+  console.log(`  Modo: ${storageConfig.mode === 'local' ? 'LOCAL (' + storageConfig.localPath + ')' : 'FTP (' + FTP_CONFIG.host + ')'}`);
   console.log(`  \n  Abre el navegador en la URL anterior\n`);
 });
 

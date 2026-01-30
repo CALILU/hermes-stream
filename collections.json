@@ -330,6 +330,18 @@
           18,
           53
         ]
+      },
+      {
+        "filename": "Batman Begins (2005).mp4",
+        "tmdb_id": 272,
+        "title": "Batman Begins",
+        "poster": "https://image.tmdb.org/t/p/w342/6yMWU1vWkOBbNRIwOxhetd2aHhO.jpg",
+        "release_date": "2005-06-10",
+        "genre_ids": [
+          18,
+          80,
+          28
+        ]
       }
     ],
     "genre_ids": [
@@ -806,6 +818,18 @@
           878,
           53
         ]
+      },
+      {
+        "filename": "X-Men Primera Generación (2011).mp4",
+        "tmdb_id": 49538,
+        "title": "X-Men: Primera Generación",
+        "poster": "https://image.tmdb.org/t/p/w342/6ED3G0lpBXRZtEDJD2xVYsqIwxI.jpg",
+        "release_date": "2011-06-01",
+        "genre_ids": [
+          28,
+          878,
+          12
+        ]
       }
     ],
     "genre_ids": [
@@ -901,6 +925,45 @@
           80,
           53
         ]
+      },
+      {
+        "filename": "Arma letal (1987).mp4",
+        "tmdb_id": 941,
+        "title": "Arma letal",
+        "poster": "https://image.tmdb.org/t/p/w342/bOmKVohi6yjxBnoP7XvX6tpXR56.jpg",
+        "release_date": "1987-03-06",
+        "genre_ids": [
+          28,
+          35,
+          53
+        ]
+      },
+      {
+        "filename": "Arma letal 2 (1989).mp4",
+        "tmdb_id": 942,
+        "title": "Arma letal 2",
+        "poster": "https://image.tmdb.org/t/p/w342/60lsR1XuNjmA676sXUJtmEgiY4X.jpg",
+        "release_date": "1989-07-07",
+        "genre_ids": [
+          28,
+          12,
+          35,
+          80,
+          53
+        ]
+      },
+      {
+        "filename": "Arma letal 3 (1992).mp4",
+        "tmdb_id": 943,
+        "title": "Arma letal 3",
+        "poster": "https://image.tmdb.org/t/p/w342/6AYVXfpC4tE7pYNpa6Zf6wKu6f2.jpg",
+        "release_date": "1992-05-15",
+        "genre_ids": [
+          28,
+          35,
+          53,
+          80
+        ]
       }
     ],
     "genre_ids": [
@@ -954,6 +1017,43 @@
           35,
           80,
           878
+        ]
+      },
+      {
+        "filename": "Austin Powers en Miembro de Oro (2002).mp4",
+        "tmdb_id": 818,
+        "title": "Austin Powers en Miembro de Oro",
+        "poster": "https://image.tmdb.org/t/p/w342/72bSmfG2V95oQfM7C2gmtQeMwrq.jpg",
+        "release_date": "2002-07-26",
+        "genre_ids": [
+          35,
+          80,
+          878
+        ]
+      },
+      {
+        "filename": "Austin Powers La espía que me achuchó (1999).mp4",
+        "tmdb_id": 817,
+        "title": "Austin Powers: La espía que me achuchó",
+        "poster": "https://image.tmdb.org/t/p/w342/xncRyVPUP5cJWoVKiyqTtKZzwAg.jpg",
+        "release_date": "1999-06-08",
+        "genre_ids": [
+          12,
+          35,
+          80,
+          878
+        ]
+      },
+      {
+        "filename": "Austin Powers Misterioso agente internacional (1997).mp4",
+        "tmdb_id": 816,
+        "title": "Austin Powers: Misterioso agente internacional",
+        "poster": "https://image.tmdb.org/t/p/w342/6vUjqYh8hDh7pVIcdQySw3SN3SH.jpg",
+        "release_date": "1997-05-02",
+        "genre_ids": [
+          878,
+          35,
+          80
         ]
       }
     ],
@@ -1771,6 +1871,17 @@
           53,
           878
         ]
+      },
+      {
+        "filename": "2010 Odisea dos (1984).mp4",
+        "tmdb_id": 4437,
+        "title": "2010: Odisea dos",
+        "poster": "https://image.tmdb.org/t/p/w342/nMA0Z5Vw05GwHyugYl5s72Lf0Z.jpg",
+        "release_date": "1984-12-06",
+        "genre_ids": [
+          53,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -1931,6 +2042,17 @@
         "genre_ids": [
           28,
           53,
+          878
+        ]
+      },
+      {
+        "filename": "Alien, el octavo pasajero (1979).mp4",
+        "tmdb_id": 348,
+        "title": "Alien, el octavo pasajero",
+        "poster": "https://image.tmdb.org/t/p/w342/pZ9cAe5FxexJjpCaeiETbXzz3Fs.jpg",
+        "release_date": "1979-05-25",
+        "genre_ids": [
+          27,
           878
         ]
       }
@@ -2837,6 +2959,29 @@
       53
     ],
     "cached_at": 1769093190101
+  },
+  "48037": {
+    "id": 48037,
+    "name": "Los albóndigas - Colección",
+    "overview": "Los albóndigas es una película de comedia canadiense de 1979 dirigida por Ivan Reitman. Se destaca por la primera aparición cinematográfica de Bill Murray en un papel protagónico y por lanzar la carrera de director de Reitman. Le siguieron varias secuelas, de las cuales solo Los albóndigas 3: Los chicos están calientes (1986) tenía alguna conexión con el original.",
+    "poster": "https://image.tmdb.org/t/p/w342/ycmrsQ36H77Q5lmOQbfM4emg5DF.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/plJy1OS6PSKp6PTpMDlk47u86E6.jpg",
+    "movies": [
+      {
+        "filename": "Los incorregibles albóndigas.mp4",
+        "tmdb_id": 14035,
+        "title": "Los incorregibles albóndigas",
+        "poster": "https://image.tmdb.org/t/p/w342/khCfHEFzYFXpOeEcuL6Emym8iXr.jpg",
+        "release_date": "1979-06-28",
+        "genre_ids": [
+          35
+        ]
+      }
+    ],
+    "genre_ids": [
+      35
+    ],
+    "cached_at": 1769763764299
   },
   "52749": {
     "id": 52749,
@@ -4181,6 +4326,19 @@
           878,
           53
         ]
+      },
+      {
+        "filename": "2013 Rescate en L.A. (1996).mp4",
+        "tmdb_id": 10061,
+        "title": "2013: Rescate en L.A.",
+        "poster": "https://image.tmdb.org/t/p/w342/oXowyvjvE3z2npTuqdsJVzL2KiM.jpg",
+        "release_date": "1996-08-09",
+        "genre_ids": [
+          28,
+          12,
+          878,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -4262,6 +4420,53 @@
       },
       {
         "filename": "Batman y Robin (1997).mkv",
+        "tmdb_id": 415,
+        "title": "Batman y Robin",
+        "poster": "https://image.tmdb.org/t/p/w342/aW7SsLyTGAWvFN8nafWpcVaKjA4.jpg",
+        "release_date": "1997-06-20",
+        "genre_ids": [
+          28,
+          878,
+          12
+        ]
+      },
+      {
+        "filename": "Batman (1989).mp4",
+        "tmdb_id": 268,
+        "title": "Batman",
+        "poster": "https://image.tmdb.org/t/p/w342/fpY5cNPIbKYpdBtukCMtBMMt1s3.jpg",
+        "release_date": "1989-06-21",
+        "genre_ids": [
+          14,
+          28,
+          80
+        ]
+      },
+      {
+        "filename": "Batman Forever (1995).mp4",
+        "tmdb_id": 414,
+        "title": "Batman Forever",
+        "poster": "https://image.tmdb.org/t/p/w342/wg6BN76E9iIEtiawMJnCecY0zgY.jpg",
+        "release_date": "1995-06-16",
+        "genre_ids": [
+          28,
+          80,
+          14
+        ]
+      },
+      {
+        "filename": "Batman vuelve (1992).mp4",
+        "tmdb_id": 364,
+        "title": "Batman vuelve",
+        "poster": "https://image.tmdb.org/t/p/w342/i5xLIx2vkisiLPQqaeI3uiSaG1b.jpg",
+        "release_date": "1992-06-19",
+        "genre_ids": [
+          28,
+          14
+        ]
+      },
+      {
+        "filename": "Batman y Robin (1997).mp4",
         "tmdb_id": 415,
         "title": "Batman y Robin",
         "poster": "https://image.tmdb.org/t/p/w342/aW7SsLyTGAWvFN8nafWpcVaKjA4.jpg",
@@ -4379,7 +4584,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w500/ipu7wJghURt4QOecgHO0tEP0qHp.jpg",
     "movies": [
       {
-        "filename": "300 (2006).mkv",
+        "filename": "300 (2007).mp4",
         "tmdb_id": 1271,
         "title": "300",
         "poster": "https://image.tmdb.org/t/p/w342/h7Lcio0c9ohxPhSZg42eTlKIVVY.jpg",
@@ -4674,6 +4879,18 @@
           12,
           9648
         ]
+      },
+      {
+        "filename": "Alien Covenant (2017).mp4",
+        "tmdb_id": 126889,
+        "title": "Alien: Covenant",
+        "poster": "https://image.tmdb.org/t/p/w342/245tgZ3mTHWs0NRiPSwPjKobKHf.jpg",
+        "release_date": "2017-05-09",
+        "genre_ids": [
+          27,
+          878,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -4795,6 +5012,18 @@
     "movies": [
       {
         "filename": "Almas de metal (1973).mkv",
+        "tmdb_id": 2362,
+        "title": "Almas de metal",
+        "poster": "https://image.tmdb.org/t/p/w342/d0ARZWovukxMwN97D83UOiwMAqP.jpg",
+        "release_date": "1973-08-15",
+        "genre_ids": [
+          12,
+          878,
+          37
+        ]
+      },
+      {
+        "filename": "Almas de metal (1973).mp4",
         "tmdb_id": 2362,
         "title": "Almas de metal",
         "poster": "https://image.tmdb.org/t/p/w342/d0ARZWovukxMwN97D83UOiwMAqP.jpg",
@@ -5079,6 +5308,17 @@
     "movies": [
       {
         "filename": "Anarchy La noche de las bestias (2014).mkv",
+        "tmdb_id": 238636,
+        "title": "Anarchy: La noche de las bestias",
+        "poster": "https://image.tmdb.org/t/p/w342/ynDDbzVge9AzuTkeyw8JcKr58Cq.jpg",
+        "release_date": "2014-07-17",
+        "genre_ids": [
+          27,
+          53
+        ]
+      },
+      {
+        "filename": "Anarchy La noche de las bestias (2014).mp4",
         "tmdb_id": 238636,
         "title": "Anarchy: La noche de las bestias",
         "poster": "https://image.tmdb.org/t/p/w342/ynDDbzVge9AzuTkeyw8JcKr58Cq.jpg",
@@ -5670,6 +5910,18 @@
           12,
           878
         ]
+      },
+      {
+        "filename": "Ant-Man (2015).mp4",
+        "tmdb_id": 102899,
+        "title": "Ant-Man",
+        "poster": "https://image.tmdb.org/t/p/w342/zwuE28gSXlLFLgueqMe9b7xKy1f.jpg",
+        "release_date": "2015-07-14",
+        "genre_ids": [
+          878,
+          28,
+          12
+        ]
       }
     ],
     "genre_ids": [
@@ -6185,6 +6437,17 @@
     "movies": [
       {
         "filename": "Bienvenidos a Zombieland (2009).mkv",
+        "tmdb_id": 19908,
+        "title": "Bienvenidos a Zombieland",
+        "poster": "https://image.tmdb.org/t/p/w342/bsQZDSRHrRkkLWC1PgMT89dr9xA.jpg",
+        "release_date": "2009-10-02",
+        "genre_ids": [
+          35,
+          27
+        ]
+      },
+      {
+        "filename": "Bienvenidos a Zombieland (2009).mp4",
         "tmdb_id": 19908,
         "title": "Bienvenidos a Zombieland",
         "poster": "https://image.tmdb.org/t/p/w342/bsQZDSRHrRkkLWC1PgMT89dr9xA.jpg",

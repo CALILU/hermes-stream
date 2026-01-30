@@ -1,5 +1,5 @@
 {
-  "mode": "ftp",
+  "mode": "local",
   "localPath": "E:\\",
   "ftpPath": "/volume-1"
 }

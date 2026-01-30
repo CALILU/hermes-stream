@@ -1559,8 +1559,17 @@ async function readCache() {
     }
 }
 
-// Escribir caché de películas
+// Escribir caché de películas (normaliza poster_path → poster)
 async function writeCache(cache) {
+    // Normalizar campos para consistencia
+    for (const data of Object.values(cache)) {
+        if (data.poster_path && !data.poster) {
+            data.poster = data.poster_path;
+        }
+        if (data.backdrop_path && !data.backdrop) {
+            data.backdrop = data.backdrop_path;
+        }
+    }
     await fs.writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));
 }
 

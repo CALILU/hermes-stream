@@ -43,6 +43,32 @@
       -webkit-text-fill-color: transparent;
     }
 
+    .storage-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .storage-badge.ftp {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.5);
+      color: #667eea;
+    }
+
+    .storage-badge.local {
+      background: linear-gradient(135deg, rgba(17, 153, 142, 0.2) 0%, rgba(56, 239, 125, 0.2) 100%);
+      border: 1px solid rgba(56, 239, 125, 0.5);
+      color: #38ef7d;
+    }
+
+    .storage-badge .icon {
+      font-size: 1rem;
+    }
+
     .header-stats {
       display: flex;
       gap: 30px;
@@ -67,30 +93,41 @@
     /* Controls */
     .controls {
       display: flex;
-      gap: 15px;
+      flex-direction: column;
+      gap: 12px;
       padding: 20px;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 16px;
       margin-bottom: 20px;
-      flex-wrap: wrap;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .controls-row.folder-row {
+      flex-wrap: nowrap;
     }
 
     .folder-input {
       flex: 1;
-      min-width: 300px;
+      min-width: 200px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .folder-input input {
       flex: 1;
-      padding: 12px 16px;
+      min-width: 150px;
+      padding: 10px 14px;
       border: 2px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      border-radius: 8px;
       background: rgba(0, 0, 0, 0.3);
       color: #fff;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .folder-input input:focus {
@@ -98,17 +135,42 @@
       border-color: #667eea;
     }
 
-    .btn {
-      padding: 12px 24px;
-      border: none;
+    .options-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.2);
       border-radius: 10px;
-      font-size: 0.95rem;
+    }
+
+    .options-group-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      margin-right: 5px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
+      white-space: nowrap;
     }
 
     .btn-primary {
@@ -144,8 +206,9 @@
     .btn-secondary {
       background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
       color: #fff;
-      padding: 12px 16px;
-      font-size: 1.1rem;
+      padding: 10px 14px;
+      font-size: 1rem;
+      min-width: 44px;
     }
 
     .btn-secondary:hover {
@@ -159,32 +222,34 @@
       transform: none !important;
     }
 
-    .options {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-    }
-
     .checkbox-label {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
     }
 
     .checkbox-label input {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       accent-color: #667eea;
     }
 
     select {
-      padding: 10px 16px;
+      padding: 8px 12px;
       border: 2px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      border-radius: 8px;
       background: rgba(0, 0, 0, 0.3);
       color: #fff;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
     }
 
     /* Progress Section */
@@ -231,9 +296,46 @@
       gap: 20px;
     }
 
+    @media (max-width: 1200px) {
+      .controls-row {
+        flex-wrap: wrap;
+      }
+
+      .action-buttons {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 5px;
+      }
+    }
+
     @media (max-width: 900px) {
       .main-content {
         grid-template-columns: 1fr;
+      }
+
+      .controls-row.folder-row {
+        flex-wrap: wrap;
+      }
+
+      .folder-input {
+        width: 100%;
+      }
+
+      .options-group {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .header-stats {
+        width: 100%;
+        justify-content: space-around;
       }
     }
 
@@ -733,6 +835,203 @@
       font-size: 0.85rem;
     }
 
+    /* Filters Section */
+    .filters-section {
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-input {
+      flex: 1;
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .filter-input::placeholder {
+      color: #666;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .filter-stats {
+      font-size: 0.8rem;
+      color: #888;
+      margin-left: auto;
+    }
+
+    .filter-stats strong {
+      color: #667eea;
+    }
+
+    /* Checkbox for file exclusion */
+    .file-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #667eea;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-right: 10px;
+    }
+
+    .file-item.excluded {
+      opacity: 0.4;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .file-item.excluded .file-name,
+    .file-item.excluded .file-info {
+      text-decoration: line-through;
+    }
+
+    .bulk-actions {
+      display: flex;
+      gap: 10px;
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.15);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem;
+    }
+
+    .bulk-btn {
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .bulk-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    /* Mode hint */
+    .mode-hint {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .mode-hint.convert {
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+    }
+
+    .mode-hint.remux {
+      color: #f39c12;
+      background: rgba(243, 156, 18, 0.15);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner-large {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .loading-subtext {
+      color: #aaa;
+      font-size: 0.85rem;
+      max-width: 400px;
+      text-align: center;
+      word-break: break-word;
+      min-height: 20px;
+    }
+
+    .loading-progress {
+      margin-top: 15px;
+      color: #667eea;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .loading-bar {
+      width: 300px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      margin-top: 20px;
+      overflow: hidden;
+    }
+
+    .loading-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    /* Dots animation */
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -765,6 +1064,10 @@
     <!-- Header -->
     <div class="header">
       <h1>IsiPrime Batch Converter</h1>
+      <div id="storage-mode-badge" class="storage-badge" style="display: none;">
+        <span class="icon">📁</span>
+        <span class="mode-text">-</span>
+      </div>
       <div class="header-stats">
         <div class="stat-box">
           <div class="stat-value" id="stat-pending">0</div>
@@ -783,42 +1086,69 @@
 
     <!-- Controls -->
     <div class="controls">
-      <div class="folder-input">
-        <input type="text" id="folder-path" placeholder="Ruta de la carpeta con peliculas (ej: E:\Peliculas)">
-        <button class="btn btn-secondary" id="btn-browse" title="Explorar...">&#128193;</button>
-        <button class="btn btn-secondary" id="btn-open-folder" title="Abrir carpeta en Explorador" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">&#128194;</button>
-        <button class="btn btn-primary" id="btn-scan" style="padding: 10px 16px; font-size: 0.85rem;">Escanear</button>
+      <!-- Fila 1: Ruta de carpeta -->
+      <div class="controls-row folder-row">
+        <div class="folder-input">
+          <input type="text" id="folder-path" placeholder="Ruta de la carpeta con peliculas (ej: E:\Peliculas)">
+          <button class="btn btn-secondary" id="btn-browse" title="Explorar...">&#128193;</button>
+          <button class="btn btn-secondary" id="btn-open-folder" title="Abrir carpeta en Explorador" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">&#128194;</button>
+        </div>
+        <button class="btn btn-primary" id="btn-scan">Escanear</button>
       </div>
-      <div class="options">
-        <label class="checkbox-label">
-          <input type="checkbox" id="chk-delete">
-          Eliminar originales
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="chk-rename" checked>
-          Renombrar (TMDB)
-        </label>
-        <select id="sel-gpu">
-          <option value="auto">GPU: Auto</option>
-          <option value="nvidia">NVIDIA</option>
-          <option value="intel">Intel</option>
-          <option value="amd">AMD</option>
-          <option value="none">Solo CPU</option>
-        </select>
-        <select id="sel-quality">
-          <option value="fast">Rapido</option>
-          <option value="balanced" selected>Balanceado</option>
-          <option value="quality">Calidad</option>
-        </select>
+
+      <!-- Fila 2: Opciones -->
+      <div class="controls-row">
+        <!-- Grupo: Opciones generales -->
+        <div class="options-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-delete">
+            Eliminar originales
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-rename" checked>
+            Renombrar (TMDB)
+          </label>
+        </div>
+
+        <!-- Grupo: Modo de conversión -->
+        <div class="options-group">
+          <span class="options-group-label">Modo:</span>
+          <select id="sel-mode" title="Modo de conversión">
+            <option value="convert">Convertir (recodificar todo)</option>
+            <option value="remux">Remux (video rapido + audio AAC)</option>
+          </select>
+          <span class="mode-hint" id="mode-hint"></span>
+        </div>
+
+        <!-- Grupo: Configuración de encoder -->
+        <div class="options-group" id="encoder-options">
+          <span class="options-group-label">Encoder:</span>
+          <select id="sel-gpu">
+            <option value="auto">GPU: Auto</option>
+            <option value="nvidia">NVIDIA</option>
+            <option value="intel">Intel</option>
+            <option value="amd">AMD</option>
+            <option value="none">Solo CPU</option>
+          </select>
+          <select id="sel-quality">
+            <option value="fast">Rapido</option>
+            <option value="balanced" selected>Balanceado</option>
+            <option value="quality">Calidad</option>
+          </select>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="action-buttons">
+          <button class="btn btn-success" id="btn-start" disabled>Iniciar</button>
+          <button class="btn btn-danger" id="btn-stop" disabled>Detener</button>
+        </div>
       </div>
-      <button class="btn btn-success" id="btn-start" disabled>Iniciar</button>
-      <button class="btn btn-danger" id="btn-stop" disabled>Detener</button>
     </div>
 
     <!-- Progress Section -->
     <div class="progress-section" id="progress-section" style="display: none;">
       <div class="progress-header">
-        <span class="progress-text">Convirtiendo: <strong id="current-file">-</strong></span>
+        <span class="progress-text"><span id="progress-mode">Convirtiendo</span>: <strong id="current-file">-</strong></span>
         <span class="progress-text"><strong id="progress-percent">0</strong>%</span>
       </div>
       <div class="progress-bar-container">
@@ -852,6 +1182,39 @@
           <h2>Pendientes</h2>
           <span class="count" id="pending-count">0</span>
         </div>
+        <!-- Filters -->
+        <div class="filters-section" id="filters-section" style="display: none;">
+          <input type="text" class="filter-input" id="filter-name" placeholder="Buscar por nombre...">
+          <select class="filter-select" id="filter-size">
+            <option value="">Todos los tamaños</option>
+            <option value="tiny">< 100 MB</option>
+            <option value="verysmall">100 - 300 MB</option>
+            <option value="small">300 - 500 MB</option>
+            <option value="medium">500 MB - 1 GB</option>
+            <option value="medlarge">1 GB - 2 GB</option>
+            <option value="large">2 GB - 4 GB</option>
+            <option value="vlarge">4 GB - 6 GB</option>
+            <option value="xlarge">6 GB - 10 GB</option>
+            <option value="xxlarge">> 10 GB</option>
+          </select>
+          <select class="filter-select" id="filter-sort">
+            <option value="">Sin ordenar</option>
+            <option value="size-desc">Tamaño ↓ (mayor a menor)</option>
+            <option value="size-asc">Tamaño ↑ (menor a mayor)</option>
+            <option value="name-asc">Nombre A-Z</option>
+            <option value="name-desc">Nombre Z-A</option>
+          </select>
+          <div class="filter-stats">
+            <span id="filter-visible">0</span> de <strong id="filter-total">0</strong> |
+            Excluidos: <span id="filter-excluded">0</span>
+          </div>
+        </div>
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulk-actions" style="display: none;">
+          <button class="bulk-btn" onclick="selectAllVisible()">✓ Seleccionar visibles</button>
+          <button class="bulk-btn" onclick="deselectAllVisible()">✗ Deseleccionar visibles</button>
+          <button class="bulk-btn" onclick="invertSelection()">⇄ Invertir selección</button>
+        </div>
         <div class="panel-content" id="pending-list">
           <div class="empty-state">
             <div class="icon">📁</div>
@@ -877,6 +1240,17 @@
 
     <div class="footer">
       IsiPrime Batch Converter - Conversion masiva con aceleracion GPU
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner-large"></div>
+    <div class="loading-text">Escaneando carpeta<span class="loading-dots"></span></div>
+    <div class="loading-subtext" id="loading-subtext">Buscando archivos AVI y MKV</div>
+    <div class="loading-progress" id="loading-progress"></div>
+    <div class="loading-bar" id="loading-bar" style="display: none;">
+      <div class="loading-bar-fill" id="loading-bar-fill" style="width: 0%"></div>
     </div>
   </div>
 
@@ -916,6 +1290,24 @@
       stats: { savedBytes: 0 }
     };
 
+    // Configuración de almacenamiento
+    let storageConfig = {
+      mode: 'ftp',
+      localPath: '',
+      ftpConfigured: false,
+      ftpHost: ''
+    };
+
+    // Estado de exclusión de archivos (nombre -> excluido)
+    let excludedFiles = new Set();
+
+    // Filtros actuales
+    let filters = {
+      name: '',
+      size: '',
+      sort: ''
+    };
+
     // Elementos
     const elements = {
       folderPath: document.getElementById('folder-path'),
@@ -928,10 +1320,12 @@
       chkRename: document.getElementById('chk-rename'),
       selGpu: document.getElementById('sel-gpu'),
       selQuality: document.getElementById('sel-quality'),
+      selMode: document.getElementById('sel-mode'),
       progressSection: document.getElementById('progress-section'),
       currentFile: document.getElementById('current-file'),
       progressPercent: document.getElementById('progress-percent'),
       progressBar: document.getElementById('progress-bar'),
+      progressMode: document.getElementById('progress-mode'),
       pendingList: document.getElementById('pending-list'),
       completedList: document.getElementById('completed-list'),
       pendingCount: document.getElementById('pending-count'),
@@ -945,8 +1339,166 @@
       uploadFilename: document.getElementById('upload-filename'),
       uploadProgressBar: document.getElementById('upload-progress-bar'),
       uploadStats: document.getElementById('upload-stats'),
-      btnCancelUpload: document.getElementById('btn-cancel-upload')
+      btnCancelUpload: document.getElementById('btn-cancel-upload'),
+      // Storage mode badge
+      storageBadge: document.getElementById('storage-mode-badge'),
+      // Filters
+      filtersSection: document.getElementById('filters-section'),
+      bulkActions: document.getElementById('bulk-actions'),
+      filterName: document.getElementById('filter-name'),
+      filterSize: document.getElementById('filter-size'),
+      filterSort: document.getElementById('filter-sort'),
+      filterVisible: document.getElementById('filter-visible'),
+      filterTotal: document.getElementById('filter-total'),
+      filterExcluded: document.getElementById('filter-excluded')
     };
+
+    // Filtrar y ordenar archivos
+    function filterFiles(files) {
+      let result = files.filter(file => {
+        // Filtro por nombre
+        if (filters.name) {
+          const searchTerm = filters.name.toLowerCase();
+          const fileName = file.name.toLowerCase();
+          const tmdbTitle = file.tmdbMatch?.title?.toLowerCase() || '';
+          if (!fileName.includes(searchTerm) && !tmdbTitle.includes(searchTerm)) {
+            return false;
+          }
+        }
+
+        // Filtro por tamaño
+        if (filters.size) {
+          const sizeMB = file.size / (1024 * 1024);
+          const sizeGB = sizeMB / 1024;
+          switch (filters.size) {
+            case 'tiny': if (sizeMB >= 100) return false; break;
+            case 'verysmall': if (sizeMB < 100 || sizeMB >= 300) return false; break;
+            case 'small': if (sizeMB < 300 || sizeMB >= 500) return false; break;
+            case 'medium': if (sizeMB < 500 || sizeGB >= 1) return false; break;
+            case 'medlarge': if (sizeGB < 1 || sizeGB >= 2) return false; break;
+            case 'large': if (sizeGB < 2 || sizeGB >= 4) return false; break;
+            case 'vlarge': if (sizeGB < 4 || sizeGB >= 6) return false; break;
+            case 'xlarge': if (sizeGB < 6 || sizeGB >= 10) return false; break;
+            case 'xxlarge': if (sizeGB < 10) return false; break;
+          }
+        }
+
+        return true;
+      });
+
+      // Ordenar
+      if (filters.sort) {
+        result = [...result].sort((a, b) => {
+          switch (filters.sort) {
+            case 'size-desc': return b.size - a.size;
+            case 'size-asc': return a.size - b.size;
+            case 'name-asc': return a.name.localeCompare(b.name);
+            case 'name-desc': return b.name.localeCompare(a.name);
+            default: return 0;
+          }
+        });
+      }
+
+      return result;
+    }
+
+    // Toggle exclusión de archivo por índice
+    function toggleExcludeByIndex(index) {
+      const file = window.currentFilteredFiles?.[index];
+      if (!file) return;
+
+      if (excludedFiles.has(file.name)) {
+        excludedFiles.delete(file.name);
+      } else {
+        excludedFiles.add(file.name);
+      }
+      updateUI();
+    }
+
+    // Abrir modal TMDB por índice
+    function openTmdbModalByIndex(index) {
+      const file = window.currentFilteredFiles?.[index];
+      if (!file || state.isRunning) return;
+      openTmdbModal(file.name, file.searchQuery || '');
+    }
+
+    // Event delegation para el panel de pendientes
+    document.getElementById('pending-list').addEventListener('click', function(e) {
+      const checkbox = e.target.closest('.file-checkbox');
+      const editBtn = e.target.closest('.edit-btn');
+      const fileInfo = e.target.closest('.file-info');
+
+      if (checkbox) {
+        e.stopPropagation();
+        const index = parseInt(checkbox.dataset.index);
+        toggleExcludeByIndex(index);
+      } else if (editBtn) {
+        e.stopPropagation();
+        const index = parseInt(editBtn.dataset.index);
+        openTmdbModalByIndex(index);
+      } else if (fileInfo) {
+        const index = parseInt(fileInfo.dataset.index);
+        openTmdbModalByIndex(index);
+      }
+    });
+
+    // Seleccionar todos los visibles (incluirlos en conversión)
+    function selectAllVisible() {
+      const visibleFiles = window.currentFilteredFiles || filterFiles(state.pending);
+      visibleFiles.forEach(file => {
+        excludedFiles.delete(file.name);
+      });
+      updateUI();
+    }
+
+    // Deseleccionar todos los visibles (excluirlos de conversión)
+    function deselectAllVisible() {
+      const visibleFiles = window.currentFilteredFiles || filterFiles(state.pending);
+      visibleFiles.forEach(file => {
+        excludedFiles.add(file.name);
+      });
+      updateUI();
+    }
+
+    // Invertir selección
+    function invertSelection() {
+      const visibleFiles = window.currentFilteredFiles || filterFiles(state.pending);
+      visibleFiles.forEach(file => {
+        if (excludedFiles.has(file.name)) {
+          excludedFiles.delete(file.name);
+        } else {
+          excludedFiles.add(file.name);
+        }
+      });
+      updateUI();
+    }
+
+    // Cargar configuración de almacenamiento
+    async function loadStorageConfig() {
+      try {
+        const res = await fetch('/api/storage/config');
+        const data = await res.json();
+        storageConfig = data;
+
+        // Actualizar badge
+        const badge = elements.storageBadge;
+        badge.style.display = 'flex';
+        badge.classList.remove('ftp', 'local');
+        badge.classList.add(storageConfig.mode);
+
+        if (storageConfig.mode === 'local') {
+          badge.querySelector('.icon').textContent = '📂';
+          badge.querySelector('.mode-text').textContent = 'LOCAL';
+          badge.title = `Guardando en: ${storageConfig.localPath}`;
+        } else {
+          badge.querySelector('.icon').textContent = '☁️';
+          badge.querySelector('.mode-text').textContent = 'FTP';
+          badge.title = `Subiendo a: ${storageConfig.ftpHost}`;
+        }
+      } catch (err) {
+        console.error('Error cargando config de almacenamiento:', err);
+      }
+    }
 
     // Formatear tamaño
     function formatSize(bytes) {
@@ -961,15 +1513,18 @@
 
     // Actualizar UI
     function updateUI() {
+      // Calcular archivos a convertir (no excluidos)
+      const filesToConvert = state.pending.filter(f => !excludedFiles.has(f.name));
+
       // Stats
-      elements.statPending.textContent = state.pending.length;
+      elements.statPending.textContent = filesToConvert.length;
       elements.statCompleted.textContent = state.completed.length;
       elements.statSaved.textContent = formatSize(state.stats?.savedBytes || 0);
-      elements.pendingCount.textContent = state.pending.length;
+      elements.pendingCount.textContent = `${filesToConvert.length}/${state.pending.length}`;
       elements.completedCount.textContent = state.completed.length + (state.failed?.length || 0);
 
       // Buttons
-      elements.btnStart.disabled = state.pending.length === 0 || state.isRunning;
+      elements.btnStart.disabled = filesToConvert.length === 0 || state.isRunning;
       elements.btnStop.disabled = !state.isRunning;
       elements.btnScan.disabled = state.isRunning;
       elements.btnOpenFolder.disabled = !elements.folderPath.value.trim();
@@ -980,11 +1535,17 @@
         elements.currentFile.textContent = state.currentFile;
         elements.progressPercent.textContent = state.progress;
         elements.progressBar.style.width = `${state.progress}%`;
+        // Mostrar modo actual
+        const isRemux = state.settings?.mode === 'remux';
+        elements.progressMode.textContent = isRemux ? '⚡ Remux' : 'Convirtiendo';
+        elements.progressBar.style.background = isRemux
+          ? 'linear-gradient(90deg, #f39c12 0%, #e74c3c 100%)'
+          : 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)';
       } else {
         elements.progressSection.style.display = 'none';
       }
 
-      // Upload progress (FTP)
+      // Upload progress (FTP o Local)
       if (state.upload && state.upload.isUploading) {
         elements.uploadSection.style.display = 'block';
         elements.uploadFilename.textContent = state.upload.fileName || '-';
@@ -994,16 +1555,42 @@
         const total = formatSize(state.upload.totalBytes || 0);
         elements.uploadStats.textContent = `${state.upload.progress || 0}% - ${transferred} / ${total}`;
 
+        // Adaptar texto según modo (local o FTP)
+        const isLocalCopy = state.upload.isLocalCopy || storageConfig.mode === 'local';
+
         if (state.upload.cancelled) {
-          elements.uploadStatusText.textContent = 'Subida cancelada';
+          elements.uploadStatusText.textContent = isLocalCopy ? 'Copia cancelada' : 'Subida cancelada';
           elements.btnCancelUpload.disabled = true;
         } else {
-          elements.uploadStatusText.textContent = 'Subiendo al servidor FTP...';
+          elements.uploadStatusText.textContent = isLocalCopy
+            ? 'Copiando al destino local...'
+            : 'Subiendo al servidor FTP...';
           elements.btnCancelUpload.disabled = false;
         }
+        elements.btnCancelUpload.textContent = isLocalCopy ? 'Cancelar Copia' : 'Cancelar Subida';
       } else {
         elements.uploadSection.style.display = 'none';
       }
+
+      // Filters section visibility
+      if (state.pending.length > 0) {
+        elements.filtersSection.style.display = 'flex';
+        elements.bulkActions.style.display = 'flex';
+      } else {
+        elements.filtersSection.style.display = 'none';
+        elements.bulkActions.style.display = 'none';
+      }
+
+      // Apply filters
+      const filteredFiles = filterFiles(state.pending);
+      const excludedCount = Array.from(excludedFiles).filter(name =>
+        state.pending.some(f => f.name === name)
+      ).length;
+
+      // Update filter stats
+      elements.filterTotal.textContent = state.pending.length;
+      elements.filterVisible.textContent = filteredFiles.length;
+      elements.filterExcluded.textContent = excludedCount;
 
       // Pending list
       if (state.pending.length === 0 && !state.isRunning) {
@@ -1027,12 +1614,18 @@
           `;
         }
 
-        // Pending files
-        state.pending.forEach(file => {
+        // Pending files (filtered)
+        filteredFiles.forEach((file, index) => {
           const hasTmdb = file.tmdbMatch && elements.chkRename.checked;
+          const isExcluded = excludedFiles.has(file.name);
+          // Usar data-index para evitar problemas con caracteres especiales en nombres
           html += `
-            <div class="file-item" onclick="openTmdbModal('${escapeHtml(file.name)}', '${escapeHtml(file.searchQuery || '')}')">
-              <div class="file-info">
+            <div class="file-item ${isExcluded ? 'excluded' : ''}" data-filename="${index}">
+              <input type="checkbox" class="file-checkbox"
+                     ${!isExcluded ? 'checked' : ''}
+                     data-index="${index}"
+                     title="${isExcluded ? 'Incluir en conversión' : 'Excluir de conversión'}">
+              <div class="file-info" data-index="${index}">
                 ${hasTmdb ? `
                   <div class="file-original">${file.name}</div>
                   <div class="file-tmdb">
@@ -1045,10 +1638,23 @@
                 `}
               </div>
               <div class="file-size">${file.sizeHuman}</div>
-              <button class="edit-btn" title="Cambiar pelicula">&#9998;</button>
+              <button class="edit-btn" data-index="${index}" title="Cambiar pelicula">&#9998;</button>
             </div>
           `;
         });
+
+        // Guardar referencia a los archivos filtrados para los event handlers
+        window.currentFilteredFiles = filteredFiles;
+
+        // Show message if filters hide all files
+        if (filteredFiles.length === 0 && state.pending.length > 0) {
+          html = `
+            <div class="empty-state">
+              <div class="icon">🔍</div>
+              <p>Ningun archivo coincide con los filtros</p>
+            </div>
+          `;
+        }
 
         elements.pendingList.innerHTML = html || `
           <div class="empty-state">
@@ -1098,6 +1704,32 @@
       }
     }
 
+    // Elementos del loading overlay
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingSubtext = document.getElementById('loading-subtext');
+    const loadingProgress = document.getElementById('loading-progress');
+    const loadingBar = document.getElementById('loading-bar');
+    const loadingBarFill = document.getElementById('loading-bar-fill');
+
+    // Mostrar/ocultar loading
+    function showLoading(message, subtext) {
+      loadingSubtext.textContent = subtext || 'Buscando archivos AVI y MKV';
+      loadingProgress.textContent = '';
+      loadingBar.style.display = 'none';
+      loadingBarFill.style.width = '0%';
+      loadingOverlay.classList.add('active');
+    }
+
+    function hideLoading() {
+      loadingOverlay.classList.remove('active');
+      loadingBar.style.display = 'none';
+      loadingBarFill.style.width = '0%';
+    }
+
+    function updateLoadingProgress(text) {
+      loadingProgress.textContent = text;
+    }
+
     // Escanear carpeta
     async function scanFolder() {
       const path = elements.folderPath.value.trim();
@@ -1107,7 +1739,14 @@
       }
 
       elements.btnScan.disabled = true;
-      elements.btnScan.textContent = 'Escaneando...';
+      showLoading('Escaneando carpeta', 'Buscando archivos AVI y MKV...');
+
+      // Simular progreso mientras se escanea
+      let dots = 0;
+      const progressInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        loadingSubtext.textContent = 'Buscando archivos AVI y MKV' + '.'.repeat(dots);
+      }, 500);
 
       try {
         const res = await fetch('/api/scan', {
@@ -1117,25 +1756,51 @@
         });
 
         const data = await res.json();
+        clearInterval(progressInterval);
 
         if (data.error) {
+          hideLoading();
           alert(data.error);
         } else {
+          // Mostrar progreso de búsqueda TMDB
+          if (data.files.length > 0) {
+            loadingSubtext.textContent = 'Buscando metadatos en TMDB...';
+            updateLoadingProgress(`${data.files.length} archivos encontrados`);
+          }
+
           state.pending = data.files;
           state.completed = [];
           state.failed = [];
+          // Limpiar exclusiones y filtros del escaneo anterior
+          excludedFiles.clear();
+          filters.name = '';
+          filters.size = '';
+          filters.sort = '';
+          elements.filterName.value = '';
+          elements.filterSize.value = '';
+          elements.filterSort.value = '';
+
+          hideLoading();
           updateUI();
         }
       } catch (err) {
+        clearInterval(progressInterval);
+        hideLoading();
         alert('Error al escanear: ' + err.message);
       } finally {
         elements.btnScan.disabled = false;
-        elements.btnScan.textContent = 'Escanear';
       }
     }
 
     // Iniciar conversión
     async function startConversion() {
+      // Verificar que hay archivos no excluidos
+      const filesToConvert = state.pending.filter(f => !excludedFiles.has(f.name));
+      if (filesToConvert.length === 0) {
+        alert('No hay archivos seleccionados para convertir. Desmarca algunos archivos de la lista.');
+        return;
+      }
+
       // Guardar settings
       await fetch('/api/settings', {
         method: 'POST',
@@ -1144,9 +1809,24 @@
           deleteOriginals: elements.chkDelete.checked,
           renameWithTMDB: elements.chkRename.checked,
           gpu: elements.selGpu.value,
-          quality: elements.selQuality.value
+          quality: elements.selQuality.value,
+          mode: elements.selMode.value
         })
       });
+
+      // Enviar lista de archivos excluidos
+      const excludedArray = Array.from(excludedFiles);
+      console.log('Enviando archivos excluidos:', excludedArray.length, excludedArray);
+
+      const excludeRes = await fetch('/api/exclude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          excludedFiles: excludedArray
+        })
+      });
+      const excludeData = await excludeRes.json();
+      console.log('Respuesta de exclusión:', excludeData);
 
       // Iniciar
       const res = await fetch('/api/start', { method: 'POST' });
@@ -1184,13 +1864,51 @@
       const eventSource = new EventSource('/api/events');
 
       eventSource.onmessage = (event) => {
-        state = JSON.parse(event.data);
-        updateUI();
+        const data = JSON.parse(event.data);
+
+        // Verificar si es un mensaje de progreso de escaneo
+        if (data.type === 'scan-progress') {
+          handleScanProgress(data);
+        } else {
+          state = data;
+          updateUI();
+        }
       };
 
       eventSource.onerror = () => {
         setTimeout(connectSSE, 2000);
       };
+    }
+
+    // Manejar progreso de escaneo
+    function handleScanProgress(progress) {
+      if (progress.isScanning) {
+        // Asegurar que el overlay está visible
+        if (!loadingOverlay.classList.contains('active')) {
+          loadingOverlay.classList.add('active');
+        }
+
+        if (progress.phase === 'scanning') {
+          loadingSubtext.textContent = 'Buscando archivos AVI y MKV...';
+          loadingProgress.textContent = '';
+          loadingBar.style.display = 'none';
+        } else if (progress.phase === 'tmdb') {
+          // Truncar nombre de archivo si es muy largo
+          const fileName = progress.currentFile || 'Buscando metadatos...';
+          const displayName = fileName.length > 50 ? fileName.substring(0, 47) + '...' : fileName;
+          loadingSubtext.textContent = displayName;
+          loadingProgress.textContent = `TMDB: ${progress.current} / ${progress.total}`;
+
+          // Mostrar y actualizar barra de progreso
+          loadingBar.style.display = 'block';
+          const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+          loadingBarFill.style.width = `${percent}%`;
+        }
+      } else if (progress.phase === 'done') {
+        // Completar la barra al 100% brevemente antes de cerrar
+        loadingBarFill.style.width = '100%';
+        loadingProgress.textContent = 'Completado';
+      }
     }
 
     // Escapar HTML para evitar inyección
@@ -1329,15 +2047,17 @@
 
         if (data.success && data.path) {
           elements.folderPath.value = data.path;
+          elements.btnBrowse.disabled = false;
+          elements.btnBrowse.innerHTML = '&#128193;';
           // Auto-escanear después de seleccionar
           scanFolder();
+          return;
         }
       } catch (err) {
         console.error('Error al explorar:', err);
-      } finally {
-        elements.btnBrowse.disabled = false;
-        elements.btnBrowse.innerHTML = '&#128193;';
       }
+      elements.btnBrowse.disabled = false;
+      elements.btnBrowse.innerHTML = '&#128193;';
     }
 
     // Abrir carpeta en el Explorador de Windows
@@ -1376,6 +2096,51 @@
     // Checkbox rename - actualizar UI cuando cambia
     elements.chkRename.addEventListener('change', updateUI);
 
+    // Filtros
+    elements.filterName.addEventListener('input', (e) => {
+      filters.name = e.target.value;
+      updateUI();
+    });
+
+    elements.filterSize.addEventListener('change', (e) => {
+      filters.size = e.target.value;
+      updateUI();
+    });
+
+    elements.filterSort.addEventListener('change', (e) => {
+      filters.sort = e.target.value;
+      updateUI();
+    });
+
+    // Modo remux: deshabilitar opciones de GPU y calidad + mostrar hint
+    const encoderOptions = document.getElementById('encoder-options');
+    const modeHint = document.getElementById('mode-hint');
+
+    function updateModeHint(mode) {
+      const isRemux = mode === 'remux';
+      elements.selGpu.disabled = isRemux;
+      elements.selQuality.disabled = isRemux;
+      encoderOptions.style.opacity = isRemux ? '0.4' : '1';
+      encoderOptions.style.pointerEvents = isRemux ? 'none' : 'auto';
+
+      // Actualizar hint
+      modeHint.classList.remove('convert', 'remux');
+      if (isRemux) {
+        modeHint.textContent = '⚡ Video sin recodificar, audio → AAC';
+        modeHint.classList.add('remux');
+      } else {
+        modeHint.textContent = '🎬 Recodifica video y audio';
+        modeHint.classList.add('convert');
+      }
+    }
+
+    elements.selMode.addEventListener('change', (e) => {
+      updateModeHint(e.target.value);
+    });
+
+    // Inicializar hint al cargar
+    updateModeHint(elements.selMode.value);
+
     // Modal event listeners
     modalElements.close.addEventListener('click', closeTmdbModal);
     modalElements.overlay.addEventListener('click', (e) => {
@@ -1392,7 +2157,11 @@
       if (e.key === 'Escape') closeTmdbModal();
     });
 
+    // Inicializar referencia global para archivos filtrados
+    window.currentFilteredFiles = [];
+
     // Init
+    loadStorageConfig();
     connectSSE();
     updateUI();
   </script>
