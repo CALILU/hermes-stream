@@ -132,15 +132,52 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Mensaje de notificación
+        let notifMessage = "✅ Añadido a cola de descargas";
+        if (data.updatedRequest) {
+          notifMessage = `✅ Descargando: ${data.updatedRequest.title}`;
+        }
+
         // Mostrar notificación de éxito
         try {
           await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             func: showNotification,
-            args: ["✅ Añadido a cola de descargas", "success"]
+            args: [notifMessage, "success"]
           });
         } catch (e) {
           console.log("Añadido correctamente (notificación no disponible en esta página)");
+        }
+
+        // Abrir IsiPrime o reutilizar pestaña existente
+        try {
+          // Buscar si ya hay una pestaña de IsiPrime abierta
+          const tabs = await chrome.tabs.query({ url: "http://localhost:8080/*" });
+
+          if (tabs.length > 0) {
+            // Reutilizar la primera pestaña existente
+            const existingTab = tabs[0];
+            await chrome.tabs.update(existingTab.id, {
+              url: "http://localhost:8080/?showRequests=true",
+              active: true
+            });
+            // Enfocar la ventana que contiene la pestaña
+            await chrome.windows.update(existingTab.windowId, { focused: true });
+            console.log("IsiPrime: Reutilizando pestaña existente");
+          } else {
+            // Crear nueva pestaña solo si no existe ninguna
+            await chrome.tabs.create({
+              url: "http://localhost:8080/?showRequests=true",
+              active: true
+            });
+            console.log("IsiPrime: Nueva pestaña creada");
+          }
+
+          // Cerrar la pestaña de OK.ru después de abrir IsiPrime
+          await chrome.tabs.remove(tab.id);
+          console.log("OK.ru: Pestaña cerrada");
+        } catch (e) {
+          console.log("No se pudo abrir IsiPrime:", e);
         }
       } else {
         // Mostrar error

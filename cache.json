@@ -9422,7 +9422,7 @@
   "Torrente, el brazo tonto de la ley (1998).mp4": {
     "tmdb_id": 1283,
     "title": "Torrente, el brazo tonto de la ley",
-    "overview": "Torrente es un policía español, fascista, machista, racista, alcohólico y del Atleti. Tiene un vecino llamado Rafi, al que le gustan las películas de acción y las pistolas, y que vive con su madre y s...",
+    "overview": "Torrente es un policía español, fascista, machista, racista, alcohólico y del Atleti. Tiene un vecino llamado Rafi, al que le gustan las películas de acción y las pistolas, y que vive con su madre y su prima Amparito, una ninfómana. Juntos, Torrente y Rafi, patrullarán por la noche las calles de la ciudad.",
     "poster_path": "https://image.tmdb.org/t/p/w342/bYAqKRiDVL0f38AoUKpDI32oY5r.jpg",
     "backdrop_path": "https://image.tmdb.org/t/p/w342/59xWNE4bXaPsKHHre8dYwHUMJeQ.jpg",
     "release_date": "1998-03-13",
@@ -9431,7 +9431,6 @@
       35,
       80
     ],
-    "cached_at": 1769724637900,
     "runtime": 97,
     "videos": [],
     "recommendations": [
@@ -9613,7 +9612,9 @@
       "name": "Torrente - La saga",
       "poster_path": "/8vZ79YP9XuRPDOb8SnMG71AayjQ.jpg",
       "backdrop_path": "/mO7doOZpxTND8hEtsXMHgxynoin.jpg"
-    }
+    },
+    "cached_at": 1769720133043,
+    "poster": "https://image.tmdb.org/t/p/w342/bYAqKRiDVL0f38AoUKpDI32oY5r.jpg"
   },
   "Transformers El lado oscuro de la luna (2011).mkv": {
     "tmdb_id": 38356,
@@ -12114,7 +12115,13 @@
         "vote_average": 6.1
       }
     ],
-    "cached_at": 1769723197709
+    "cached_at": 1769723197709,
+    "collection": {
+      "id": 4438,
+      "name": "Odisea en el espacio - Colección",
+      "poster_path": "/3WDYzj45TjZdJ3B1PQHCg8T0e2g.jpg",
+      "backdrop_path": "/mGeBxBuhU7yx2Ga4U2ST4reEDeb.jpg"
+    }
   },
   "2012 (2009).mkv": {
     "tmdb_id": 14161,
@@ -12479,7 +12486,13 @@
         "vote_average": 5.67
       }
     ],
-    "cached_at": 1769723199523
+    "cached_at": 1769723199523,
+    "collection": {
+      "id": 115838,
+      "name": "Rescate en... - Colección",
+      "poster_path": "/li7FGL1lWNRlbfmTK9kRv3gIot4.jpg",
+      "backdrop_path": "/1erOKf92qvCc1v2lhvyyyrH0wH6.jpg"
+    }
   },
   "300 (2006).mkv": {
     "tmdb_id": 1271,
@@ -12661,7 +12674,13 @@
         "vote_average": 7.122
       }
     ],
-    "cached_at": 1769723200520
+    "cached_at": 1769723200520,
+    "collection": {
+      "id": 125570,
+      "name": "300 - Colección",
+      "poster_path": "/1gAZsMeemlHQ5t3DcdDt8W4qNPG.jpg",
+      "backdrop_path": "/ipu7wJghURt4QOecgHO0tEP0qHp.jpg"
+    }
   },
   "40 días y 40 noches (2002).mp4": {
     "tmdb_id": 2752,
@@ -13025,7 +13044,13 @@
         "vote_average": 5.929
       }
     ],
-    "cached_at": 1769723202155
+    "cached_at": 1769723202155,
+    "collection": {
+      "id": 93295,
+      "name": "48 Horas - Colección",
+      "poster_path": "/mdNbPlji7Bz3UEAuV3r2f53qK61.jpg",
+      "backdrop_path": "/53SfXzq0CuBMQNAJMnrvwePbRLN.jpg"
+    }
   },
   "50 primeras citas (2004).mp4": {
     "tmdb_id": 1824,
@@ -13534,7 +13559,13 @@
         "vote_average": 6.561
       }
     ],
-    "cached_at": 1769723204711
+    "cached_at": 1769723204711,
+    "collection": {
+      "id": 10924,
+      "name": "Abierto hasta el amanecer - Colección",
+      "poster_path": "/8nTSKhWTZi8WagZ5843UxQuuwqD.jpg",
+      "backdrop_path": "/g1KtXRjYRoUQ6v0r6eMe4qbs7ll.jpg"
+    }
   },
   "Abyss (1989).mkv": {
     "tmdb_id": 2756,
@@ -13898,7 +13929,13 @@
         "vote_average": 7.196
       }
     ],
-    "cached_at": 1769723206483
+    "cached_at": 1769723206483,
+    "collection": {
+      "id": 3167,
+      "name": "Ace Ventura - Colección",
+      "poster_path": "/5Tmxq1OtaLTj7cMo3jI5fkRXts3.jpg",
+      "backdrop_path": "/81lmzeTuMAyrDpgX6um9PIYgw8Y.jpg"
+    }
   },
   "Acorralado (1982).mp4": {
     "tmdb_id": 1368,
@@ -14081,7 +14118,13 @@
         "vote_average": 7.853
       }
     ],
-    "cached_at": 1769723207307
+    "cached_at": 1769723207307,
+    "collection": {
+      "id": 5039,
+      "name": "Rambo - Colección",
+      "poster_path": "/bAB4f27dtioQokZesx28x1sqmXA.jpg",
+      "backdrop_path": "/ecvVwlK75evrAlsEE96V14KN6MN.jpg"
+    }
   },
   "Admitido (2006).mp4": {
     "tmdb_id": 9788,
@@ -14625,7 +14668,13 @@
         "vote_average": 8.1
       }
     ],
-    "cached_at": 1769723209823
+    "cached_at": 1769723209823,
+    "collection": {
+      "id": 37139,
+      "name": "Agárralo como puedas - Colección",
+      "poster_path": "/gWg2VOreSC28UGj3qqwfAN3c2tK.jpg",
+      "backdrop_path": "/patl2k4AK0S6wVo1DwOp4nmvNLm.jpg"
+    }
   },
   "Agarralo como puedas 2½ El aroma del miedo (1991).mp4": {
     "tmdb_id": 37137,
@@ -14806,7 +14855,13 @@
         "vote_average": 5.284
       }
     ],
-    "cached_at": 1769723210626
+    "cached_at": 1769723210626,
+    "collection": {
+      "id": 37139,
+      "name": "Agárralo como puedas - Colección",
+      "poster_path": "/gWg2VOreSC28UGj3qqwfAN3c2tK.jpg",
+      "backdrop_path": "/patl2k4AK0S6wVo1DwOp4nmvNLm.jpg"
+    }
   },
   "Agárralo como puedas 33⅓ El insulto final (1994).mp4": {
     "tmdb_id": 36593,
@@ -14987,7 +15042,13 @@
         "vote_average": 4.283
       }
     ],
-    "cached_at": 1769723211439
+    "cached_at": 1769723211439,
+    "collection": {
+      "id": 37139,
+      "name": "Agárralo como puedas - Colección",
+      "poster_path": "/gWg2VOreSC28UGj3qqwfAN3c2tK.jpg",
+      "backdrop_path": "/patl2k4AK0S6wVo1DwOp4nmvNLm.jpg"
+    }
   },
   "Al cruzar el límite (1996).mp4": {
     "tmdb_id": 11306,
@@ -16436,7 +16497,13 @@
         "vote_average": 6.654
       }
     ],
-    "cached_at": 1769723218448
+    "cached_at": 1769723218448,
+    "collection": {
+      "id": 135416,
+      "name": "Prometheus - Colección",
+      "poster_path": "/fdj2lntPpo6C49QlmgA8urf6JwK.jpg",
+      "backdrop_path": "/cK83Pq8SJoeSTnLJucr8IWn35KF.jpg"
+    }
   },
   "Alien, el octavo pasajero (1979).mkv": {
     "tmdb_id": 348,
@@ -16581,7 +16648,13 @@
         "vote_average": 8.065
       }
     ],
-    "cached_at": 1769723219347
+    "cached_at": 1769723219347,
+    "collection": {
+      "id": 8091,
+      "name": "Alien - Colección",
+      "poster_path": "/jIAKsVHZA210iSesqoy8pUAvLql.jpg",
+      "backdrop_path": "/6X42JnSMdo3dPAswOHUuvebdTq7.jpg"
+    }
   },
   "Aliens El regreso (1986).mp4": {
     "tmdb_id": 679,
@@ -16763,7 +16836,13 @@
         "vote_average": 6.591
       }
     ],
-    "cached_at": 1769723220198
+    "cached_at": 1769723220198,
+    "collection": {
+      "id": 8091,
+      "name": "Alien - Colección",
+      "poster_path": "/jIAKsVHZA210iSesqoy8pUAvLql.jpg",
+      "backdrop_path": "/6X42JnSMdo3dPAswOHUuvebdTq7.jpg"
+    }
   },
   "Alita Ángel de combate (2019).mkv": {
     "tmdb_id": 399579,
@@ -17127,7 +17206,13 @@
         "vote_average": 6.201
       }
     ],
-    "cached_at": 1769723221960
+    "cached_at": 1769723221960,
+    "collection": {
+      "id": 166698,
+      "name": "Westworld - Colección",
+      "poster_path": "/cezpGxSMDsWjwrS7VwMqZ5N4Ay8.jpg",
+      "backdrop_path": "/3yzaSCXO8cT7Q1tgCsmf8ypSxRI.jpg"
+    }
   },
   "Amanecer de los muertos (2004).mp4": {
     "tmdb_id": 924,
@@ -17663,7 +17748,13 @@
         "vote_average": 5
       }
     ],
-    "cached_at": 1769723224620
+    "cached_at": 1769723224620,
+    "collection": {
+      "id": 298820,
+      "name": "American Pie presenta... - Colección",
+      "poster_path": "/r4Ihh2rat6dwm2dXNVvcLCa5tM6.jpg",
+      "backdrop_path": "/sEz84D4EP86mKDl7c2wgSj1KElr.jpg"
+    }
   },
   "American Ultra (2015).mkv": {
     "tmdb_id": 261392,
@@ -18136,7 +18227,13 @@
         "vote_average": 6.586
       }
     ],
-    "cached_at": 1769723227265
+    "cached_at": 1769723227265,
+    "collection": {
+      "id": 256322,
+      "name": "The Purge: La noche de las bestias - Colección",
+      "poster_path": "/4M3jliqWFbGErsrFc7oJEaj3HBf.jpg",
+      "backdrop_path": "/zLx0VxpzJt3E0cb4GodV10Wp0Lt.jpg"
+    }
   },
   "Ant-Man (2015).mkv": {
     "tmdb_id": 102899,
@@ -18318,7 +18415,13 @@
         "vote_average": 7.905
       }
     ],
-    "cached_at": 1769723228075
+    "cached_at": 1769723228075,
+    "collection": {
+      "id": 422834,
+      "name": "Ant-Man - Colección",
+      "poster_path": "/xB3aMpyK190oEkvOgFxvhVaqD7k.jpg",
+      "backdrop_path": "/2KjtWUBiksmN8LsUouaZnxocu5N.jpg"
+    }
   },
   "Ant-Man y la Avispa (2018).mkv": {
     "tmdb_id": 363088,
@@ -18500,7 +18603,13 @@
         "vote_average": 6.826
       }
     ],
-    "cached_at": 1769723228985
+    "cached_at": 1769723228985,
+    "collection": {
+      "id": 422834,
+      "name": "Ant-Man - Colección",
+      "poster_path": "/xB3aMpyK190oEkvOgFxvhVaqD7k.jpg",
+      "backdrop_path": "/2KjtWUBiksmN8LsUouaZnxocu5N.jpg"
+    }
   },
   "Ant-Man y la Avispa Quantumanía (2023).mkv": {
     "tmdb_id": 640146,
@@ -18682,7 +18791,13 @@
         "vote_average": 6.826
       }
     ],
-    "cached_at": 1769723229836
+    "cached_at": 1769723229836,
+    "collection": {
+      "id": 422834,
+      "name": "Ant-Man - Colección",
+      "poster_path": "/xB3aMpyK190oEkvOgFxvhVaqD7k.jpg",
+      "backdrop_path": "/2KjtWUBiksmN8LsUouaZnxocu5N.jpg"
+    }
   },
   "Apocalypto (2006).mp4": {
     "tmdb_id": 1579,
@@ -19046,7 +19161,13 @@
         "vote_average": 7.353
       }
     ],
-    "cached_at": 1769723231517
+    "cached_at": 1769723231517,
+    "collection": {
+      "id": 945,
+      "name": "Arma letal - Colección",
+      "poster_path": "/58aDVHiRGvx1a1QLJsSHyOBAdAa.jpg",
+      "backdrop_path": "/jSslTHuJS86fp4SVJKP9oBhE4s6.jpg"
+    }
   },
   "Arma letal 2 (1989).mkv": {
     "tmdb_id": 942,
@@ -19230,7 +19351,13 @@
         "vote_average": 6.4
       }
     ],
-    "cached_at": 1769723232378
+    "cached_at": 1769723232378,
+    "collection": {
+      "id": 945,
+      "name": "Arma letal - Colección",
+      "poster_path": "/58aDVHiRGvx1a1QLJsSHyOBAdAa.jpg",
+      "backdrop_path": "/jSslTHuJS86fp4SVJKP9oBhE4s6.jpg"
+    }
   },
   "Arma letal 3 (1992).mkv": {
     "tmdb_id": 943,
@@ -19413,7 +19540,13 @@
         "vote_average": 7.385
       }
     ],
-    "cached_at": 1769723233262
+    "cached_at": 1769723233262,
+    "collection": {
+      "id": 945,
+      "name": "Arma letal - Colección",
+      "poster_path": "/58aDVHiRGvx1a1QLJsSHyOBAdAa.jpg",
+      "backdrop_path": "/jSslTHuJS86fp4SVJKP9oBhE4s6.jpg"
+    }
   },
   "Arma letal 4 (1998).mkv": {
     "tmdb_id": 944,
@@ -19597,7 +19730,13 @@
         "vote_average": 6.96
       }
     ],
-    "cached_at": 1769723234134
+    "cached_at": 1769723234134,
+    "collection": {
+      "id": 945,
+      "name": "Arma letal - Colección",
+      "poster_path": "/58aDVHiRGvx1a1QLJsSHyOBAdAa.jpg",
+      "backdrop_path": "/jSslTHuJS86fp4SVJKP9oBhE4s6.jpg"
+    }
   },
   "Armageddon (1998).mkv": {
     "tmdb_id": 95,
@@ -20877,7 +21016,13 @@
         "vote_average": 6.07
       }
     ],
-    "cached_at": 1769723240052
+    "cached_at": 1769723240052,
+    "collection": {
+      "id": 1006,
+      "name": "Austin Powers - Colección",
+      "poster_path": "/9STIdyi9GkxP66XH2uc1OgLqv04.jpg",
+      "backdrop_path": "/2YHoBMDWa2IwEssDlUs6G2qWVpR.jpg"
+    }
   },
   "Austin Powers Misterioso agente internacional (1997).mkv": {
     "tmdb_id": 816,
@@ -21059,7 +21204,13 @@
         "vote_average": 5.99
       }
     ],
-    "cached_at": 1769723240836
+    "cached_at": 1769723240836,
+    "collection": {
+      "id": 1006,
+      "name": "Austin Powers - Colección",
+      "poster_path": "/9STIdyi9GkxP66XH2uc1OgLqv04.jpg",
+      "backdrop_path": "/2YHoBMDWa2IwEssDlUs6G2qWVpR.jpg"
+    }
   },
   "Austin Powers en Miembro de Oro (2002).mkv": {
     "tmdb_id": 818,
@@ -21241,7 +21392,13 @@
         "vote_average": 6
       }
     ],
-    "cached_at": 1769723241718
+    "cached_at": 1769723241718,
+    "collection": {
+      "id": 1006,
+      "name": "Austin Powers - Colección",
+      "poster_path": "/9STIdyi9GkxP66XH2uc1OgLqv04.jpg",
+      "backdrop_path": "/2YHoBMDWa2IwEssDlUs6G2qWVpR.jpg"
+    }
   },
   "Avatar (2009).mkv": {
     "tmdb_id": 19995,
@@ -21424,7 +21581,13 @@
         "vote_average": 7.902
       }
     ],
-    "cached_at": 1769723242666
+    "cached_at": 1769723242666,
+    "collection": {
+      "id": 87096,
+      "name": "Avatar - Colección",
+      "poster_path": "/bQo9IdxYRgvhfHcfJdo98PttTcG.jpg",
+      "backdrop_path": "/6qkJLRCZp9Y3ovXti5tSuhH0DpO.jpg"
+    }
   },
   "Barry Seal el traficante (2017).mp4": {
     "tmdb_id": 337170,
@@ -21789,7 +21952,13 @@
         "vote_average": 7.628
       }
     ],
-    "cached_at": 1769723244528
+    "cached_at": 1769723244528,
+    "collection": {
+      "id": 120794,
+      "name": "Batman - Colección",
+      "poster_path": "/mdg6YKzq4KeBiekFw4KF92LjnAb.jpg",
+      "backdrop_path": "/4UHZWw5lV3ZoadTjXuVOakdH32L.jpg"
+    }
   },
   "Batman Begins (2005).mkv": {
     "tmdb_id": 272,
@@ -21971,7 +22140,13 @@
         "vote_average": 6.239
       }
     ],
-    "cached_at": 1769723245410
+    "cached_at": 1769723245410,
+    "collection": {
+      "id": 263,
+      "name": "Batman (El caballero oscuro) - Colección",
+      "poster_path": "/pO70id4LcjEJrokvrhxlF3A9Vhl.jpg",
+      "backdrop_path": "/xyhrCEdB4XRkelfVsqXeUZ6rLHi.jpg"
+    }
   },
   "Batman Forever (1995).mkv": {
     "tmdb_id": 414,
@@ -22153,7 +22328,13 @@
         "vote_average": 7
       }
     ],
-    "cached_at": 1769723246246
+    "cached_at": 1769723246246,
+    "collection": {
+      "id": 120794,
+      "name": "Batman - Colección",
+      "poster_path": "/mdg6YKzq4KeBiekFw4KF92LjnAb.jpg",
+      "backdrop_path": "/4UHZWw5lV3ZoadTjXuVOakdH32L.jpg"
+    }
   },
   "Batman vs Superman El amanecer de la justicia (2016).mp4": {
     "tmdb_id": 209112,
@@ -22335,7 +22516,13 @@
         "vote_average": 6.867
       }
     ],
-    "cached_at": 1769723247104
+    "cached_at": 1769723247104,
+    "collection": {
+      "id": 209131,
+      "name": "El hombre de acero - Colección",
+      "poster_path": "/p3aMbHfdrzoJaEnRZ7HAyCLXBc6.jpg",
+      "backdrop_path": "/rPaqhsSMCky0UXVW4qmNOJq5Orp.jpg"
+    }
   },
   "Batman vuelve (1992).mkv": {
     "tmdb_id": 364,
@@ -22516,7 +22703,13 @@
         "vote_average": 6.4
       }
     ],
-    "cached_at": 1769723248155
+    "cached_at": 1769723248155,
+    "collection": {
+      "id": 120794,
+      "name": "Batman - Colección",
+      "poster_path": "/mdg6YKzq4KeBiekFw4KF92LjnAb.jpg",
+      "backdrop_path": "/4UHZWw5lV3ZoadTjXuVOakdH32L.jpg"
+    }
   },
   "Batman y Robin (1997).mkv": {
     "tmdb_id": 415,
@@ -22698,7 +22891,13 @@
         "vote_average": 4.3
       }
     ],
-    "cached_at": 1769723249176
+    "cached_at": 1769723249176,
+    "collection": {
+      "id": 120794,
+      "name": "Batman - Colección",
+      "poster_path": "/mdg6YKzq4KeBiekFw4KF92LjnAb.jpg",
+      "backdrop_path": "/4UHZWw5lV3ZoadTjXuVOakdH32L.jpg"
+    }
   },
   "Battleship (2012).mp4": {
     "tmdb_id": 44833,
@@ -23063,7 +23262,13 @@
         "vote_average": 7.892
       }
     ],
-    "cached_at": 1769723250891
+    "cached_at": 1769723250891,
+    "collection": {
+      "id": 91697,
+      "name": "Battlestar Galactica - Colección",
+      "poster_path": "/ftyqh0sAnCIIu87hyuqd5jd7IAG.jpg",
+      "backdrop_path": "/fzHofvAjG9bLdgsblvz12Mv8UbX.jpg"
+    }
   },
   "Ben-Hur (1959).mkv": {
     "tmdb_id": 665,
@@ -23426,7 +23631,13 @@
         "vote_average": 6.808
       }
     ],
-    "cached_at": 1769723252576
+    "cached_at": 1769723252576,
+    "collection": {
+      "id": 537982,
+      "name": "Zombieland - Colección",
+      "poster_path": "/6DRKz2e6ADjAXxpKCbMLyDuvLuv.jpg",
+      "backdrop_path": "/xND97nArZixB25GxyKtYN7gCpk7.jpg"
+    }
   },
   "Black Hawk derribado (2001).mkv": {
     "tmdb_id": 855,
@@ -23790,7 +24001,13 @@
         "vote_average": 6.533
       }
     ],
-    "cached_at": 1769723254527
+    "cached_at": 1769723254527,
+    "collection": {
+      "id": 529892,
+      "name": "Pantera Negra - Colección",
+      "poster_path": "/v9bjbRXf6Du06QYpDNvteQovXLN.jpg",
+      "backdrop_path": "/nsiBzWsmmerBMuD8TKHpYBTnfhD.jpg"
+    }
   },
   "Blackhat Amenaza en la red (2015).mkv": {
     "tmdb_id": 201088,
@@ -24153,7 +24370,13 @@
         "vote_average": 7.009
       }
     ],
-    "cached_at": 1769723256183
+    "cached_at": 1769723256183,
+    "collection": {
+      "id": 735,
+      "name": "Blade - Trilogía",
+      "poster_path": "/8UBmQQsaGxHYWyrGP80Amlr3lDO.jpg",
+      "backdrop_path": "/d7h60yRgP6US9VYenEPzFGW9saY.jpg"
+    }
   },
   "Blade II (2002).mp4": {
     "tmdb_id": 36586,
@@ -24336,7 +24559,13 @@
         "vote_average": 7.603
       }
     ],
-    "cached_at": 1769723256973
+    "cached_at": 1769723256973,
+    "collection": {
+      "id": 735,
+      "name": "Blade - Trilogía",
+      "poster_path": "/8UBmQQsaGxHYWyrGP80Amlr3lDO.jpg",
+      "backdrop_path": "/d7h60yRgP6US9VYenEPzFGW9saY.jpg"
+    }
   },
   "Blade Runner (1982).mkv": {
     "tmdb_id": 78,
@@ -24518,7 +24747,13 @@
         "vote_average": 7.587
       }
     ],
-    "cached_at": 1769723257796
+    "cached_at": 1769723257796,
+    "collection": {
+      "id": 422837,
+      "name": "Blade Runner - Colección",
+      "poster_path": "/52G5Zwa07sq9Hu7ZcNZ9SNYJYar.jpg",
+      "backdrop_path": "/li3buIx57ph3RX5XlbpMzJPewZ0.jpg"
+    }
   },
   "Blade Trinity (2004).mp4": {
     "tmdb_id": 36648,
@@ -24700,7 +24935,13 @@
         "vote_average": 6.646
       }
     ],
-    "cached_at": 1769723258742
+    "cached_at": 1769723258742,
+    "collection": {
+      "id": 735,
+      "name": "Blade - Trilogía",
+      "poster_path": "/8UBmQQsaGxHYWyrGP80Amlr3lDO.jpg",
+      "backdrop_path": "/d7h60yRgP6US9VYenEPzFGW9saY.jpg"
+    }
   },
   "Blood Father (2016).mp4": {
     "tmdb_id": 309886,
@@ -25971,7 +26212,13 @@
         "vote_average": 6.951
       }
     ],
-    "cached_at": 1769723264948
+    "cached_at": 1769723264948,
+    "collection": {
+      "id": 623911,
+      "name": "Capitana Marvel - Colección",
+      "poster_path": "/mLs9f9J8SbVM6TO5idZDhT7EuuF.jpg",
+      "backdrop_path": "/yMJn2vWKAAzZzlewJm5pPWHUWL3.jpg"
+    }
   },
   "Capitán América Brave New World (2025).mkv": {
     "tmdb_id": 822119,
@@ -26153,7 +26400,13 @@
         "vote_average": 5.9
       }
     ],
-    "cached_at": 1769723265762
+    "cached_at": 1769723265762,
+    "collection": {
+      "id": 131295,
+      "name": "Capitán América - Colección",
+      "poster_path": "/c78ZW1qaO62fLxNbaTGKp6n2PrQ.jpg",
+      "backdrop_path": "/7kVucUYqz8fZkOmFtA8opDwJFXM.jpg"
+    }
   },
   "Capitán América Civil War (2016).mkv": {
     "tmdb_id": 271110,
@@ -26335,7 +26588,13 @@
         "vote_average": 7.611
       }
     ],
-    "cached_at": 1769723266665
+    "cached_at": 1769723266665,
+    "collection": {
+      "id": 131295,
+      "name": "Capitán América - Colección",
+      "poster_path": "/c78ZW1qaO62fLxNbaTGKp6n2PrQ.jpg",
+      "backdrop_path": "/7kVucUYqz8fZkOmFtA8opDwJFXM.jpg"
+    }
   },
   "Capitán América El primer vengador (2011).mkv": {
     "tmdb_id": 1771,
@@ -26517,7 +26776,13 @@
         "vote_average": 6.095
       }
     ],
-    "cached_at": 1769723267522
+    "cached_at": 1769723267522,
+    "collection": {
+      "id": 131295,
+      "name": "Capitán América - Colección",
+      "poster_path": "/c78ZW1qaO62fLxNbaTGKp6n2PrQ.jpg",
+      "backdrop_path": "/7kVucUYqz8fZkOmFtA8opDwJFXM.jpg"
+    }
   },
   "Capitán América El soldado de invierno (2014).mkv": {
     "tmdb_id": 100402,
@@ -26699,7 +26964,13 @@
         "vote_average": 7.422
       }
     ],
-    "cached_at": 1769723268461
+    "cached_at": 1769723268461,
+    "collection": {
+      "id": 131295,
+      "name": "Capitán América - Colección",
+      "poster_path": "/c78ZW1qaO62fLxNbaTGKp6n2PrQ.jpg",
+      "backdrop_path": "/7kVucUYqz8fZkOmFtA8opDwJFXM.jpg"
+    }
   },
   "Casablanca (1943).mp4": {
     "tmdb_id": 289,
@@ -27425,7 +27696,13 @@
         "vote_average": 6.693
       }
     ],
-    "cached_at": 1769723271893
+    "cached_at": 1769723271893,
+    "collection": {
+      "id": 9332,
+      "name": "Cocodrilo Dundee - Colección",
+      "poster_path": "/2Twur1JF4K3AWelVsGYO9I5OHqQ.jpg",
+      "backdrop_path": "/xqCYAWNqhuV1AH4GM03dejy8a1V.jpg"
+    }
   },
   "Coma (1978).mp4": {
     "tmdb_id": 11223,
@@ -27787,7 +28064,13 @@
         "vote_average": 6.5
       }
     ],
-    "cached_at": 1769723273578
+    "cached_at": 1769723273578,
+    "collection": {
+      "id": 124949,
+      "name": "Como Dios - Colección",
+      "poster_path": "/sWOXJkAUxL3afEgM471WhO55pxS.jpg",
+      "backdrop_path": "/fjYES2aMQ05mRcaRoUHACfloNM3.jpg"
+    }
   },
   "Como locos... a por el oro (2008).mp4": {
     "tmdb_id": 8676,
@@ -28332,7 +28615,13 @@
         "vote_average": 6.226
       }
     ],
-    "cached_at": 1769723276189
+    "cached_at": 1769723276189,
+    "collection": {
+      "id": 43055,
+      "name": "Conan - Colección",
+      "poster_path": "/1yM1WZ4ryeBd5fYy61LhIlAmMXO.jpg",
+      "backdrop_path": "/rJw7mflYzuHXBdRYEJyjAXDru5t.jpg"
+    }
   },
   "Conan, el destructor (1984).mkv": {
     "tmdb_id": 9610,
@@ -28514,7 +28803,13 @@
         "vote_average": 5.913
       }
     ],
-    "cached_at": 1769723277028
+    "cached_at": 1769723277028,
+    "collection": {
+      "id": 43055,
+      "name": "Conan - Colección",
+      "poster_path": "/1yM1WZ4ryeBd5fYy61LhIlAmMXO.jpg",
+      "backdrop_path": "/rJw7mflYzuHXBdRYEJyjAXDru5t.jpg"
+    }
   },
   "Conserje a su medida (1993).mkv": {
     "tmdb_id": 9024,
@@ -29239,7 +29534,13 @@
         "vote_average": 7.036
       }
     ],
-    "cached_at": 1769723280620
+    "cached_at": 1769723280620,
+    "collection": {
+      "id": 1025281,
+      "name": "Constantine - Colección",
+      "poster_path": "/uzkkCL80WHYCz4ciVATG0EzyurT.jpg",
+      "backdrop_path": "/44TlYuWbWBpRY3i0Ch7MJtLv4Yd.jpg"
+    }
   },
   "Contact (1997).mkv": {
     "tmdb_id": 686,
@@ -30347,7 +30648,13 @@
         "vote_average": 6.528
       }
     ],
-    "cached_at": 1769723286695
+    "cached_at": 1769723286695,
+    "collection": {
+      "id": 64751,
+      "name": "Crank - Colección",
+      "poster_path": "/doZuipyWmAFEIB7yWWjNqd0W2iK.jpg",
+      "backdrop_path": "/g49FylpoLi9aUPWOqvPCIEezCHN.jpg"
+    }
   },
   "Crank alto voltaje (2009).mp4": {
     "tmdb_id": 15092,
@@ -30529,7 +30836,13 @@
         "vote_average": 5.095
       }
     ],
-    "cached_at": 1769723287504
+    "cached_at": 1769723287504,
+    "collection": {
+      "id": 64751,
+      "name": "Crank - Colección",
+      "poster_path": "/doZuipyWmAFEIB7yWWjNqd0W2iK.jpg",
+      "backdrop_path": "/g49FylpoLi9aUPWOqvPCIEezCHN.jpg"
+    }
   },
   "Creadores de sombras (1989).mp4": {
     "tmdb_id": 27461,
@@ -32335,7 +32648,13 @@
         "vote_average": 7.3
       }
     ],
-    "cached_at": 1769723296111
+    "cached_at": 1769723296111,
+    "collection": {
+      "id": 45154,
+      "name": "Darkman - Colección",
+      "poster_path": "/tCMjRms3gsStWh3Kr0PchE1f84z.jpg",
+      "backdrop_path": "/AcpO3qSz02VDrZ2ZSzgr64RI5q4.jpg"
+    }
   },
   "De Boda En Boda (2005).mp4": {
     "tmdb_id": 9522,
@@ -32879,7 +33198,13 @@
         "vote_average": 5.934
       }
     ],
-    "cached_at": 1769723298779
+    "cached_at": 1769723298779,
+    "collection": {
+      "id": 448150,
+      "name": "Deadpool - Colección",
+      "poster_path": "/6dVSBlh9blLX96tyRDsYtNKpswv.jpg",
+      "backdrop_path": "/dTq7mGyAR5eAydR532feWfjJjzm.jpg"
+    }
   },
   "Deadpool 2 (2018).mkv": {
     "tmdb_id": 383498,
@@ -33061,7 +33386,13 @@
         "vote_average": 7.585
       }
     ],
-    "cached_at": 1769723299788
+    "cached_at": 1769723299788,
+    "collection": {
+      "id": 448150,
+      "name": "Deadpool - Colección",
+      "poster_path": "/6dVSBlh9blLX96tyRDsYtNKpswv.jpg",
+      "backdrop_path": "/dTq7mGyAR5eAydR532feWfjJjzm.jpg"
+    }
   },
   "Deadpool y Lobezno (2024).mp4": {
     "tmdb_id": 533535,
@@ -33243,7 +33574,13 @@
         "vote_average": 5.603
       }
     ],
-    "cached_at": 1769723300636
+    "cached_at": 1769723300636,
+    "collection": {
+      "id": 448150,
+      "name": "Deadpool - Colección",
+      "poster_path": "/6dVSBlh9blLX96tyRDsYtNKpswv.jpg",
+      "backdrop_path": "/dTq7mGyAR5eAydR532feWfjJjzm.jpg"
+    }
   },
   "Demolition Man (1993).avi": {
     "tmdb_id": 9739,
@@ -33608,7 +33945,13 @@
         "vote_average": 6.702
       }
     ],
-    "cached_at": 1769723302297
+    "cached_at": 1769723302297,
+    "collection": {
+      "id": 399,
+      "name": "Predator - Colección",
+      "poster_path": "/fpR6OGXFadXAd2vgQ0Q0Bdnwvfn.jpg",
+      "backdrop_path": "/u1CTqTYRUVyLwlEd1z1VJrVBp0J.jpg"
+    }
   },
   "Desafío total (1990).mkv": {
     "tmdb_id": 861,
@@ -34150,7 +34493,13 @@
         "vote_average": 6.844
       }
     ],
-    "cached_at": 1769723305067
+    "cached_at": 1769723305067,
+    "collection": {
+      "id": 466318,
+      "name": "Despedida de soltero - Colección",
+      "poster_path": "/r5JhgAQZTxje5CXksJr3VWPBGRR.jpg",
+      "backdrop_path": "/f2ckgUb2dR2bkjJ39fKCotT0Ypn.jpg"
+    }
   },
   "Destino final 2 (2003).mkv": {
     "tmdb_id": 9358,
@@ -34331,7 +34680,13 @@
         "vote_average": 6.16
       }
     ],
-    "cached_at": 1769723305933
+    "cached_at": 1769723305933,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Destino final 3 (2006).mkv": {
     "tmdb_id": 9286,
@@ -34512,7 +34867,13 @@
         "vote_average": 5.492
       }
     ],
-    "cached_at": 1769723306770
+    "cached_at": 1769723306770,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Destino final 4 (2009).mkv": {
     "tmdb_id": 19912,
@@ -34693,7 +35054,13 @@
         "vote_average": 5.325
       }
     ],
-    "cached_at": 1769723307661
+    "cached_at": 1769723307661,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Destino final 5 (2011).mkv": {
     "tmdb_id": 55779,
@@ -34874,7 +35241,13 @@
         "vote_average": 4.4
       }
     ],
-    "cached_at": 1769723308596
+    "cached_at": 1769723308596,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Destino final Lazos de sangre (2025).mkv": {
     "tmdb_id": 574475,
@@ -35055,7 +35428,13 @@
         "vote_average": 6.628
       }
     ],
-    "cached_at": 1769723309475
+    "cached_at": 1769723309475,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Destino final Lazos de sangre (2025).mp4": {
     "tmdb_id": 574475,
@@ -35236,7 +35615,13 @@
         "vote_average": 6.628
       }
     ],
-    "cached_at": 1769723310064
+    "cached_at": 1769723310064,
+    "collection": {
+      "id": 8864,
+      "name": "Destino final - Colección",
+      "poster_path": "/yrQjtYmEsnc1hlDlXQZ29EMSFbp.jpg",
+      "backdrop_path": "/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg"
+    }
   },
   "Deuce Bigalow Gigoló europeo (2005).mp4": {
     "tmdb_id": 11453,
@@ -35416,7 +35801,13 @@
         "vote_average": 6.7
       }
     ],
-    "cached_at": 1769723310901
+    "cached_at": 1769723310901,
+    "collection": {
+      "id": 95664,
+      "name": "Gigoló - Colección",
+      "poster_path": "/AtsQVlvLt5j0YmLjDx1joyMDVhA.jpg",
+      "backdrop_path": "/5jvRtBbRahwy1dDDNgh4kN1Yz24.jpg"
+    }
   },
   "Diamante de sangre (2006).mp4": {
     "tmdb_id": 1372,
@@ -36324,7 +36715,13 @@
         "vote_average": 7.363
       }
     ],
-    "cached_at": 1769723315448
+    "cached_at": 1769723315448,
+    "collection": {
+      "id": 618529,
+      "name": "Doctor Strange - Colección",
+      "poster_path": "/bS2ck2fPtMjCfUSCegCu6SwuWmB.jpg",
+      "backdrop_path": "/t7Xl8fNVuETzrbpmf6dGosjIHPN.jpg"
+    }
   },
   "Doctor Strange en el multiverso de la locura.mkv": {
     "tmdb_id": 453395,
@@ -36506,7 +36903,13 @@
         "vote_average": 7.654
       }
     ],
-    "cached_at": 1769723316291
+    "cached_at": 1769723316291,
+    "collection": {
+      "id": 618529,
+      "name": "Doctor Strange - Colección",
+      "poster_path": "/bS2ck2fPtMjCfUSCegCu6SwuWmB.jpg",
+      "backdrop_path": "/t7Xl8fNVuETzrbpmf6dGosjIHPN.jpg"
+    }
   },
   "Dolor y dinero (2013).mp4": {
     "tmdb_id": 134374,
@@ -36870,7 +37273,13 @@
         "vote_average": 6.7
       }
     ],
-    "cached_at": 1769723318054
+    "cached_at": 1769723318054,
+    "collection": {
+      "id": 634390,
+      "name": "Doom - Colección",
+      "poster_path": "/qhmCZgD80VXMLpkLxJ61UYvvLsH.jpg",
+      "backdrop_path": "/9zy1Y57oMMApCl1dVoKpeiCUEKE.jpg"
+    }
   },
   "Doom: Annihilation.avi": {
     "tmdb_id": 520901,
@@ -37052,7 +37461,13 @@
         "vote_average": 8.715
       }
     ],
-    "cached_at": 1769723318934
+    "cached_at": 1769723318934,
+    "collection": {
+      "id": 634390,
+      "name": "Doom - Colección",
+      "poster_path": "/qhmCZgD80VXMLpkLxJ61UYvvLsH.jpg",
+      "backdrop_path": "/9zy1Y57oMMApCl1dVoKpeiCUEKE.jpg"
+    }
   },
   "Dos buenos tipos (2016).mkv": {
     "tmdb_id": 290250,
@@ -37418,7 +37833,13 @@
         "vote_average": 7.333
       }
     ],
-    "cached_at": 1769723320656
+    "cached_at": 1769723320656,
+    "collection": {
+      "id": 625812,
+      "name": "Dos hombres y un destino - Colección",
+      "poster_path": "/3vo0mef33DOn4YzHdnkbcFEj9vC.jpg",
+      "backdrop_path": "/nvlkWZRoWlef0aDTJDgXxhffQM2.jpg"
+    }
   },
   "Dos pájaros a tiro (1990).mp4": {
     "tmdb_id": 1727,
@@ -38146,7 +38567,13 @@
         "vote_average": 7.064
       }
     ],
-    "cached_at": 1769723324255
+    "cached_at": 1769723324255,
+    "collection": {
+      "id": 726871,
+      "name": "Dune - Colección",
+      "poster_path": "/kylC8ibuv4t8ch3nnq2Kp8i8p3X.jpg",
+      "backdrop_path": "/fahk0Fu7VUUfK6IkTt1R3waOD9F.jpg"
+    }
   },
   "Duplex (2003).mp4": {
     "tmdb_id": 7288,
@@ -39416,7 +39843,13 @@
         "vote_average": 4.5
       }
     ],
-    "cached_at": 1769723330488
+    "cached_at": 1769723330488,
+    "collection": {
+      "id": 261590,
+      "name": "La noche de los muertos vivientes - Colección",
+      "poster_path": "/5tzYvD8a7M6YdGy37V5goRJXsMk.jpg",
+      "backdrop_path": "/xacnP6WJBhs5vptIcYE8RCDVKIo.jpg"
+    }
   },
   "El aprendiz de brujo (2010).avi": {
     "tmdb_id": 27022,
@@ -40492,7 +40925,13 @@
         "vote_average": 6.9
       }
     ],
-    "cached_at": 1769723335680
+    "cached_at": 1769723335680,
+    "collection": {
+      "id": 108804,
+      "name": "Outpost (El bunker) - Colección",
+      "poster_path": "/xiAWTgzyb1TxW8kN05qiVKNJFxb.jpg",
+      "backdrop_path": "/lwO4ZAvRZvK0ubhDY39PJkQ9bRO.jpg"
+    }
   },
   "El caballero oscuro (2008).mkv": {
     "tmdb_id": 155,
@@ -40674,7 +41113,13 @@
         "vote_average": 8.4
       }
     ],
-    "cached_at": 1769723336659
+    "cached_at": 1769723336659,
+    "collection": {
+      "id": 263,
+      "name": "Batman (El caballero oscuro) - Colección",
+      "poster_path": "/pO70id4LcjEJrokvrhxlF3A9Vhl.jpg",
+      "backdrop_path": "/xyhrCEdB4XRkelfVsqXeUZ6rLHi.jpg"
+    }
   },
   "El caballero oscuro La leyenda renace (2012).mkv": {
     "tmdb_id": 49026,
@@ -40857,7 +41302,13 @@
         "vote_average": 6.931
       }
     ],
-    "cached_at": 1769723337695
+    "cached_at": 1769723337695,
+    "collection": {
+      "id": 263,
+      "name": "Batman (El caballero oscuro) - Colección",
+      "poster_path": "/pO70id4LcjEJrokvrhxlF3A9Vhl.jpg",
+      "backdrop_path": "/xyhrCEdB4XRkelfVsqXeUZ6rLHi.jpg"
+    }
   },
   "El chico de oro (1986).mp4": {
     "tmdb_id": 10136,
@@ -41942,7 +42393,13 @@
         "vote_average": 5.6
       }
     ],
-    "cached_at": 1769723343098
+    "cached_at": 1769723343098,
+    "collection": {
+      "id": 870339,
+      "name": "El contable - Colección",
+      "poster_path": "/9y7nwUBXp50CA5kVarhE61mdJ2O.jpg",
+      "backdrop_path": "/p779p13IE06Wb2hfyosnI057uNx.jpg"
+    }
   },
   "El corredor del laberinto La cura mortal (2018).mp4": {
     "tmdb_id": 336843,
@@ -42125,7 +42582,13 @@
         "vote_average": 6.9
       }
     ],
-    "cached_at": 1769723344098
+    "cached_at": 1769723344098,
+    "collection": {
+      "id": 295130,
+      "name": "El corredor del laberinto - Colección",
+      "poster_path": "/5xBuWkpB1sS8rYXWMqtlyl3n5fy.jpg",
+      "backdrop_path": "/9BX8MUXmOa9i7oyTMx9OmbzkLev.jpg"
+    }
   },
   "El corredor del laberinto.mp4": {
     "tmdb_id": 198663,
@@ -42308,7 +42771,13 @@
         "vote_average": 6.558
       }
     ],
-    "cached_at": 1769723344997
+    "cached_at": 1769723344997,
+    "collection": {
+      "id": 295130,
+      "name": "El corredor del laberinto - Colección",
+      "poster_path": "/5xBuWkpB1sS8rYXWMqtlyl3n5fy.jpg",
+      "backdrop_path": "/9BX8MUXmOa9i7oyTMx9OmbzkLev.jpg"
+    }
   },
   "El cuervo (1998).mkv": {
     "tmdb_id": 841009,
@@ -42578,7 +43047,13 @@
         "vote_average": 6.072
       }
     ],
-    "cached_at": 1769723346649
+    "cached_at": 1769723346649,
+    "collection": {
+      "id": 391860,
+      "name": "Kingsman - Colección",
+      "poster_path": "/avTOATIGKsce6sN0vK5eZ1HWSo6.jpg",
+      "backdrop_path": "/esDXPeq4eBLI5uIWH9QiyHkCUBB.jpg"
+    }
   },
   "El día del juicio final (2014).mkv": {
     "tmdb_id": 280002,
@@ -43086,7 +43561,13 @@
         "vote_average": 6.391
       }
     ],
-    "cached_at": 1769723349319
+    "cached_at": 1769723349319,
+    "collection": {
+      "id": 1960,
+      "name": "Posesión infernal - Colección",
+      "poster_path": "/qcAltryXUfqtRJ4jluA2ic268Uk.jpg",
+      "backdrop_path": "/377E9KSoUGxKWuvyR1Zu9aXcU4I.jpg"
+    }
   },
   "El escuadrón suicida (2021).avi": {
     "tmdb_id": 436969,
@@ -43268,7 +43749,13 @@
         "vote_average": 7.3
       }
     ],
-    "cached_at": 1769723350150
+    "cached_at": 1769723350150,
+    "collection": {
+      "id": 531242,
+      "name": "Escuadrón suicida - Colección",
+      "poster_path": "/qIWrWjm01lYjKrmjnefdXKtPGeV.jpg",
+      "backdrop_path": "/e0uUxFdhdGLcvy9eC7WlO2eLusr.jpg"
+    }
   },
   "El expreso de Chicago (1976).avi": {
     "tmdb_id": 11558,
@@ -43814,7 +44301,13 @@
         "vote_average": 6.2
       }
     ],
-    "cached_at": 1769723352697
+    "cached_at": 1769723352697,
+    "collection": {
+      "id": 711707,
+      "name": "Josey Wales Collection",
+      "poster_path": "/4w9arZqXq2j64nxYHYzLGzR6bl.jpg",
+      "backdrop_path": "/A2fGnCGf8cIvJifAnc8OabDsODp.jpg"
+    }
   },
   "El fugitivo (1993).mkv": {
     "tmdb_id": 5503,
@@ -43996,7 +44489,13 @@
         "vote_average": 6.8
       }
     ],
-    "cached_at": 1769723353526
+    "cached_at": 1769723353526,
+    "collection": {
+      "id": 721111,
+      "name": "Marshal Samuel Gerard - Colección",
+      "poster_path": "/9h8igLprm4i5bIhJ54TDE5Jl5po.jpg",
+      "backdrop_path": "/e2e08PJii5xXSnSwsHDSkDhSP4Q.jpg"
+    }
   },
   "El furor del dragón (1972).mp4": {
     "tmdb_id": 9462,
@@ -44359,7 +44858,13 @@
         "vote_average": 7.423
       }
     ],
-    "cached_at": 1769723355273
+    "cached_at": 1769723355273,
+    "collection": {
+      "id": 330605,
+      "name": "El golpe - Colección",
+      "poster_path": "/xmBBUh3WS56YtW6zTBi7KgYdv5h.jpg",
+      "backdrop_path": null
+    }
   },
   "El gran Lebowski (1998).mp4": {
     "tmdb_id": 115,
@@ -45263,7 +45768,13 @@
         "vote_average": 7.988
       }
     ],
-    "cached_at": 1769723359605
+    "cached_at": 1769723359605,
+    "collection": {
+      "id": 121938,
+      "name": "El hobbit - Colección",
+      "poster_path": "/7v0zSqufU8OBEcpocmbHYDnZE9t.jpg",
+      "backdrop_path": "/7wO7MSnP5UcwR2cTHdJFF1vP4Ie.jpg"
+    }
   },
   "El hobbit La desolación de Smaug (2013).avi": {
     "tmdb_id": 57158,
@@ -45445,7 +45956,13 @@
         "vote_average": 7.422
       }
     ],
-    "cached_at": 1769723360536
+    "cached_at": 1769723360536,
+    "collection": {
+      "id": 121938,
+      "name": "El hobbit - Colección",
+      "poster_path": "/7v0zSqufU8OBEcpocmbHYDnZE9t.jpg",
+      "backdrop_path": "/7wO7MSnP5UcwR2cTHdJFF1vP4Ie.jpg"
+    }
   },
   "El hobbit Un viaje inesperado (2012).avi": {
     "tmdb_id": 49051,
@@ -45627,7 +46144,13 @@
         "vote_average": 7.256
       }
     ],
-    "cached_at": 1769723361347
+    "cached_at": 1769723361347,
+    "collection": {
+      "id": 121938,
+      "name": "El hobbit - Colección",
+      "poster_path": "/7v0zSqufU8OBEcpocmbHYDnZE9t.jpg",
+      "backdrop_path": "/7wO7MSnP5UcwR2cTHdJFF1vP4Ie.jpg"
+    }
   },
   "El hombre de acero (2013).mkv": {
     "tmdb_id": 49521,
@@ -45809,7 +46332,13 @@
         "vote_average": 6.931
       }
     ],
-    "cached_at": 1769723362257
+    "cached_at": 1769723362257,
+    "collection": {
+      "id": 209131,
+      "name": "El hombre de acero - Colección",
+      "poster_path": "/p3aMbHfdrzoJaEnRZ7HAyCLXBc6.jpg",
+      "backdrop_path": "/rPaqhsSMCky0UXVW4qmNOJq5Orp.jpg"
+    }
   },
   "El hombre de la máscara de hierro (1998).mp4": {
     "tmdb_id": 9313,
@@ -46173,7 +46702,13 @@
         "vote_average": 6.284
       }
     ],
-    "cached_at": 1769723364005
+    "cached_at": 1769723364005,
+    "collection": {
+      "id": 645,
+      "name": "James Bond - Colección",
+      "poster_path": "/ruEIIzwvrhvKnMfuZUNVMGhzuqr.jpg",
+      "backdrop_path": "/dOSECZImeyZldoq0ObieBE0lwie.jpg"
+    }
   },
   "El hombre que mató a Liberty Valance (1962).avi": {
     "tmdb_id": 11697,
@@ -46897,7 +47432,13 @@
         "vote_average": 8.37
       }
     ],
-    "cached_at": 1769723367432
+    "cached_at": 1769723367432,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "El incidente (2008).mp4": {
     "tmdb_id": 8645,
@@ -48711,7 +49252,13 @@
         "vote_average": 6.549
       }
     ],
-    "cached_at": 1769723376427
+    "cached_at": 1769723376427,
+    "collection": {
+      "id": 31562,
+      "name": "Bourne - Colección",
+      "poster_path": "/dSYbWvzNglPaPFkmMqHotOdj4ij.jpg",
+      "backdrop_path": "/vA5xMglyZv7yzDTj1qUTU4OvelV.jpg"
+    }
   },
   "El lobo de Wall Street (2013).mkv": {
     "tmdb_id": 106646,
@@ -49255,7 +49802,13 @@
         "vote_average": 6.959
       }
     ],
-    "cached_at": 1769723379097
+    "cached_at": 1769723379097,
+    "collection": {
+      "id": 31562,
+      "name": "Bourne - Colección",
+      "poster_path": "/dSYbWvzNglPaPFkmMqHotOdj4ij.jpg",
+      "backdrop_path": "/vA5xMglyZv7yzDTj1qUTU4OvelV.jpg"
+    }
   },
   "El mundo de los perdidos (2009).mp4": {
     "tmdb_id": 18162,
@@ -49620,7 +50173,13 @@
         "vote_average": 6.298
       }
     ],
-    "cached_at": 1769723381033
+    "cached_at": 1769723381033,
+    "collection": {
+      "id": 328,
+      "name": "Jurassic Park - Colección",
+      "poster_path": "/cn1D5g7dFCNCcXiO070H89JuvnE.jpg",
+      "backdrop_path": "/njFixYzIxX8jsn6KMSEtAzi4avi.jpg"
+    }
   },
   "El médico (2013).avi": {
     "tmdb_id": 169881,
@@ -49802,7 +50361,13 @@
         "vote_average": 5.5
       }
     ],
-    "cached_at": 1769723381889
+    "cached_at": 1769723381889,
+    "collection": {
+      "id": 1434598,
+      "name": "El médico - Colección",
+      "poster_path": "/sg0LFWwJbr9jvCAF2vBbOmkKo6z.jpg",
+      "backdrop_path": null
+    }
   },
   "El nombre de la rosa (1986).mp4": {
     "tmdb_id": 192,
@@ -50167,7 +50732,13 @@
         "vote_average": 6.64
       }
     ],
-    "cached_at": 1769723383638
+    "cached_at": 1769723383638,
+    "collection": {
+      "id": 173710,
+      "name": "El Planeta de los Simios (El Origen) - Colección",
+      "poster_path": "/4QUhVxQgtsUhqydkmrFob90Rtwl.jpg",
+      "backdrop_path": "/iMhm0g555HgQNIXAMvnlgOiW5Rz.jpg"
+    }
   },
   "El otro guardaespaldas (2017).mkv": {
     "tmdb_id": 390043,
@@ -50350,7 +50921,13 @@
         "vote_average": 6.252
       }
     ],
-    "cached_at": 1769723384530
+    "cached_at": 1769723384530,
+    "collection": {
+      "id": 608101,
+      "name": "El otro guardaespaldas - Colección",
+      "poster_path": "/vToJBLa8QPSBfDoti3PGZu2tdgH.jpg",
+      "backdrop_path": "/8FgE8oDOkldI9iAM6FxcByIlROz.jpg"
+    }
   },
   "El otro guardaespaldas 2 (2021).avi": {
     "tmdb_id": 522931,
@@ -50533,7 +51110,13 @@
         "vote_average": 7.179
       }
     ],
-    "cached_at": 1769723385313
+    "cached_at": 1769723385313,
+    "collection": {
+      "id": 608101,
+      "name": "El otro guardaespaldas - Colección",
+      "poster_path": "/vToJBLa8QPSBfDoti3PGZu2tdgH.jpg",
+      "backdrop_path": "/8FgE8oDOkldI9iAM6FxcByIlROz.jpg"
+    }
   },
   "El patriota (2000).mkv": {
     "tmdb_id": 2024,
@@ -51806,7 +52389,13 @@
         "vote_average": 6.807
       }
     ],
-    "cached_at": 1769723391517
+    "cached_at": 1769723391517,
+    "collection": {
+      "id": 1733,
+      "name": "La Momia - Colección",
+      "poster_path": "/k4LMa9UBVJwJyOLBkuc1BJJblJ8.jpg",
+      "backdrop_path": "/1BeKi6IytbfQlQocJSvP2k6sO1a.jpg"
+    }
   },
   "El regreso de los muertos vivientes Necrópolis (2005).avi": {
     "tmdb_id": 24935,
@@ -51988,7 +52577,13 @@
         "vote_average": 5.395
       }
     ],
-    "cached_at": 1769723392599
+    "cached_at": 1769723392599,
+    "collection": {
+      "id": 101471,
+      "name": "El regreso de los muertos vivientes - Colección",
+      "poster_path": "/7ekXvck6C94gKbfH6WlKK2qqdVL.jpg",
+      "backdrop_path": "/c5sDFadkYthAki1BEk66PYcW0WN.jpg"
+    }
   },
   "El reino de los cielos (2005).mp4": {
     "tmdb_id": 1495,
@@ -52717,7 +53312,13 @@
         "vote_average": 7.744
       }
     ],
-    "cached_at": 1769723396088
+    "cached_at": 1769723396088,
+    "collection": {
+      "id": 530064,
+      "name": "El resplandor - Colección",
+      "poster_path": "/xKsvYP0mjiZavWBxVxFxoHa60Fh.jpg",
+      "backdrop_path": "/8L2bt7OWxrVhZPrFPkyZW4rEXzq.jpg"
+    }
   },
   "El retorno del Jedi (1983).avi": {
     "tmdb_id": 1892,
@@ -52899,7 +53500,13 @@
         "vote_average": 7.458
       }
     ],
-    "cached_at": 1769723396953
+    "cached_at": 1769723396953,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "El sargento de hierro (1986).mp4": {
     "tmdb_id": 10015,
@@ -53626,7 +54233,13 @@
         "vote_average": 7.009
       }
     ],
-    "cached_at": 1769723400652
+    "cached_at": 1769723400652,
+    "collection": {
+      "id": 119,
+      "name": "El señor de los anillos - Colección",
+      "poster_path": "/yAonjcMRitkztnvRjrLqwpKgbXS.jpg",
+      "backdrop_path": "/bccR2CGTWVVSZAG0yqmy3DIvhTX.jpg"
+    }
   },
   "El señor de los anillos La comunidad del anillo (2001).mkv": {
     "tmdb_id": 120,
@@ -53808,7 +54421,13 @@
         "vote_average": 7.366
       }
     ],
-    "cached_at": 1769723401489
+    "cached_at": 1769723401489,
+    "collection": {
+      "id": 119,
+      "name": "El señor de los anillos - Colección",
+      "poster_path": "/yAonjcMRitkztnvRjrLqwpKgbXS.jpg",
+      "backdrop_path": "/bccR2CGTWVVSZAG0yqmy3DIvhTX.jpg"
+    }
   },
   "El señor de los anillos Las dos torres (2002).mkv": {
     "tmdb_id": 121,
@@ -53990,7 +54609,13 @@
         "vote_average": 5.788
       }
     ],
-    "cached_at": 1769723402436
+    "cached_at": 1769723402436,
+    "collection": {
+      "id": 119,
+      "name": "El señor de los anillos - Colección",
+      "poster_path": "/yAonjcMRitkztnvRjrLqwpKgbXS.jpg",
+      "backdrop_path": "/bccR2CGTWVVSZAG0yqmy3DIvhTX.jpg"
+    }
   },
   "El show de Truman (1998).mkv": {
     "tmdb_id": 37165,
@@ -54353,7 +54978,13 @@
         "vote_average": 5.853
       }
     ],
-    "cached_at": 1769723404136
+    "cached_at": 1769723404136,
+    "collection": {
+      "id": 9743,
+      "name": "Hannibal Lecter - Colección",
+      "poster_path": "/dhXQvL1rkShIP5dpoevZliIONsA.jpg",
+      "backdrop_path": "/yiwhEr1BV3K9fCsZuFxUHtZezHZ.jpg"
+    }
   },
   "El síndrome de China (1979).avi": {
     "tmdb_id": 988,
@@ -56685,7 +57316,13 @@
         "vote_average": 7.94
       }
     ],
-    "cached_at": 1769723415740
+    "cached_at": 1769723415740,
+    "collection": {
+      "id": 84,
+      "name": "Indiana Jones - Colección",
+      "poster_path": "/z1ZuPmh4gdwfDbCJmzbe8WJgZ0m.jpg",
+      "backdrop_path": "/s4xWmz9PEjPERSRcd7H7xMJpYvE.jpg"
+    }
   },
   "En campaña todo vale (2012).avi": {
     "tmdb_id": 77953,
@@ -57048,7 +57685,13 @@
         "vote_average": 6.239
       }
     ],
-    "cached_at": 1769723417476
+    "cached_at": 1769723417476,
+    "collection": {
+      "id": 492896,
+      "name": "Virgil Tibbs - Colección",
+      "poster_path": "/e9TqBgJn9skumnh2ymaA6GSDQEi.jpg",
+      "backdrop_path": "/4kh2UHbmoHUkT53R4xNbL2fNVtY.jpg"
+    }
   },
   "En la boca del miedo (1995).mp4": {
     "tmdb_id": 2654,
@@ -58136,7 +58779,13 @@
         "vote_average": 6
       }
     ],
-    "cached_at": 1769723422625
+    "cached_at": 1769723422625,
+    "collection": {
+      "id": 985085,
+      "name": "Eraser Collection",
+      "poster_path": "/oXKF5Th7K0a5QlXLGTkyLaYEonL.jpg",
+      "backdrop_path": "/xuWMERxIhCcoyJTNDlHPve9viG8.jpg"
+    }
   },
   "Escape Room (2017).mkv": {
     "tmdb_id": 431259,
@@ -58488,7 +59137,13 @@
         "vote_average": 6.442
       }
     ],
-    "cached_at": 1769723424320
+    "cached_at": 1769723424320,
+    "collection": {
+      "id": 769423,
+      "name": "Escape Room - Colección",
+      "poster_path": "/zdgt4NhbhJqFQOKDRD6L2Jmh7tx.jpg",
+      "backdrop_path": "/adCkjAt5Hc4uv0gouVslziGmB9d.jpg"
+    }
   },
   "Esposa por sorpresa (1992).mp4": {
     "tmdb_id": 10407,
@@ -60298,7 +60953,13 @@
         "vote_average": 7
       }
     ],
-    "cached_at": 1769723432994
+    "cached_at": 1769723432994,
+    "collection": {
+      "id": 171439,
+      "name": "F/X - Colección",
+      "poster_path": "/nwiW8MgZLuukDFLe09lWixljmKF.jpg",
+      "backdrop_path": "/pLj66wA3xzB9vyOlzZRevSKamoD.jpg"
+    }
   },
   "FX Efectos mortales (1986).avi": {
     "tmdb_id": 9873,
@@ -60479,7 +61140,13 @@
         "vote_average": 6.099
       }
     ],
-    "cached_at": 1769723433848
+    "cached_at": 1769723433848,
+    "collection": {
+      "id": 171439,
+      "name": "F/X - Colección",
+      "poster_path": "/nwiW8MgZLuukDFLe09lWixljmKF.jpg",
+      "backdrop_path": "/pLj66wA3xzB9vyOlzZRevSKamoD.jpg"
+    }
   },
   "Fantasmas de Marte (2001).mkv": {
     "tmdb_id": 10016,
@@ -61023,7 +61690,13 @@
         "vote_average": 7.625
       }
     ],
-    "cached_at": 1769723436478
+    "cached_at": 1769723436478,
+    "collection": {
+      "id": 288280,
+      "name": "Fiebre del sábado noche - Colección",
+      "poster_path": "/qWXxKpBdnMlQyP8f2WPIE3iCL63.jpg",
+      "backdrop_path": "/28f8ckuOSsMiXTaVKB1nOCityBm.jpg"
+    }
   },
   "Figuras Ocultas (2016).mp4": {
     "tmdb_id": 381284,
@@ -61568,7 +62241,13 @@
         "vote_average": 7.2
       }
     ],
-    "cached_at": 1769723438971
+    "cached_at": 1769723438971,
+    "collection": {
+      "id": 1240438,
+      "name": "Five Nights at Freddy's - Colección",
+      "poster_path": "/soO4tOP2N4b0C35ZWDhYMVG4Vr0.jpg",
+      "backdrop_path": "/537TH9PnmUk5X0FZaRP0wH1PJqV.jpg"
+    }
   },
   "Flash Gordon (1980).avi": {
     "tmdb_id": 3604,
@@ -61933,7 +62612,13 @@
         "vote_average": 6.865
       }
     ],
-    "cached_at": 1769723440702
+    "cached_at": 1769723440702,
+    "collection": {
+      "id": 167456,
+      "name": "Flint Agente secreto - Colección",
+      "poster_path": "/Aft6eZ6E9s0CkUWCAVnj6KBjVuT.jpg",
+      "backdrop_path": "/nsBn1N9b2ok0O09OCwPm518nzmr.jpg"
+    }
   },
   "Frequency (2000).mkv": {
     "tmdb_id": 10559,
@@ -62298,7 +62983,13 @@
         "vote_average": 4.849
       }
     ],
-    "cached_at": 1769723442400
+    "cached_at": 1769723442400,
+    "collection": {
+      "id": 1068899,
+      "name": "Puños de furia - Colección",
+      "poster_path": "/qiTf9uIH3XEdXnYe5L8yX3tGJm.jpg",
+      "backdrop_path": "/n8r2VWAFExMFR4BmEdJ5WW9ZTmM.jpg"
+    }
   },
   "Furia de titanes (2010).mkv": {
     "tmdb_id": 18823,
@@ -62480,7 +63171,13 @@
         "vote_average": 5.788
       }
     ],
-    "cached_at": 1769723443212
+    "cached_at": 1769723443212,
+    "collection": {
+      "id": 86780,
+      "name": "Furia de titanes - Colección",
+      "poster_path": "/bs4Ok8tbqT9EaQS2whZfgSWjcbY.jpg",
+      "backdrop_path": "/vmE52XvE2yWWQFt4g1x17K070gY.jpg"
+    }
   },
   "G.I. Joe (2009).avi": {
     "tmdb_id": 14869,
@@ -62663,7 +63360,13 @@
         "vote_average": 7.682
       }
     ],
-    "cached_at": 1769723444107
+    "cached_at": 1769723444107,
+    "collection": {
+      "id": 135468,
+      "name": "G.I. Joe - Colección",
+      "poster_path": "/uSOUMiKk6a7YiEdvOJjOlRc33Jt.jpg",
+      "backdrop_path": "/m3ip0ci0TnX0ATUxpweqElYCeq4.jpg"
+    }
   },
   "Gangs of New York (2002).mkv": {
     "tmdb_id": 3131,
@@ -63026,7 +63729,13 @@
         "vote_average": 5.415
       }
     ],
-    "cached_at": 1769723445770
+    "cached_at": 1769723445770,
+    "collection": {
+      "id": 95664,
+      "name": "Gigoló - Colección",
+      "poster_path": "/AtsQVlvLt5j0YmLjDx1joyMDVhA.jpg",
+      "backdrop_path": "/5jvRtBbRahwy1dDDNgh4kN1Yz24.jpg"
+    }
   },
   "Gladiator (2000).mkv": {
     "tmdb_id": 98,
@@ -63208,7 +63917,13 @@
         "vote_average": 6.638
       }
     ],
-    "cached_at": 1769723446668
+    "cached_at": 1769723446668,
+    "collection": {
+      "id": 1069584,
+      "name": "Gladiator - Colección",
+      "poster_path": "/aRMttbADa60lYPVTfW0JKMzsvq0.jpg",
+      "backdrop_path": "/1VdLvSIeHuwqCT13H9EafxCacGB.jpg"
+    }
   },
   "Gold La gran estafa (2016).mp4": {
     "tmdb_id": 334524,
@@ -64119,7 +64834,13 @@
         "vote_average": 7.352
       }
     ],
-    "cached_at": 1769723451000
+    "cached_at": 1769723451000,
+    "collection": {
+      "id": 112636,
+      "name": "Blue Brothers - Colección",
+      "poster_path": "/p7qZq9Ykl5MThiqILCwdfgZ0TbC.jpg",
+      "backdrop_path": "/i4Jai1IlkbOWd8eNFM0S1lupyLt.jpg"
+    }
   },
   "Grease (1978).avi": {
     "tmdb_id": 621,
@@ -64300,7 +65021,13 @@
         "vote_average": 7.228
       }
     ],
-    "cached_at": 1769723451953
+    "cached_at": 1769723451953,
+    "collection": {
+      "id": 86083,
+      "name": "Grease - Colección",
+      "poster_path": "/zQQ93JPkSzKhztbJU9RfrFfGvol.jpg",
+      "backdrop_path": "/95ASlSlkBSILVLrZA69P0OdniP5.jpg"
+    }
   },
   "Green Zone Distrito protegido (2010).avi": {
     "tmdb_id": 22972,
@@ -64666,7 +65393,13 @@
         "vote_average": 7.446
       }
     ],
-    "cached_at": 1769723453623
+    "cached_at": 1769723453623,
+    "collection": {
+      "id": 284433,
+      "name": "Guardianes de la galaxia - Colección",
+      "poster_path": "/4KvfCk1haG5gSJhc2CwrizP2cV4.jpg",
+      "backdrop_path": "/sxyF4lVkEvOLVzr8jOF5K5nrMh3.jpg"
+    }
   },
   "Guardianes de la Galaxia Volumen 3 (2023).mkv": {
     "tmdb_id": 447365,
@@ -64848,7 +65581,13 @@
         "vote_average": 7.611
       }
     ],
-    "cached_at": 1769723454642
+    "cached_at": 1769723454642,
+    "collection": {
+      "id": 284433,
+      "name": "Guardianes de la galaxia - Colección",
+      "poster_path": "/4KvfCk1haG5gSJhc2CwrizP2cV4.jpg",
+      "backdrop_path": "/sxyF4lVkEvOLVzr8jOF5K5nrMh3.jpg"
+    }
   },
   "Guardianes de la galaxia (2014).mkv": {
     "tmdb_id": 118340,
@@ -65030,7 +65769,13 @@
         "vote_average": 7.446
       }
     ],
-    "cached_at": 1769723455580
+    "cached_at": 1769723455580,
+    "collection": {
+      "id": 284433,
+      "name": "Guardianes de la galaxia - Colección",
+      "poster_path": "/4KvfCk1haG5gSJhc2CwrizP2cV4.jpg",
+      "backdrop_path": "/sxyF4lVkEvOLVzr8jOF5K5nrMh3.jpg"
+    }
   },
   "Guerra Mundial Z (2013).mkv": {
     "tmdb_id": 72190,
@@ -65575,7 +66320,13 @@
         "vote_average": 7.625
       }
     ],
-    "cached_at": 1769723458247
+    "cached_at": 1769723458247,
+    "collection": {
+      "id": 116661,
+      "name": "¡Han llegado! - Colección",
+      "poster_path": "/hcURy1riW3qLFHQdf9b7bGy8NkQ.jpg",
+      "backdrop_path": "/7O6vQ0S1qkAn1BKorHpTIpDg0PZ.jpg"
+    }
   },
   "Hanky Panky una fuga muy chiflada (1982).avi": {
     "tmdb_id": 25001,
@@ -65939,7 +66690,13 @@
         "vote_average": 7
       }
     ],
-    "cached_at": 1769723460028
+    "cached_at": 1769723460028,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y el misterio del príncipe (2009).avi": {
     "tmdb_id": 767,
@@ -66120,7 +66877,13 @@
         "vote_average": 7.329
       }
     ],
-    "cached_at": 1769723460874
+    "cached_at": 1769723460874,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y el prisionero de Azkaban (2004).avi": {
     "tmdb_id": 673,
@@ -66301,7 +67064,13 @@
         "vote_average": 7.297
       }
     ],
-    "cached_at": 1769723461722
+    "cached_at": 1769723461722,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y la Orden del Fénix (2007).avi": {
     "tmdb_id": 675,
@@ -66482,7 +67251,13 @@
         "vote_average": 6.385
       }
     ],
-    "cached_at": 1769723462565
+    "cached_at": 1769723462565,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y la cámara secreta (2002).avi": {
     "tmdb_id": 672,
@@ -66663,7 +67438,13 @@
         "vote_average": 6.587
       }
     ],
-    "cached_at": 1769723463392
+    "cached_at": 1769723463392,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y la piedra filosofal (2001).mkv": {
     "tmdb_id": 671,
@@ -66844,7 +67625,13 @@
         "vote_average": 6.565
       }
     ],
-    "cached_at": 1769723464293
+    "cached_at": 1769723464293,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y las Reliquias de la Muerte - Parte 1 (2010).avi": {
     "tmdb_id": 12444,
@@ -67025,7 +67812,13 @@
         "vote_average": 7.309
       }
     ],
-    "cached_at": 1769723465262
+    "cached_at": 1769723465262,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry Potter y las Reliquias de la Muerte - Parte 2 (2011).avi": {
     "tmdb_id": 12445,
@@ -67206,7 +67999,13 @@
         "vote_average": 7.774
       }
     ],
-    "cached_at": 1769723466103
+    "cached_at": 1769723466103,
+    "collection": {
+      "id": 1241,
+      "name": "Harry Potter - Colección",
+      "poster_path": "/pNeqCBGdEOhdaMTPlwdy1oJLG75.jpg",
+      "backdrop_path": "/kmEsQL2vOTA0jnM28fXS45Ky8kX.jpg"
+    }
   },
   "Harry el ejecutor (1976).mkv": {
     "tmdb_id": 10649,
@@ -67387,7 +68186,13 @@
         "vote_average": 5.2
       }
     ],
-    "cached_at": 1769723466956
+    "cached_at": 1769723466956,
+    "collection": {
+      "id": 10456,
+      "name": "Harry el sucio - Colección",
+      "poster_path": "/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
+      "backdrop_path": "/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg"
+    }
   },
   "Harry el fuerte (1973).mkv": {
     "tmdb_id": 10648,
@@ -67569,7 +68374,13 @@
         "vote_average": 6.509
       }
     ],
-    "cached_at": 1769723467898
+    "cached_at": 1769723467898,
+    "collection": {
+      "id": 10456,
+      "name": "Harry el sucio - Colección",
+      "poster_path": "/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
+      "backdrop_path": "/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg"
+    }
   },
   "Harry el sucio (1971).mkv": {
     "tmdb_id": 984,
@@ -67751,7 +68562,13 @@
         "vote_average": 6.266
       }
     ],
-    "cached_at": 1769723468766
+    "cached_at": 1769723468766,
+    "collection": {
+      "id": 10456,
+      "name": "Harry el sucio - Colección",
+      "poster_path": "/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
+      "backdrop_path": "/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg"
+    }
   },
   "Heavy Metal (1981).mp4": {
     "tmdb_id": 11827,
@@ -67935,7 +68752,13 @@
         "vote_average": 8.2
       }
     ],
-    "cached_at": 1769723469654
+    "cached_at": 1769723469654,
+    "collection": {
+      "id": 141086,
+      "name": "Heavy Metal - Colección",
+      "poster_path": "/tgPpYcsjSo1DK0wublqYItYDwSW.jpg",
+      "backdrop_path": "/iao9hIahX41T1Lxpa5h62J28rQF.jpg"
+    }
   },
   "Hellboy (2004).mkv": {
     "tmdb_id": 1487,
@@ -68116,7 +68939,13 @@
         "vote_average": 5.982
       }
     ],
-    "cached_at": 1769723470596
+    "cached_at": 1769723470596,
+    "collection": {
+      "id": 17235,
+      "name": "Hellboy - Colección",
+      "poster_path": "/f1TiCw7t2IagYQSQ6jIa9D3L1qS.jpg",
+      "backdrop_path": "/qpFCHvjPCEGDW6RPBCdV9iq1yI4.jpg"
+    }
   },
   "Hellboy II El ejército dorado (2008).mkv": {
     "tmdb_id": 11253,
@@ -68297,7 +69126,13 @@
         "vote_average": 5.316
       }
     ],
-    "cached_at": 1769723471410
+    "cached_at": 1769723471410,
+    "collection": {
+      "id": 17235,
+      "name": "Hellboy - Colección",
+      "poster_path": "/f1TiCw7t2IagYQSQ6jIa9D3L1qS.jpg",
+      "backdrop_path": "/qpFCHvjPCEGDW6RPBCdV9iq1yI4.jpg"
+    }
   },
   "Hitman Agente 47 (2015).avi": {
     "tmdb_id": 249070,
@@ -68479,7 +69314,13 @@
         "vote_average": 5.878
       }
     ],
-    "cached_at": 1769723472367
+    "cached_at": 1769723472367,
+    "collection": {
+      "id": 737031,
+      "name": "Hitman - Colección",
+      "poster_path": "/5kqgqkOQ4fi9yePl6FIY5MTZDYA.jpg",
+      "backdrop_path": "/oOZ7Kt9Ntcv8Ids6P05phqRbsZO.jpg"
+    }
   },
   "Hombres de negro II (2002).mkv": {
     "tmdb_id": 608,
@@ -68661,7 +69502,13 @@
         "vote_average": 5.897
       }
     ],
-    "cached_at": 1769723473210
+    "cached_at": 1769723473210,
+    "collection": {
+      "id": 86055,
+      "name": "Men in Black - Colección",
+      "poster_path": "/1z9gqwqLGnnW4CltnKHzPIfhg7c.jpg",
+      "backdrop_path": "/xKz6YaOvmnIJQ3MYIpnaa7FBaAB.jpg"
+    }
   },
   "Hora punta (1998).mp4": {
     "tmdb_id": 2109,
@@ -68843,7 +69690,13 @@
         "vote_average": 6.818
       }
     ],
-    "cached_at": 1769723474061
+    "cached_at": 1769723474061,
+    "collection": {
+      "id": 90863,
+      "name": "Hora punta - Colección",
+      "poster_path": "/iT7xJmPwUHoowHokx0hPUtoML5b.jpg",
+      "backdrop_path": "/Atik4QqBg8IrTPiCzaj9AcI9p1i.jpg"
+    }
   },
   "Hora punta 2 (2001).mp4": {
     "tmdb_id": 5175,
@@ -69025,7 +69878,13 @@
         "vote_average": 6.024
       }
     ],
-    "cached_at": 1769723474917
+    "cached_at": 1769723474917,
+    "collection": {
+      "id": 90863,
+      "name": "Hora punta - Colección",
+      "poster_path": "/iT7xJmPwUHoowHokx0hPUtoML5b.jpg",
+      "backdrop_path": "/Atik4QqBg8IrTPiCzaj9AcI9p1i.jpg"
+    }
   },
   "Hora punta 3 (2007).mp4": {
     "tmdb_id": 5174,
@@ -69207,7 +70066,13 @@
         "vote_average": 5.952
       }
     ],
-    "cached_at": 1769723475800
+    "cached_at": 1769723475800,
+    "collection": {
+      "id": 90863,
+      "name": "Hora punta - Colección",
+      "poster_path": "/iT7xJmPwUHoowHokx0hPUtoML5b.jpg",
+      "backdrop_path": "/Atik4QqBg8IrTPiCzaj9AcI9p1i.jpg"
+    }
   },
   "Horizonte Final (1997).mp4": {
     "tmdb_id": 8413,
@@ -69570,7 +70435,13 @@
         "vote_average": 6.901
       }
     ],
-    "cached_at": 1769723477611
+    "cached_at": 1769723477611,
+    "collection": {
+      "id": 1709,
+      "name": "El planeta de los simios (Original) - Colección",
+      "poster_path": "/umKb8njr1lZljV2UvPmiCqk7vtn.jpg",
+      "backdrop_path": "/wBiFfCAuYzuSOl0sFnkQMB5BEZx.jpg"
+    }
   },
   "Impacto súbito (1983).mkv": {
     "tmdb_id": 10650,
@@ -69752,7 +70623,13 @@
         "vote_average": 4.9
       }
     ],
-    "cached_at": 1769723478457
+    "cached_at": 1769723478457,
+    "collection": {
+      "id": 10456,
+      "name": "Harry el sucio - Colección",
+      "poster_path": "/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
+      "backdrop_path": "/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg"
+    }
   },
   "Independence Day (1996).mkv": {
     "tmdb_id": 602,
@@ -69934,7 +70811,13 @@
         "vote_average": 6.826
       }
     ],
-    "cached_at": 1769723479402
+    "cached_at": 1769723479402,
+    "collection": {
+      "id": 304378,
+      "name": "Independence Day - Colección",
+      "poster_path": "/1doONb75E7H04yGsrQ21bN2Qiqi.jpg",
+      "backdrop_path": "/p7oqa94XgNGVMazXwR49QfyGgtx.jpg"
+    }
   },
   "Indiana Jones y el reino de la calavera de cristal (2008).mkv": {
     "tmdb_id": 217,
@@ -70115,7 +70998,13 @@
         "vote_average": 6.601
       }
     ],
-    "cached_at": 1769723480292
+    "cached_at": 1769723480292,
+    "collection": {
+      "id": 84,
+      "name": "Indiana Jones - Colección",
+      "poster_path": "/z1ZuPmh4gdwfDbCJmzbe8WJgZ0m.jpg",
+      "backdrop_path": "/s4xWmz9PEjPERSRcd7H7xMJpYvE.jpg"
+    }
   },
   "Indiana Jones y el templo maldito (1984).mkv": {
     "tmdb_id": 87,
@@ -70296,7 +71185,13 @@
         "vote_average": 7.679
       }
     ],
-    "cached_at": 1769723481127
+    "cached_at": 1769723481127,
+    "collection": {
+      "id": 84,
+      "name": "Indiana Jones - Colección",
+      "poster_path": "/z1ZuPmh4gdwfDbCJmzbe8WJgZ0m.jpg",
+      "backdrop_path": "/s4xWmz9PEjPERSRcd7H7xMJpYvE.jpg"
+    }
   },
   "Indiana Jones y la última cruzada (1989).mkv": {
     "tmdb_id": 89,
@@ -70477,7 +71372,13 @@
         "vote_average": 7.239
       }
     ],
-    "cached_at": 1769723482109
+    "cached_at": 1769723482109,
+    "collection": {
+      "id": 84,
+      "name": "Indiana Jones - Colección",
+      "poster_path": "/z1ZuPmh4gdwfDbCJmzbe8WJgZ0m.jpg",
+      "backdrop_path": "/s4xWmz9PEjPERSRcd7H7xMJpYvE.jpg"
+    }
   },
   "Infielmente tuya (1984).mp4": {
     "tmdb_id": 50812,
@@ -71750,7 +72651,13 @@
         "vote_average": 7.257
       }
     ],
-    "cached_at": 1769723488507
+    "cached_at": 1769723488507,
+    "collection": {
+      "id": 70068,
+      "name": "Ip Man - Colección",
+      "poster_path": "/pte0QVZ3OMOHhyDrgihe8us4FbZ.jpg",
+      "backdrop_path": "/rVdFzHgzvUcp0lJPGG3Cewy9hgs.jpg"
+    }
   },
   "Ip Man 2 (2010).mkv": {
     "tmdb_id": 37472,
@@ -71932,7 +72839,13 @@
         "vote_average": 6.295
       }
     ],
-    "cached_at": 1769723489379
+    "cached_at": 1769723489379,
+    "collection": {
+      "id": 70068,
+      "name": "Ip Man - Colección",
+      "poster_path": "/pte0QVZ3OMOHhyDrgihe8us4FbZ.jpg",
+      "backdrop_path": "/rVdFzHgzvUcp0lJPGG3Cewy9hgs.jpg"
+    }
   },
   "Ip Man 3 (2015).mkv": {
     "tmdb_id": 365222,
@@ -72114,7 +73027,13 @@
         "vote_average": 7.18
       }
     ],
-    "cached_at": 1769723490330
+    "cached_at": 1769723490330,
+    "collection": {
+      "id": 70068,
+      "name": "Ip Man - Colección",
+      "poster_path": "/pte0QVZ3OMOHhyDrgihe8us4FbZ.jpg",
+      "backdrop_path": "/rVdFzHgzvUcp0lJPGG3Cewy9hgs.jpg"
+    }
   },
   "Irma la dulce (1963).avi": {
     "tmdb_id": 2690,
@@ -72477,7 +73396,13 @@
         "vote_average": 8.492
       }
     ],
-    "cached_at": 1769723492053
+    "cached_at": 1769723492053,
+    "collection": {
+      "id": 131292,
+      "name": "Iron Man - Colección",
+      "poster_path": "/9IcmiJNK5cPiYwefR2915DCa9Y1.jpg",
+      "backdrop_path": "/rI8zOWkRQJdlAyQ6WJOSlYK6JxZ.jpg"
+    }
   },
   "Iron Man 2 (2010).mkv": {
     "tmdb_id": 10138,
@@ -72659,7 +73584,13 @@
         "vote_average": 7.122
       }
     ],
-    "cached_at": 1769723492900
+    "cached_at": 1769723492900,
+    "collection": {
+      "id": 131292,
+      "name": "Iron Man - Colección",
+      "poster_path": "/9IcmiJNK5cPiYwefR2915DCa9Y1.jpg",
+      "backdrop_path": "/rI8zOWkRQJdlAyQ6WJOSlYK6JxZ.jpg"
+    }
   },
   "Iron Man 3 (2013).mkv": {
     "tmdb_id": 68721,
@@ -72841,7 +73772,13 @@
         "vote_average": 7.6
       }
     ],
-    "cached_at": 1769723493738
+    "cached_at": 1769723493738,
+    "collection": {
+      "id": 131292,
+      "name": "Iron Man - Colección",
+      "poster_path": "/9IcmiJNK5cPiYwefR2915DCa9Y1.jpg",
+      "backdrop_path": "/rI8zOWkRQJdlAyQ6WJOSlYK6JxZ.jpg"
+    }
   },
   "Iron Sky (2012).avi": {
     "tmdb_id": 10679,
@@ -73023,7 +73960,13 @@
         "vote_average": 4.7
       }
     ],
-    "cached_at": 1769723494648
+    "cached_at": 1769723494648,
+    "collection": {
+      "id": 312977,
+      "name": "Iron Sky - Colección",
+      "poster_path": "/zOApnDOMwp2lnJ0QQMy85YvQcDV.jpg",
+      "backdrop_path": "/A3gUwCnqz05B6wtZrunWrbcT9jt.jpg"
+    }
   },
   "Jacuzzi al pasado (2010).avi": {
     "tmdb_id": 23048,
@@ -73205,7 +74148,13 @@
         "vote_average": 5.588
       }
     ],
-    "cached_at": 1769723495492
+    "cached_at": 1769723495492,
+    "collection": {
+      "id": 313576,
+      "name": "Jacuzzi al pasado - Colección",
+      "poster_path": "/ipmemRADUObIXU29g8nCIbqVO7W.jpg",
+      "backdrop_path": "/noeTVcgpBiD48fDjFVic1Vz7ope.jpg"
+    }
   },
   "Jacuzzi al pasado 2 (2015).avi": {
     "tmdb_id": 243938,
@@ -73385,7 +74334,13 @@
         "vote_average": 5.678
       }
     ],
-    "cached_at": 1769723496298
+    "cached_at": 1769723496298,
+    "collection": {
+      "id": 313576,
+      "name": "Jacuzzi al pasado - Colección",
+      "poster_path": "/ipmemRADUObIXU29g8nCIbqVO7W.jpg",
+      "backdrop_path": "/noeTVcgpBiD48fDjFVic1Vz7ope.jpg"
+    }
   },
   "James Bond contra Goldfinger (1964).mkv": {
     "tmdb_id": 658,
@@ -73567,7 +74522,13 @@
         "vote_average": 8.2
       }
     ],
-    "cached_at": 1769723496950
+    "cached_at": 1769723496950,
+    "collection": {
+      "id": 645,
+      "name": "James Bond - Colección",
+      "poster_path": "/ruEIIzwvrhvKnMfuZUNVMGhzuqr.jpg",
+      "backdrop_path": "/dOSECZImeyZldoq0ObieBE0lwie.jpg"
+    }
   },
   "Jerry Maguire (1996).mkv": {
     "tmdb_id": 9390,
@@ -74112,7 +75073,13 @@
         "vote_average": 7.725
       }
     ],
-    "cached_at": 1769723498770
+    "cached_at": 1769723498770,
+    "collection": {
+      "id": 404609,
+      "name": "John Wick - Colección",
+      "poster_path": "/yq0BOIp4cMfGon8n1vAqnFy7BwN.jpg",
+      "backdrop_path": "/fSwYa5q2xRkBoOOjueLpkLf3N1m.jpg"
+    }
   },
   "John Wick 4 (2023).mkv": {
     "tmdb_id": 603692,
@@ -74294,7 +75261,13 @@
         "vote_average": 7.412
       }
     ],
-    "cached_at": 1769723499451
+    "cached_at": 1769723499451,
+    "collection": {
+      "id": 404609,
+      "name": "John Wick - Colección",
+      "poster_path": "/yq0BOIp4cMfGon8n1vAqnFy7BwN.jpg",
+      "backdrop_path": "/fSwYa5q2xRkBoOOjueLpkLf3N1m.jpg"
+    }
   },
   "John Wick Pacto de sangre (2017).avi": {
     "tmdb_id": 324552,
@@ -74476,7 +75449,13 @@
         "vote_average": 6.1
       }
     ],
-    "cached_at": 1769723500258
+    "cached_at": 1769723500258,
+    "collection": {
+      "id": 404609,
+      "name": "John Wick - Colección",
+      "poster_path": "/yq0BOIp4cMfGon8n1vAqnFy7BwN.jpg",
+      "backdrop_path": "/fSwYa5q2xRkBoOOjueLpkLf3N1m.jpg"
+    }
   },
   "Juego de patriotas (1992).mp4": {
     "tmdb_id": 9869,
@@ -74659,7 +75638,13 @@
         "vote_average": 7.1
       }
     ],
-    "cached_at": 1769723500880
+    "cached_at": 1769723500880,
+    "collection": {
+      "id": 192492,
+      "name": "Jack Ryan - Colección",
+      "poster_path": "/1mpfBNSpszeVQG68Hnk4A8O2bY6.jpg",
+      "backdrop_path": "/qYlcVBifq5T4wyWV00a5Awq0kUi.jpg"
+    }
   },
   "Juego sucio (2025).avi": {
     "tmdb_id": 941109,
@@ -75021,7 +76006,13 @@
         "vote_average": 5.881
       }
     ],
-    "cached_at": 1769723502163
+    "cached_at": 1769723502163,
+    "collection": {
+      "id": 151263,
+      "name": "Juegos de guerra - Colección",
+      "poster_path": "/tPvDCajdnC6RpuKQqRI9G62IJ7f.jpg",
+      "backdrop_path": "/tBWSIMflBa1tUvSVVqLCuwviW1y.jpg"
+    }
   },
   "Juerga hasta el fin (2013).avi": {
     "tmdb_id": 109414,
@@ -75565,7 +76556,13 @@
         "vote_average": 7.055
       }
     ],
-    "cached_at": 1769723504017
+    "cached_at": 1769723504017,
+    "collection": {
+      "id": 495527,
+      "name": "Jumanji - Colección",
+      "poster_path": "/tFxNyzeDRXd3k0NIJA82n0uodx0.jpg",
+      "backdrop_path": "/2XDgq7CVVc6IVRPbphu58ts4gIV.jpg"
+    }
   },
   "Jumanji Bienvenidos a la jungla (2017).mp4": {
     "tmdb_id": 353486,
@@ -75748,7 +76745,13 @@
         "vote_average": 6.951
       }
     ],
-    "cached_at": 1769723504695
+    "cached_at": 1769723504695,
+    "collection": {
+      "id": 495527,
+      "name": "Jumanji - Colección",
+      "poster_path": "/tFxNyzeDRXd3k0NIJA82n0uodx0.jpg",
+      "backdrop_path": "/2XDgq7CVVc6IVRPbphu58ts4gIV.jpg"
+    }
   },
   "Jumper (2008).mkv": {
     "tmdb_id": 8247,
@@ -76293,7 +77296,13 @@
         "vote_average": 7.58
       }
     ],
-    "cached_at": 1769723506665
+    "cached_at": 1769723506665,
+    "collection": {
+      "id": 1570,
+      "name": "La jungla de cristal - Colección",
+      "poster_path": "/As8l0i21dtha874Tr0GYWsSGShW.jpg",
+      "backdrop_path": "/nKShbIW0wJnSbl3t8uPje0QhTb7.jpg"
+    }
   },
   "Juntos y revueltos (2014).avi": {
     "tmdb_id": 232672,
@@ -76655,7 +77664,13 @@
         "vote_average": 7.511
       }
     ],
-    "cached_at": 1769723508022
+    "cached_at": 1769723508022,
+    "collection": {
+      "id": 328,
+      "name": "Jurassic Park - Colección",
+      "poster_path": "/cn1D5g7dFCNCcXiO070H89JuvnE.jpg",
+      "backdrop_path": "/njFixYzIxX8jsn6KMSEtAzi4avi.jpg"
+    }
   },
   "Jurassic Park III (Parque Jurásico III) (2001).mkv": {
     "tmdb_id": 331,
@@ -76838,7 +77853,13 @@
         "vote_average": 7.053
       }
     ],
-    "cached_at": 1769723508690
+    "cached_at": 1769723508690,
+    "collection": {
+      "id": 328,
+      "name": "Jurassic Park - Colección",
+      "poster_path": "/cn1D5g7dFCNCcXiO070H89JuvnE.jpg",
+      "backdrop_path": "/njFixYzIxX8jsn6KMSEtAzi4avi.jpg"
+    }
   },
   "Jurassic World Dominion (2022).avi": {
     "tmdb_id": 507086,
@@ -77020,7 +78041,13 @@
         "vote_average": 6.699
       }
     ],
-    "cached_at": 1769723509464
+    "cached_at": 1769723509464,
+    "collection": {
+      "id": 328,
+      "name": "Jurassic Park - Colección",
+      "poster_path": "/cn1D5g7dFCNCcXiO070H89JuvnE.jpg",
+      "backdrop_path": "/njFixYzIxX8jsn6KMSEtAzi4avi.jpg"
+    }
   },
   "Kick-Ass 2 Con un par (2013).mkv": {
     "tmdb_id": 59859,
@@ -77202,7 +78229,13 @@
         "vote_average": 6.24
       }
     ],
-    "cached_at": 1769723510120
+    "cached_at": 1769723510120,
+    "collection": {
+      "id": 179892,
+      "name": "Kick-Ass - Colección",
+      "poster_path": "/77MnvUqDFIlMsRHOUFiyQ3GwVtI.jpg",
+      "backdrop_path": "/fYMsCXEMguNlSORJIHydfBgOnty.jpg"
+    }
   },
   "Kick-Ass Listo para machacar (2010).avi": {
     "tmdb_id": 23483,
@@ -77383,7 +78416,13 @@
         "vote_average": 6.884
       }
     ],
-    "cached_at": 1769723510798
+    "cached_at": 1769723510798,
+    "collection": {
+      "id": 179892,
+      "name": "Kick-Ass - Colección",
+      "poster_path": "/77MnvUqDFIlMsRHOUFiyQ3GwVtI.jpg",
+      "backdrop_path": "/fYMsCXEMguNlSORJIHydfBgOnty.jpg"
+    }
   },
   "Kingsman El círculo de oro (2017).avi": {
     "tmdb_id": 343668,
@@ -77566,7 +78605,13 @@
         "vote_average": 6.072
       }
     ],
-    "cached_at": 1769723511407
+    "cached_at": 1769723511407,
+    "collection": {
+      "id": 391860,
+      "name": "Kingsman - Colección",
+      "poster_path": "/avTOATIGKsce6sN0vK5eZ1HWSo6.jpg",
+      "backdrop_path": "/esDXPeq4eBLI5uIWH9QiyHkCUBB.jpg"
+    }
   },
   "Kingsman Servicio secreto (2015).avi": {
     "tmdb_id": 207703,
@@ -77749,7 +78794,13 @@
         "vote_average": 5.52
       }
     ],
-    "cached_at": 1769723512312
+    "cached_at": 1769723512312,
+    "collection": {
+      "id": 391860,
+      "name": "Kingsman - Colección",
+      "poster_path": "/avTOATIGKsce6sN0vK5eZ1HWSo6.jpg",
+      "backdrop_path": "/esDXPeq4eBLI5uIWH9QiyHkCUBB.jpg"
+    }
   },
   "Krampus Maldita Navidad (2015).avi": {
     "tmdb_id": 287903,
@@ -79306,7 +80357,13 @@
         "vote_average": 6.548
       }
     ],
-    "cached_at": 1769723518137
+    "cached_at": 1769723518137,
+    "collection": {
+      "id": 52984,
+      "name": "La búsqueda - Colección",
+      "poster_path": "/kAjoo0o7thpCPsnH7QZiIChavmu.jpg",
+      "backdrop_path": "/a0GLVfaDSf5GNZKK5H4FgGCD2VW.jpg"
+    }
   },
   "La búsqueda 2 El diario secreto (2007).avi": {
     "tmdb_id": 6637,
@@ -79489,7 +80546,13 @@
         "vote_average": 6.081
       }
     ],
-    "cached_at": 1769723518766
+    "cached_at": 1769723518766,
+    "collection": {
+      "id": 52984,
+      "name": "La búsqueda - Colección",
+      "poster_path": "/kAjoo0o7thpCPsnH7QZiIChavmu.jpg",
+      "backdrop_path": "/a0GLVfaDSf5GNZKK5H4FgGCD2VW.jpg"
+    }
   },
   "La casa del reloj en la pared (2018).mkv": {
     "tmdb_id": 463821,
@@ -79854,7 +80917,13 @@
         "vote_average": 6.636
       }
     ],
-    "cached_at": 1769723520254
+    "cached_at": 1769723520254,
+    "collection": {
+      "id": 192492,
+      "name": "Jack Ryan - Colección",
+      "poster_path": "/1mpfBNSpszeVQG68Hnk4A8O2bY6.jpg",
+      "backdrop_path": "/qYlcVBifq5T4wyWV00a5Awq0kUi.jpg"
+    }
   },
   "La chaqueta metálica (1987).mkv": {
     "tmdb_id": 600,
@@ -80396,7 +81465,13 @@
         "vote_average": 7.149
       }
     ],
-    "cached_at": 1769723522130
+    "cached_at": 1769723522130,
+    "collection": {
+      "id": 1709,
+      "name": "El planeta de los simios (Original) - Colección",
+      "poster_path": "/umKb8njr1lZljV2UvPmiCqk7vtn.jpg",
+      "backdrop_path": "/wBiFfCAuYzuSOl0sFnkQMB5BEZx.jpg"
+    }
   },
   "La cosa (El enigma de otro mundo) (1982).avi": {
     "tmdb_id": 1091,
@@ -80578,7 +81653,13 @@
         "vote_average": 8.167
       }
     ],
-    "cached_at": 1769723522756
+    "cached_at": 1769723522756,
+    "collection": {
+      "id": 479888,
+      "name": "La cosa - Colección",
+      "poster_path": "/vuCSeoxDHNrsgg0PN9r43AQkLI0.jpg",
+      "backdrop_path": "/lUPruOqjDhZrCKz9Ze2tCufPxHR.jpg"
+    }
   },
   "La cosa (El enigma de otro mundo) (1982).mkv": {
     "tmdb_id": 1091,
@@ -80760,7 +81841,13 @@
         "vote_average": 8.167
       }
     ],
-    "cached_at": 1769723523311
+    "cached_at": 1769723523311,
+    "collection": {
+      "id": 479888,
+      "name": "La cosa - Colección",
+      "poster_path": "/vuCSeoxDHNrsgg0PN9r43AQkLI0.jpg",
+      "backdrop_path": "/lUPruOqjDhZrCKz9Ze2tCufPxHR.jpg"
+    }
   },
   "La cosa (The Thing) (2011).mkv": {
     "tmdb_id": 60935,
@@ -80942,7 +82029,13 @@
         "vote_average": 7.352
       }
     ],
-    "cached_at": 1769723523960
+    "cached_at": 1769723523960,
+    "collection": {
+      "id": 479888,
+      "name": "La cosa - Colección",
+      "poster_path": "/vuCSeoxDHNrsgg0PN9r43AQkLI0.jpg",
+      "backdrop_path": "/lUPruOqjDhZrCKz9Ze2tCufPxHR.jpg"
+    }
   },
   "La cruda realidad (2009).mp4": {
     "tmdb_id": 20943,
@@ -81304,7 +82397,13 @@
         "vote_average": 5.3
       }
     ],
-    "cached_at": 1769723525359
+    "cached_at": 1769723525359,
+    "collection": {
+      "id": 101471,
+      "name": "El regreso de los muertos vivientes - Colección",
+      "poster_path": "/7ekXvck6C94gKbfH6WlKK2qqdVL.jpg",
+      "backdrop_path": "/c5sDFadkYthAki1BEk66PYcW0WN.jpg"
+    }
   },
   "La gran apuesta (2015).mkv": {
     "tmdb_id": 318846,
@@ -81849,7 +82948,13 @@
         "vote_average": 6.557
       }
     ],
-    "cached_at": 1769723527296
+    "cached_at": 1769723527296,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "La guerra de las galaxias. Episodio I La amenaza fantasma (1999).avi": {
     "tmdb_id": 1893,
@@ -82031,7 +83136,13 @@
         "vote_average": 7.253
       }
     ],
-    "cached_at": 1769723527934
+    "cached_at": 1769723527934,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "La guerra de las galaxias. Episodio II El ataque de los clones (2002).avi": {
     "tmdb_id": 1894,
@@ -82213,7 +83324,13 @@
         "vote_average": 7.504
       }
     ],
-    "cached_at": 1769723528526
+    "cached_at": 1769723528526,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "La guerra de las galaxias. Episodio III La venganza de los Sith (2005).avi": {
     "tmdb_id": 1895,
@@ -82395,7 +83512,13 @@
         "vote_average": 7.02
       }
     ],
-    "cached_at": 1769723529231
+    "cached_at": 1769723529231,
+    "collection": {
+      "id": 10,
+      "name": "La guerra de las galaxias - Colección",
+      "poster_path": "/b8FzGmDRm8E1revfJGLbJb33BkO.jpg",
+      "backdrop_path": "/qVPChlozQ1BP3svfHjiAdNneMGA.jpg"
+    }
   },
   "La guerra de los mundos (2005).mkv": {
     "tmdb_id": 74,
@@ -83124,7 +84247,13 @@
         "vote_average": 5.153
       }
     ],
-    "cached_at": 1769723531790
+    "cached_at": 1769723531790,
+    "collection": {
+      "id": 89264,
+      "name": "Tras el corazón - Colección",
+      "poster_path": "/jFEsmuDgTRjHwstBTeciBFLLnDC.jpg",
+      "backdrop_path": "/fHDAbqV14BX13K21e2bO9wX9dB5.jpg"
+    }
   },
   "La jungla 2 Alerta roja (1990).mkv": {
     "tmdb_id": 1573,
@@ -83305,7 +84434,13 @@
         "vote_average": 5.472
       }
     ],
-    "cached_at": 1769723532414
+    "cached_at": 1769723532414,
+    "collection": {
+      "id": 1570,
+      "name": "La jungla de cristal - Colección",
+      "poster_path": "/As8l0i21dtha874Tr0GYWsSGShW.jpg",
+      "backdrop_path": "/nKShbIW0wJnSbl3t8uPje0QhTb7.jpg"
+    }
   },
   "La jungla 4.0 (2007).mkv": {
     "tmdb_id": 1571,
@@ -83486,7 +84621,13 @@
         "vote_average": 6.137
       }
     ],
-    "cached_at": 1769723533145
+    "cached_at": 1769723533145,
+    "collection": {
+      "id": 1570,
+      "name": "La jungla de cristal - Colección",
+      "poster_path": "/As8l0i21dtha874Tr0GYWsSGShW.jpg",
+      "backdrop_path": "/nKShbIW0wJnSbl3t8uPje0QhTb7.jpg"
+    }
   },
   "La jungla de cristal La venganza 1995.mkv": {
     "tmdb_id": 1572,
@@ -83667,7 +84808,13 @@
         "vote_average": 6.053
       }
     ],
-    "cached_at": 1769723533902
+    "cached_at": 1769723533902,
+    "collection": {
+      "id": 1570,
+      "name": "La jungla de cristal - Colección",
+      "poster_path": "/As8l0i21dtha874Tr0GYWsSGShW.jpg",
+      "backdrop_path": "/nKShbIW0wJnSbl3t8uPje0QhTb7.jpg"
+    }
   },
   "La larga marcha (2025).mkv": {
     "tmdb_id": 604079,
@@ -84214,7 +85361,13 @@
         "vote_average": 5.378
       }
     ],
-    "cached_at": 1769723536266
+    "cached_at": 1769723536266,
+    "collection": {
+      "id": 10456,
+      "name": "Harry el sucio - Colección",
+      "poster_path": "/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
+      "backdrop_path": "/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg"
+    }
   },
   "La llave del mal (2005).mp4": {
     "tmdb_id": 9913,
@@ -84760,7 +85913,13 @@
         "vote_average": 7.215
       }
     ],
-    "cached_at": 1769723538157
+    "cached_at": 1769723538157,
+    "collection": {
+      "id": 1733,
+      "name": "La Momia - Colección",
+      "poster_path": "/k4LMa9UBVJwJyOLBkuc1BJJblJ8.jpg",
+      "backdrop_path": "/1BeKi6IytbfQlQocJSvP2k6sO1a.jpg"
+    }
   },
   "La momia La tumba del emperador Dragón (2008).mkv": {
     "tmdb_id": 1735,
@@ -84942,7 +86101,13 @@
         "vote_average": 6.768
       }
     ],
-    "cached_at": 1769723538731
+    "cached_at": 1769723538731,
+    "collection": {
+      "id": 1733,
+      "name": "La Momia - Colección",
+      "poster_path": "/k4LMa9UBVJwJyOLBkuc1BJJblJ8.jpg",
+      "backdrop_path": "/1BeKi6IytbfQlQocJSvP2k6sO1a.jpg"
+    }
   },
   "La niebla (2007).mp4": {
     "tmdb_id": 5876,
@@ -85305,7 +86470,13 @@
         "vote_average": 5.5
       }
     ],
-    "cached_at": 1769723540047
+    "cached_at": 1769723540047,
+    "collection": {
+      "id": 937,
+      "name": "La pantera rosa (Original) - Colección",
+      "poster_path": "/gRRe7HgwpeJ2UmedbStyDKC586U.jpg",
+      "backdrop_path": "/eVHH8peqVMN9VcEZvn9yTG6SDed.jpg"
+    }
   },
   "La princesa prometida (1987).mp4": {
     "tmdb_id": 2493,
@@ -85670,7 +86841,13 @@
         "vote_average": 7.295
       }
     ],
-    "cached_at": 1769723541336
+    "cached_at": 1769723541336,
+    "collection": {
+      "id": 10919,
+      "name": "La profecía - Colección",
+      "poster_path": "/eswvgb5r9oBtD5xaTMZlJr5O7E6.jpg",
+      "backdrop_path": "/97vU4Y2bBmoJ3Mwi3uOAL8ahdUC.jpg"
+    }
   },
   "La proposición (2009).mp4": {
     "tmdb_id": 18240,
@@ -86033,7 +87210,13 @@
         "vote_average": 5.3
       }
     ],
-    "cached_at": 1769723542915
+    "cached_at": 1769723542915,
+    "collection": {
+      "id": 1709,
+      "name": "El planeta de los simios (Original) - Colección",
+      "poster_path": "/umKb8njr1lZljV2UvPmiCqk7vtn.jpg",
+      "backdrop_path": "/wBiFfCAuYzuSOl0sFnkQMB5BEZx.jpg"
+    }
   },
   "La recluta Benjamin (1980).mp4": {
     "tmdb_id": 10765,
@@ -86397,7 +87580,13 @@
         "vote_average": 5.5
       }
     ],
-    "cached_at": 1769723544128
+    "cached_at": 1769723544128,
+    "collection": {
+      "id": 328073,
+      "name": "La red - Colección",
+      "poster_path": "/sO76zaomJunfbwKmoeDvPepgk6P.jpg",
+      "backdrop_path": "/5j4HxayNgcAgGStNKqPxM0QNC7V.jpg"
+    }
   },
   "La reina de África (1952).avi": {
     "tmdb_id": 488,
@@ -86966,7 +88155,13 @@
         "vote_average": 6.242
       }
     ],
-    "cached_at": 1769723546840
+    "cached_at": 1769723546840,
+    "collection": {
+      "id": 105075,
+      "name": "La sombra - Colección",
+      "poster_path": "/qTuxplQWxxwKPWaRSHk93rSbW6p.jpg",
+      "backdrop_path": "/ntIfzZNGz2aHRumYM7P8vqLJv6W.jpg"
+    }
   },
   "La tapadera (1993).mp4": {
     "tmdb_id": 37233,
@@ -87875,7 +89070,13 @@
         "vote_average": 6.368
       }
     ],
-    "cached_at": 1769723550296
+    "cached_at": 1769723550296,
+    "collection": {
+      "id": 2467,
+      "name": "Lara Croft: Tomb Raider - Colección",
+      "poster_path": "/psaUpusAidBptNoZSCFn7BCgZHV.jpg",
+      "backdrop_path": "/dY55rtfQMOMGHJXGDNfSEyuHPGG.jpg"
+    }
   },
   "Lara Croft Tomb Raider - La cuna de la vida (2003).mp4": {
     "tmdb_id": 1996,
@@ -88057,7 +89258,13 @@
         "vote_average": 5.683
       }
     ],
-    "cached_at": 1769723550901
+    "cached_at": 1769723550901,
+    "collection": {
+      "id": 2467,
+      "name": "Lara Croft: Tomb Raider - Colección",
+      "poster_path": "/psaUpusAidBptNoZSCFn7BCgZHV.jpg",
+      "backdrop_path": "/dY55rtfQMOMGHJXGDNfSEyuHPGG.jpg"
+    }
   },
   "Las brujas de Eastwick (1987).mkv": {
     "tmdb_id": 6069,
@@ -88601,7 +89808,13 @@
         "vote_average": 7.446
       }
     ],
-    "cached_at": 1769723552707
+    "cached_at": 1769723552707,
+    "collection": {
+      "id": 583555,
+      "name": "Le llamaban Trinidad - Colección",
+      "poster_path": "/jSEIfhoBWLdHINohOpOmhJDN87n.jpg",
+      "backdrop_path": "/FzjWIXu3n714sYxQHq3TPEWz16.jpg"
+    }
   },
   "Le seguían llamando Trinidad (1971).mp4": {
     "tmdb_id": 11829,
@@ -88782,7 +89995,13 @@
         "vote_average": 6.544
       }
     ],
-    "cached_at": 1769723553384
+    "cached_at": 1769723553384,
+    "collection": {
+      "id": 583555,
+      "name": "Le llamaban Trinidad - Colección",
+      "poster_path": "/jSEIfhoBWLdHINohOpOmhJDN87n.jpg",
+      "backdrop_path": "/FzjWIXu3n714sYxQHq3TPEWz16.jpg"
+    }
   },
   "Legitima Defensa (1997).mp4": {
     "tmdb_id": 11975,
@@ -90057,7 +91276,13 @@
         "vote_average": 6.639
       }
     ],
-    "cached_at": 1769723558097
+    "cached_at": 1769723558097,
+    "collection": {
+      "id": 453993,
+      "name": "Lobezno - Colección",
+      "poster_path": "/9RaDz9aX9CPqN1h9QqpMiQdvlaY.jpg",
+      "backdrop_path": "/5HQnP60igRzNokf5jc6fCKemG4I.jpg"
+    }
   },
   "Loca academia de policía (1984).avi": {
     "tmdb_id": 9336,
@@ -90238,7 +91463,13 @@
         "vote_average": 4.279
       }
     ],
-    "cached_at": 1769723558671
+    "cached_at": 1769723558671,
+    "collection": {
+      "id": 9338,
+      "name": "Loca academia de policía - Colección",
+      "poster_path": "/fKYioUeHRlKtrIx2bzx37OgxW0p.jpg",
+      "backdrop_path": "/dEkJGGXnUlH6xEOjE4NYpgf378H.jpg"
+    }
   },
   "Lone Star (1996).mp4": {
     "tmdb_id": 26748,
@@ -90602,7 +91833,13 @@
         "vote_average": 5.801
       }
     ],
-    "cached_at": 1769723559909
+    "cached_at": 1769723559909,
+    "collection": {
+      "id": 9744,
+      "name": "Los cuatro fantásticos - Colección",
+      "poster_path": "/upUu24JdUHhz8DvLNaYi86pct0T.jpg",
+      "backdrop_path": "/u3gPzjUY0iJr8ecZGVwChdSRFZt.jpg"
+    }
   },
   "Los 4 Fantásticos y Silver Surfer (2007).mkv": {
     "tmdb_id": 1979,
@@ -90784,7 +92021,13 @@
         "vote_average": 6.23
       }
     ],
-    "cached_at": 1769723560603
+    "cached_at": 1769723560603,
+    "collection": {
+      "id": 9744,
+      "name": "Los cuatro fantásticos - Colección",
+      "poster_path": "/upUu24JdUHhz8DvLNaYi86pct0T.jpg",
+      "backdrop_path": "/u3gPzjUY0iJr8ecZGVwChdSRFZt.jpg"
+    }
   },
   "Los Cuatro Fantásticos Primeros pasos (2025).avi": {
     "tmdb_id": 617126,
@@ -91511,7 +92754,13 @@
         "vote_average": 7.905
       }
     ],
-    "cached_at": 1769723563014
+    "cached_at": 1769723563014,
+    "collection": {
+      "id": 131635,
+      "name": "Los Juegos del Hambre - Colección",
+      "poster_path": "/pV0AuDuIyrNdPG3aVlKxg8EnJQb.jpg",
+      "backdrop_path": "/Ipp7cegtub4t0mu7xaKLQkYoGc.jpg"
+    }
   },
   "Los Juegos del Hambre En llamas (2013).mkv": {
     "tmdb_id": 101299,
@@ -91693,7 +92942,13 @@
         "vote_average": 7.377
       }
     ],
-    "cached_at": 1769723563594
+    "cached_at": 1769723563594,
+    "collection": {
+      "id": 131635,
+      "name": "Los Juegos del Hambre - Colección",
+      "poster_path": "/pV0AuDuIyrNdPG3aVlKxg8EnJQb.jpg",
+      "backdrop_path": "/Ipp7cegtub4t0mu7xaKLQkYoGc.jpg"
+    }
   },
   "Los Juegos del Hambre: Sinsajo - Parte 2.mkv": {
     "tmdb_id": 131634,
@@ -91875,7 +93130,13 @@
         "vote_average": 6.012
       }
     ],
-    "cached_at": 1769723564219
+    "cached_at": 1769723564219,
+    "collection": {
+      "id": 131635,
+      "name": "Los Juegos del Hambre - Colección",
+      "poster_path": "/pV0AuDuIyrNdPG3aVlKxg8EnJQb.jpg",
+      "backdrop_path": "/Ipp7cegtub4t0mu7xaKLQkYoGc.jpg"
+    }
   },
   "Los Vengadores (2012).mkv": {
     "tmdb_id": 24428,
@@ -92057,7 +93318,13 @@
         "vote_average": 6.768
       }
     ],
-    "cached_at": 1769723564848
+    "cached_at": 1769723564848,
+    "collection": {
+      "id": 86311,
+      "name": "Los Vengadores - Colección",
+      "poster_path": "/xRgTmIWbsLjRIfFdOS6u5FTlAI2.jpg",
+      "backdrop_path": "/2UNUv4NJdC36E5myDHACBJ99EwL.jpg"
+    }
   },
   "Los amos del barrio (2012).avi": {
     "tmdb_id": 80035,
@@ -92419,7 +93686,13 @@
         "vote_average": 6.5
       }
     ],
-    "cached_at": 1769723566305
+    "cached_at": 1769723566305,
+    "collection": {
+      "id": 632730,
+      "name": "The Benchwarmers Collection",
+      "poster_path": "/a220sDotBQd3CECjWl9Aezky8IV.jpg",
+      "backdrop_path": "/mB9zh1NDaS7LNYLr6YeV1HQRZhq.jpg"
+    }
   },
   "Los cazafantasmas (1984).mkv": {
     "tmdb_id": 620,
@@ -92600,7 +93873,13 @@
         "vote_average": 6.878
       }
     ],
-    "cached_at": 1769723566970
+    "cached_at": 1769723566970,
+    "collection": {
+      "id": 2980,
+      "name": "Los Cazafantasmas - Colección",
+      "poster_path": "/xMIU7Z0EwU3nSJM4imcFKSUJGXt.jpg",
+      "backdrop_path": "/guigdRPHN65fsgZHmvVvBOyiArf.jpg"
+    }
   },
   "Los cazafantasmas II (1989).mkv": {
     "tmdb_id": 2978,
@@ -92781,7 +94060,13 @@
         "vote_average": 6.522
       }
     ],
-    "cached_at": 1769723567600
+    "cached_at": 1769723567600,
+    "collection": {
+      "id": 2980,
+      "name": "Los Cazafantasmas - Colección",
+      "poster_path": "/xMIU7Z0EwU3nSJM4imcFKSUJGXt.jpg",
+      "backdrop_path": "/guigdRPHN65fsgZHmvVvBOyiArf.jpg"
+    }
   },
   "Los fantasmas atacan al jefe (1988).mp4": {
     "tmdb_id": 9647,
@@ -93327,7 +94612,13 @@
         "vote_average": 6.4
       }
     ],
-    "cached_at": 1769723569460
+    "cached_at": 1769723569460,
+    "collection": {
+      "id": 8050,
+      "name": "Los inmortales - Colección",
+      "poster_path": "/yGIqYvysHLoVwmkXR49Oy0oUlwb.jpg",
+      "backdrop_path": "/rC40OiyxY3hwQtSn84ucVCPkO0g.jpg"
+    }
   },
   "Los intocables de Eliot Ness (1987).avi": {
     "tmdb_id": 117,
@@ -94906,7 +96197,13 @@
         "vote_average": 6.8
       }
     ],
-    "cached_at": 1769723574951
+    "cached_at": 1769723574951,
+    "collection": {
+      "id": 93295,
+      "name": "48 Horas - Colección",
+      "poster_path": "/mdNbPlji7Bz3UEAuV3r2f53qK61.jpg",
+      "backdrop_path": "/53SfXzq0CuBMQNAJMnrvwePbRLN.jpg"
+    }
   },
   "Malditos bastardos (2009).mp4": {
     "tmdb_id": 16869,
@@ -96042,7 +97339,13 @@
         "vote_average": 7.347
       }
     ],
-    "cached_at": 1769723579546
+    "cached_at": 1769723579546,
+    "collection": {
+      "id": 2344,
+      "name": "Matrix - Colección",
+      "poster_path": "/roEEKejljtahGx75nYwSlYougS9.jpg",
+      "backdrop_path": "/bRm2DEgUiYciDw3myHuYFInD7la.jpg"
+    }
   },
   "Maverick (1994).avi": {
     "tmdb_id": 9359,
@@ -96591,7 +97894,13 @@
         "vote_average": 6.251
       }
     ],
-    "cached_at": 1769723581495
+    "cached_at": 1769723581495,
+    "collection": {
+      "id": 86055,
+      "name": "Men in Black - Colección",
+      "poster_path": "/1z9gqwqLGnnW4CltnKHzPIfhg7c.jpg",
+      "backdrop_path": "/xKz6YaOvmnIJQ3MYIpnaa7FBaAB.jpg"
+    }
   },
   "Men in Black 3 (2012).mkv": {
     "tmdb_id": 41154,
@@ -96773,7 +98082,13 @@
         "vote_average": 7.107
       }
     ],
-    "cached_at": 1769723582188
+    "cached_at": 1769723582188,
+    "collection": {
+      "id": 86055,
+      "name": "Men in Black - Colección",
+      "poster_path": "/1z9gqwqLGnnW4CltnKHzPIfhg7c.jpg",
+      "backdrop_path": "/xKz6YaOvmnIJQ3MYIpnaa7FBaAB.jpg"
+    }
   },
   "Mentiras arriesgadas (1994).mkv": {
     "tmdb_id": 36955,
@@ -97683,7 +98998,13 @@
         "vote_average": 6.371
       }
     ],
-    "cached_at": 1769723585410
+    "cached_at": 1769723585410,
+    "collection": {
+      "id": 87359,
+      "name": "Misión imposible - Colección",
+      "poster_path": "/oKxF0QpITrRmEm0jM5Y1DtgnLim.jpg",
+      "backdrop_path": "/mroWh717g0Ah2c0rrPGW6f3EWMM.jpg"
+    }
   },
   "Misión Panamá (2022).mp4": {
     "tmdb_id": 628878,
@@ -98046,7 +99367,13 @@
         "vote_average": 7.668
       }
     ],
-    "cached_at": 1769723586770
+    "cached_at": 1769723586770,
+    "collection": {
+      "id": 93220,
+      "name": "Miss agente especial - Colección",
+      "poster_path": "/pUZSbHdAAnXG7Cs9rfYiGdnetZC.jpg",
+      "backdrop_path": "/7TIT28YbhAOeQGD2q2hJ9j83jI1.jpg"
+    }
   },
   "Miss Agente Especial 2 Armada y fabulosa (2005).mp4": {
     "tmdb_id": 10040,
@@ -98227,7 +99554,13 @@
         "vote_average": 6.586
       }
     ],
-    "cached_at": 1769723587496
+    "cached_at": 1769723587496,
+    "collection": {
+      "id": 93220,
+      "name": "Miss agente especial - Colección",
+      "poster_path": "/pUZSbHdAAnXG7Cs9rfYiGdnetZC.jpg",
+      "backdrop_path": "/7TIT28YbhAOeQGD2q2hJ9j83jI1.jpg"
+    }
   },
   "Mission Impossible  Ghost Protocol (2011).mp4": {
     "tmdb_id": 56292,
@@ -98409,7 +99742,13 @@
         "vote_average": 6.3
       }
     ],
-    "cached_at": 1769723588112
+    "cached_at": 1769723588112,
+    "collection": {
+      "id": 87359,
+      "name": "Misión imposible - Colección",
+      "poster_path": "/oKxF0QpITrRmEm0jM5Y1DtgnLim.jpg",
+      "backdrop_path": "/mroWh717g0Ah2c0rrPGW6f3EWMM.jpg"
+    }
   },
   "Mission Impossible 2 (2000).mp4": {
     "tmdb_id": 955,
@@ -98591,7 +99930,13 @@
         "vote_average": 7.729
       }
     ],
-    "cached_at": 1769723588792
+    "cached_at": 1769723588792,
+    "collection": {
+      "id": 87359,
+      "name": "Misión imposible - Colección",
+      "poster_path": "/oKxF0QpITrRmEm0jM5Y1DtgnLim.jpg",
+      "backdrop_path": "/mroWh717g0Ah2c0rrPGW6f3EWMM.jpg"
+    }
   },
   "Mission Impossible III (2006).mp4": {
     "tmdb_id": 956,
@@ -98773,7 +100118,13 @@
         "vote_average": 6.638
       }
     ],
-    "cached_at": 1769723589390
+    "cached_at": 1769723589390,
+    "collection": {
+      "id": 87359,
+      "name": "Misión imposible - Colección",
+      "poster_path": "/oKxF0QpITrRmEm0jM5Y1DtgnLim.jpg",
+      "backdrop_path": "/mroWh717g0Ah2c0rrPGW6f3EWMM.jpg"
+    }
   },
   "Monstruoso (2008).mp4": {
     "tmdb_id": 7191,
@@ -100045,7 +101396,13 @@
         "vote_average": 6.534
       }
     ],
-    "cached_at": 1769723593890
+    "cached_at": 1769723593890,
+    "collection": {
+      "id": 1129084,
+      "name": "Nadie - Colección",
+      "poster_path": "/nE8IEpW1Kwqrv4POLyTPLlEsOP3.jpg",
+      "backdrop_path": "/jNxcPaz5OT3A3PqTgQevwe8pVh8.jpg"
+    }
   },
   "Niños grandes (2010).avi": {
     "tmdb_id": 38365,
@@ -100225,7 +101582,13 @@
         "vote_average": 5.431
       }
     ],
-    "cached_at": 1769723594611
+    "cached_at": 1769723594611,
+    "collection": {
+      "id": 180546,
+      "name": "Niños grandes - Colección",
+      "poster_path": "/tGLlcpz4MdD4pWdND3Um7p3OZee.jpg",
+      "backdrop_path": "/ahlmYgIHI6oye76bgoUtC01mcrC.jpg"
+    }
   },
   "Niños grandes 2 (2013).mp4": {
     "tmdb_id": 109418,
@@ -100405,7 +101768,13 @@
         "vote_average": 4.688
       }
     ],
-    "cached_at": 1769723595254
+    "cached_at": 1769723595254,
+    "collection": {
+      "id": 180546,
+      "name": "Niños grandes - Colección",
+      "poster_path": "/tGLlcpz4MdD4pWdND3Um7p3OZee.jpg",
+      "backdrop_path": "/ahlmYgIHI6oye76bgoUtC01mcrC.jpg"
+    }
   },
   "No me chilles, que no te veo (1989).mp4": {
     "tmdb_id": 11185,
@@ -100949,7 +102318,13 @@
         "vote_average": 7.3
       }
     ],
-    "cached_at": 1769723597115
+    "cached_at": 1769723597115,
+    "collection": {
+      "id": 98168,
+      "name": "Noche de miedo - Colección",
+      "poster_path": "/3LGt5fovxNB9LLRXW2iJFtX67vb.jpg",
+      "backdrop_path": "/uishw5f6ng5X3blHgsw6Loep8cw.jpg"
+    }
   },
   "Noche loca (2010).mp4": {
     "tmdb_id": 35056,
@@ -101132,187 +102507,6 @@
       }
     ],
     "cached_at": 1769723597708
-  },
-  "Noches de Neon  (1988).mp4": {
-    "tmdb_id": 17170,
-    "title": "Noches de neón",
-    "overview": "El joven Jamie Conway aspira a ser escritor, pero sólo ha podido trabajar en una revista para revisar datos en los artículos de los demás. Es huérfano de madre, y su mujer lo ha dejado para irse a vivir a París como modelo. En esta situación, la única vía de escape para Jamie es la noche y las drogas.",
-    "poster": "https://image.tmdb.org/t/p/w342/yLxvitJxVmwkhd5eqG1NSuTWDeS.jpg",
-    "poster_path": "https://image.tmdb.org/t/p/w342/yLxvitJxVmwkhd5eqG1NSuTWDeS.jpg",
-    "backdrop": "https://image.tmdb.org/t/p/w780/AocqLoXjXoXzgkEsh8Ez8l9bRYm.jpg",
-    "backdrop_path": "https://image.tmdb.org/t/p/w780/AocqLoXjXoXzgkEsh8Ez8l9bRYm.jpg",
-    "release_date": "1988-04-01",
-    "vote_average": 5.668,
-    "genre_ids": [
-      18,
-      10749
-    ],
-    "runtime": 107,
-    "cast": [
-      {
-        "id": 521,
-        "name": "Michael J. Fox",
-        "character": "Jamie",
-        "photo": "https://image.tmdb.org/t/p/w185/2JB4FMgQmnhbBlQ4SxWFN9EIVDi.jpg"
-      },
-      {
-        "id": 2628,
-        "name": "Kiefer Sutherland",
-        "character": "Tad",
-        "photo": "https://image.tmdb.org/t/p/w185/tK5zjdvao2NELns3bqT7PPqPeJI.jpg"
-      },
-      {
-        "id": 16171,
-        "name": "Phoebe Cates",
-        "character": "Amanda",
-        "photo": "https://image.tmdb.org/t/p/w185/nh2jiRCFa7TQdGB87k557LG0PtY.jpg"
-      },
-      {
-        "id": 12967,
-        "name": "Swoosie Kurtz",
-        "character": "Megan",
-        "photo": "https://image.tmdb.org/t/p/w185/uCHMttpxVITjDXtjs8FS6O7TQHx.jpg"
-      },
-      {
-        "id": 36926,
-        "name": "Frances Sternhagen",
-        "character": "Clara",
-        "photo": "https://image.tmdb.org/t/p/w185/95zg4ses3DIBGBEBtVJnsedDgHE.jpg"
-      },
-      {
-        "id": 177443,
-        "name": "Tracy Pollan",
-        "character": "Vicky",
-        "photo": "https://image.tmdb.org/t/p/w185/kMsIHlRNlSw9DxKELWPRkm1D6RI.jpg"
-      },
-      {
-        "id": 11783,
-        "name": "John Houseman",
-        "character": "Mr. Vogel",
-        "photo": "https://image.tmdb.org/t/p/w185/aNWCBj1ApNIBJvFAAWuEwXWaGDw.jpg"
-      },
-      {
-        "id": 77293,
-        "name": "Charlie Schlatter",
-        "character": "Michael",
-        "photo": "https://image.tmdb.org/t/p/w185/tAXK63aGqIP7CqgvxNLEC2KHKvf.jpg"
-      },
-      {
-        "id": 4254,
-        "name": "David Warrilow",
-        "character": "Rittenhouse",
-        "photo": "https://image.tmdb.org/t/p/w185/w6APS9AwQk3WlNLMJ1En0fdYjDL.jpg"
-      },
-      {
-        "id": 1902,
-        "name": "Dianne Wiest",
-        "character": "Mother",
-        "photo": "https://image.tmdb.org/t/p/w185/axqtFLgJNNz0N9i443USHCOvrmY.jpg"
-      },
-      {
-        "id": 12224,
-        "name": "Alec Mapa",
-        "character": "Yasu Wade",
-        "photo": "https://image.tmdb.org/t/p/w185/sb8qZmCfkwliw2vY2nWDf6cJP1e.jpg"
-      },
-      {
-        "id": 21282,
-        "name": "William Hickey",
-        "character": "Ferret Man",
-        "photo": "https://image.tmdb.org/t/p/w185/sqqmvSkDK6vDNrmEgUAjzWztg9c.jpg"
-      },
-      {
-        "id": 183517,
-        "name": "Gina Belafonte",
-        "character": "Kathy",
-        "photo": "https://image.tmdb.org/t/p/w185/9OkG8ZrSE8OlrgfvCQ9ab7vq9rO.jpg"
-      },
-      {
-        "id": 8213,
-        "name": "Sam Robards",
-        "character": "Rich Vanier",
-        "photo": "https://image.tmdb.org/t/p/w185/AqYRpRgNqQopOU5YGfSFVSuIyl9.jpg"
-      },
-      {
-        "id": 1048569,
-        "name": "Bernard Zette",
-        "character": "Stevie",
-        "photo": null
-      }
-    ],
-    "recommendations": [
-      {
-        "tmdb_id": 29859,
-        "title": "El hermano más listo de Sherlock Holmes",
-        "poster_path": "https://image.tmdb.org/t/p/w342/aPjc6J7v1j4qHhn069EnRuRs8at.jpg",
-        "release_date": "1975-12-14",
-        "vote_average": 6.003
-      },
-      {
-        "tmdb_id": 26603,
-        "title": "Viceversa",
-        "poster_path": "https://image.tmdb.org/t/p/w342/pAKK3wMLWCKgOtBlKw7s6TCzbg2.jpg",
-        "release_date": "1988-02-25",
-        "vote_average": 5.8
-      },
-      {
-        "tmdb_id": 11372,
-        "title": "Ha llegado el águila",
-        "poster_path": "https://image.tmdb.org/t/p/w342/ApG1wp9vbrUEPHp6yJCVzA3RKOl.jpg",
-        "release_date": "1976-12-24",
-        "vote_average": 6.6
-      },
-      {
-        "tmdb_id": 10021,
-        "title": "El secreto de mi éxito",
-        "poster_path": "https://image.tmdb.org/t/p/w342/2Qd5a2sWt3O5Gfc6GXf3kt8pNpv.jpg",
-        "release_date": "1987-04-10",
-        "vote_average": 6.489
-      },
-      {
-        "tmdb_id": 13967,
-        "title": "Miss Potter",
-        "poster_path": "https://image.tmdb.org/t/p/w342/lZrrhzaxG35fSkQW9TSY7pN64AP.jpg",
-        "release_date": "2006-12-03",
-        "vote_average": 6.6
-      },
-      {
-        "tmdb_id": 16635,
-        "title": "Un país en África",
-        "poster_path": "https://image.tmdb.org/t/p/w342/5jalaw0CYTLYGabnqyKEXSPQisj.jpg",
-        "release_date": "2004-05-04",
-        "vote_average": 5.92
-      },
-      {
-        "tmdb_id": 2259,
-        "title": "La casa de los espíritus",
-        "poster_path": "https://image.tmdb.org/t/p/w342/eiCEPrKRm3XPrcLTLOqbPKtcH7B.jpg",
-        "release_date": "1993-10-21",
-        "vote_average": 6.9
-      },
-      {
-        "tmdb_id": 10345,
-        "title": "Superagente K-9",
-        "poster_path": "https://image.tmdb.org/t/p/w342/aroGPuJTZ6hz0okkQr39JwDFHJN.jpg",
-        "release_date": "1989-04-28",
-        "vote_average": 6.165
-      },
-      {
-        "tmdb_id": 336,
-        "title": "¡Agáchate, maldito!",
-        "poster_path": "https://image.tmdb.org/t/p/w342/zHzv1nA9azV2lLR0nu8dhIsmbjY.jpg",
-        "release_date": "1971-10-29",
-        "vote_average": 7.689
-      },
-      {
-        "tmdb_id": 656663,
-        "title": "Jackass Forever",
-        "poster_path": "https://image.tmdb.org/t/p/w342/rCfviMjtmvMJUGBWK1xjUsQhn7S.jpg",
-        "release_date": "2022-02-01",
-        "vote_average": 6.8
-      }
-    ],
-    "cached_at": 1769723598380
   },
   "Novia por contrato (2006).mp4": {
     "tmdb_id": 6877,
@@ -102400,7 +103594,13 @@
         "vote_average": 7.088
       }
     ],
-    "cached_at": 1769723602394
+    "cached_at": 1769723602394,
+    "collection": {
+      "id": 363369,
+      "name": "Pacific Rim - Colección",
+      "poster_path": "/yzp0XU6S7IeKAOioJ419oX7sddo.jpg",
+      "backdrop_path": "/zg60Lc8JJm7j2lAlTtm0jvK6nZO.jpg"
+    }
   },
   "Pasajero 57 (1992).mp4": {
     "tmdb_id": 10538,
@@ -102947,7 +104147,13 @@
         "vote_average": 7.7
       }
     ],
-    "cached_at": 1769723604463
+    "cached_at": 1769723604463,
+    "collection": {
+      "id": 192492,
+      "name": "Jack Ryan - Colección",
+      "poster_path": "/1mpfBNSpszeVQG68Hnk4A8O2bY6.jpg",
+      "backdrop_path": "/qYlcVBifq5T4wyWV00a5Awq0kUi.jpg"
+    }
   },
   "Perseguido (1987).mkv": {
     "tmdb_id": 865,
@@ -103309,7 +104515,13 @@
         "vote_average": 5.3
       }
     ],
-    "cached_at": 1769723605840
+    "cached_at": 1769723605840,
+    "collection": {
+      "id": 8581,
+      "name": "Pesadilla en Elm Street - Colección",
+      "poster_path": "/58uXfu5QtRY9yXWlUNy0gY0rdcV.jpg",
+      "backdrop_path": "/7UcPLgNneoemYmZcyUo5r3nwBbE.jpg"
+    }
   },
   "Pesadilla final La muerte de Freddy (1991).mp4": {
     "tmdb_id": 11284,
@@ -103490,7 +104702,13 @@
         "vote_average": 4.613
       }
     ],
-    "cached_at": 1769723606449
+    "cached_at": 1769723606449,
+    "collection": {
+      "id": 8581,
+      "name": "Pesadilla en Elm Street - Colección",
+      "poster_path": "/58uXfu5QtRY9yXWlUNy0gY0rdcV.jpg",
+      "backdrop_path": "/7UcPLgNneoemYmZcyUo5r3nwBbE.jpg"
+    }
   },
   "Piratas del Caribe El cofre del hombre muerto (2006).mkv": {
     "tmdb_id": 58,
@@ -103672,7 +104890,13 @@
         "vote_average": 7.585
       }
     ],
-    "cached_at": 1769723607078
+    "cached_at": 1769723607078,
+    "collection": {
+      "id": 295,
+      "name": "Piratas del Caribe - Colección",
+      "poster_path": "/aTP6lznCDV4eF8zR9ytlPU9PjHd.jpg",
+      "backdrop_path": "/wxgD3fB5lQ2sGJLog0rvXW049Pf.jpg"
+    }
   },
   "Piratas del Caribe En el fin del mundo (2007).mkv": {
     "tmdb_id": 285,
@@ -103854,7 +105078,13 @@
         "vote_average": 6.081
       }
     ],
-    "cached_at": 1769723607697
+    "cached_at": 1769723607697,
+    "collection": {
+      "id": 295,
+      "name": "Piratas del Caribe - Colección",
+      "poster_path": "/aTP6lznCDV4eF8zR9ytlPU9PjHd.jpg",
+      "backdrop_path": "/wxgD3fB5lQ2sGJLog0rvXW049Pf.jpg"
+    }
   },
   "Piratas del Caribe En mareas misteriosas (2011).mkv": {
     "tmdb_id": 1865,
@@ -104036,7 +105266,13 @@
         "vote_average": 6.887
       }
     ],
-    "cached_at": 1769723608284
+    "cached_at": 1769723608284,
+    "collection": {
+      "id": 295,
+      "name": "Piratas del Caribe - Colección",
+      "poster_path": "/aTP6lznCDV4eF8zR9ytlPU9PjHd.jpg",
+      "backdrop_path": "/wxgD3fB5lQ2sGJLog0rvXW049Pf.jpg"
+    }
   },
   "Piratas del Caribe La maldición de la Perla Negra (2003).mkv": {
     "tmdb_id": 22,
@@ -104218,7 +105454,13 @@
         "vote_average": 7.96
       }
     ],
-    "cached_at": 1769723608929
+    "cached_at": 1769723608929,
+    "collection": {
+      "id": 295,
+      "name": "Piratas del Caribe - Colección",
+      "poster_path": "/aTP6lznCDV4eF8zR9ytlPU9PjHd.jpg",
+      "backdrop_path": "/wxgD3fB5lQ2sGJLog0rvXW049Pf.jpg"
+    }
   },
   "Piratas del Caribe La venganza de Salazar (2017).mkv": {
     "tmdb_id": 166426,
@@ -104400,7 +105642,13 @@
         "vote_average": 6.552
       }
     ],
-    "cached_at": 1769723609824
+    "cached_at": 1769723609824,
+    "collection": {
+      "id": 295,
+      "name": "Piratas del Caribe - Colección",
+      "poster_path": "/aTP6lznCDV4eF8zR9ytlPU9PjHd.jpg",
+      "backdrop_path": "/wxgD3fB5lQ2sGJLog0rvXW049Pf.jpg"
+    }
   },
   "Plan de escape (2013).avi": {
     "tmdb_id": 107846,
@@ -104581,7 +105829,13 @@
         "vote_average": 6.099
       }
     ],
-    "cached_at": 1769723610527
+    "cached_at": 1769723610527,
+    "collection": {
+      "id": 525891,
+      "name": "Plan de escape - Colección",
+      "poster_path": "/40x4eM5C7FDUh67UcJ7tkztoDVV.jpg",
+      "backdrop_path": "/zQao2h92RYNmhqCvmiReIHcz3Xp.jpg"
+    }
   },
   "Poltergeist (Fenómenos extraños) (1982).avi": {
     "tmdb_id": 609,
@@ -104761,7 +106015,13 @@
         "vote_average": 6.714
       }
     ],
-    "cached_at": 1769723611145
+    "cached_at": 1769723611145,
+    "collection": {
+      "id": 10453,
+      "name": "Poltergeist - Colección",
+      "poster_path": "/g5Fu4TQQrAhr0IzJqt143mwZDpD.jpg",
+      "backdrop_path": "/i8QZZV1olny9FCPNrxAL7Kk9CJy.jpg"
+    }
   },
   "Poltergeist II El otro lado (1986).avi": {
     "tmdb_id": 11133,
@@ -104942,7 +106202,13 @@
         "vote_average": 5.588
       }
     ],
-    "cached_at": 1769723611723
+    "cached_at": 1769723611723,
+    "collection": {
+      "id": 10453,
+      "name": "Poltergeist - Colección",
+      "poster_path": "/g5Fu4TQQrAhr0IzJqt143mwZDpD.jpg",
+      "backdrop_path": "/i8QZZV1olny9FCPNrxAL7Kk9CJy.jpg"
+    }
   },
   "Porky's (1981).mp4": {
     "tmdb_id": 10246,
@@ -105122,7 +106388,13 @@
         "vote_average": 6.617
       }
     ],
-    "cached_at": 1769723612596
+    "cached_at": 1769723612596,
+    "collection": {
+      "id": 109592,
+      "name": "Porky's - Colección",
+      "poster_path": "/1NjnpHR2e589vX8ApHyq21IARFU.jpg",
+      "backdrop_path": "/1Ra6Un73JwIjGHfEU0lM3397Q8z.jpg"
+    }
   },
   "Porky's II Al día siguiente (1983).mp4": {
     "tmdb_id": 19698,
@@ -105302,7 +106574,13 @@
         "vote_average": 7.238
       }
     ],
-    "cached_at": 1769723613267
+    "cached_at": 1769723613267,
+    "collection": {
+      "id": 109592,
+      "name": "Porky's - Colección",
+      "poster_path": "/1NjnpHR2e589vX8ApHyq21IARFU.jpg",
+      "backdrop_path": "/1Ra6Un73JwIjGHfEU0lM3397Q8z.jpg"
+    }
   },
   "Porky's III - Contraataca (1985).mp4": {
     "tmdb_id": 23919,
@@ -105482,7 +106760,13 @@
         "vote_average": 6.198
       }
     ],
-    "cached_at": 1769723613880
+    "cached_at": 1769723613880,
+    "collection": {
+      "id": 109592,
+      "name": "Porky's - Colección",
+      "poster_path": "/1NjnpHR2e589vX8ApHyq21IARFU.jpg",
+      "backdrop_path": "/1Ra6Un73JwIjGHfEU0lM3397Q8z.jpg"
+    }
   },
   "Poseidón (2006).mp4": {
     "tmdb_id": 503,
@@ -105845,7 +107129,13 @@
         "vote_average": 6.2
       }
     ],
-    "cached_at": 1769723615343
+    "cached_at": 1769723615343,
+    "collection": {
+      "id": 1960,
+      "name": "Posesión infernal - Colección",
+      "poster_path": "/qcAltryXUfqtRJ4jluA2ic268Uk.jpg",
+      "backdrop_path": "/377E9KSoUGxKWuvyR1Zu9aXcU4I.jpg"
+    }
   },
   "Predator Badlands (2025).mkv": {
     "tmdb_id": 1242898,
@@ -105997,7 +107287,13 @@
         "vote_average": 7.7
       }
     ],
-    "cached_at": 1769723615940
+    "cached_at": 1769723615940,
+    "collection": {
+      "id": 399,
+      "name": "Predator - Colección",
+      "poster_path": "/fpR6OGXFadXAd2vgQ0Q0Bdnwvfn.jpg",
+      "backdrop_path": "/u1CTqTYRUVyLwlEd1z1VJrVBp0J.jpg"
+    }
   },
   "Predator La presa (2022).avi": {
     "tmdb_id": 766507,
@@ -106179,7 +107475,13 @@
         "vote_average": 6.826
       }
     ],
-    "cached_at": 1769723616591
+    "cached_at": 1769723616591,
+    "collection": {
+      "id": 399,
+      "name": "Predator - Colección",
+      "poster_path": "/fpR6OGXFadXAd2vgQ0Q0Bdnwvfn.jpg",
+      "backdrop_path": "/u1CTqTYRUVyLwlEd1z1VJrVBp0J.jpg"
+    }
   },
   "Premonición (2000).mp4": {
     "tmdb_id": 2046,
@@ -106907,7 +108209,13 @@
         "vote_average": 8.167
       }
     ],
-    "cached_at": 1769723619035
+    "cached_at": 1769723619035,
+    "collection": {
+      "id": 135416,
+      "name": "Prometheus - Colección",
+      "poster_path": "/fdj2lntPpo6C49QlmgA8urf6JwK.jpg",
+      "backdrop_path": "/cK83Pq8SJoeSTnLJucr8IWn35KF.jpg"
+    }
   },
   "Proyecto Brainstorm (1983).mp4": {
     "tmdb_id": 15050,
@@ -108176,7 +109484,13 @@
         "vote_average": 7.677
       }
     ],
-    "cached_at": 1769723623493
+    "cached_at": 1769723623493,
+    "collection": {
+      "id": 327598,
+      "name": "Rebelión en las aulas - Colección",
+      "poster_path": "/u6xCzCV5fg53KXrFslv3TpvSYEa.jpg",
+      "backdrop_path": "/jRcdy7G3DVhquLuEPusC9vtscHQ.jpg"
+    }
   },
   "Red de mentiras (2010).mkv": {
     "tmdb_id": 37682,
@@ -108668,7 +109982,13 @@
         "vote_average": 7.687
       }
     ],
-    "cached_at": 1769723625580
+    "cached_at": 1769723625580,
+    "collection": {
+      "id": 264,
+      "name": "Regreso al futuro - Colección",
+      "poster_path": "/rX5M1zsxtmysqPzXBmWTJRi4DNI.jpg",
+      "backdrop_path": "/c9C9Pg2QctyjZHRmS0P8rZg1OTA.jpg"
+    }
   },
   "Regreso al futuro II (1989).mkv": {
     "tmdb_id": 165,
@@ -108850,7 +110170,13 @@
         "vote_average": 7.297
       }
     ],
-    "cached_at": 1769723626302
+    "cached_at": 1769723626302,
+    "collection": {
+      "id": 264,
+      "name": "Regreso al futuro - Colección",
+      "poster_path": "/rX5M1zsxtmysqPzXBmWTJRi4DNI.jpg",
+      "backdrop_path": "/c9C9Pg2QctyjZHRmS0P8rZg1OTA.jpg"
+    }
   },
   "Regreso al futuro III (1990).mkv": {
     "tmdb_id": 196,
@@ -109032,7 +110358,13 @@
         "vote_average": 8.462
       }
     ],
-    "cached_at": 1769723626879
+    "cached_at": 1769723626879,
+    "collection": {
+      "id": 264,
+      "name": "Regreso al futuro - Colección",
+      "poster_path": "/rX5M1zsxtmysqPzXBmWTJRi4DNI.jpg",
+      "backdrop_path": "/c9C9Pg2QctyjZHRmS0P8rZg1OTA.jpg"
+    }
   },
   "Regreso al planeta de los simios (1970).mkv": {
     "tmdb_id": 1685,
@@ -109214,7 +110546,13 @@
         "vote_average": 3.9
       }
     ],
-    "cached_at": 1769723627455
+    "cached_at": 1769723627455,
+    "collection": {
+      "id": 1709,
+      "name": "El planeta de los simios (Original) - Colección",
+      "poster_path": "/umKb8njr1lZljV2UvPmiCqk7vtn.jpg",
+      "backdrop_path": "/wBiFfCAuYzuSOl0sFnkQMB5BEZx.jpg"
+    }
   },
   "Resacón en Las Vegas (2009).mp4": {
     "tmdb_id": 18785,
@@ -109394,7 +110732,13 @@
         "vote_average": 7.259
       }
     ],
-    "cached_at": 1769723628077
+    "cached_at": 1769723628077,
+    "collection": {
+      "id": 86119,
+      "name": "Resacón - Colección",
+      "poster_path": "/yRuGlHTW0E0N6icB6KwwOh0qZwB.jpg",
+      "backdrop_path": "/9tpB49XNPEvxEkdsIkJWP0sZWtf.jpg"
+    }
   },
   "Rescate en Nueva York (2001).mkv": {
     "tmdb_id": 213496,
@@ -109756,7 +111100,13 @@
         "vote_average": 6.368
       }
     ],
-    "cached_at": 1769723629407
+    "cached_at": 1769723629407,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resident Evil 2 Apocalipsis (2004).mp4": {
     "tmdb_id": 1577,
@@ -109938,7 +111288,13 @@
         "vote_average": 6.297
       }
     ],
-    "cached_at": 1769723630140
+    "cached_at": 1769723630140,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resident Evil 3 Extincion (2007).mp4": {
     "tmdb_id": 7737,
@@ -110120,7 +111476,13 @@
         "vote_average": 5.909
       }
     ],
-    "cached_at": 1769723631003
+    "cached_at": 1769723631003,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resident Evil 4 Ultratumba (2010).mp4": {
     "tmdb_id": 35791,
@@ -110303,7 +111665,13 @@
         "vote_average": 6.444
       }
     ],
-    "cached_at": 1769723631639
+    "cached_at": 1769723631639,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resident Evil El capitulo final (2016).mp4": {
     "tmdb_id": 173897,
@@ -110485,7 +111853,13 @@
         "vote_average": 6.831
       }
     ],
-    "cached_at": 1769723632289
+    "cached_at": 1769723632289,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resident Evil Venganza (2012).mp4": {
     "tmdb_id": 71679,
@@ -110667,7 +112041,13 @@
         "vote_average": 6.649
       }
     ],
-    "cached_at": 1769723632899
+    "cached_at": 1769723632899,
+    "collection": {
+      "id": 17255,
+      "name": "Resident Evil - Colección",
+      "poster_path": "/2rOr1CPnC5fuTbVIKH0UkqJJjjw.jpg",
+      "backdrop_path": "/zwSs7PYLAH684qXjducR5TzVOdi.jpg"
+    }
   },
   "Resplandor En La Oscuridad (1992).mp4": {
     "tmdb_id": 31962,
@@ -111032,7 +112412,13 @@
         "vote_average": 5.665
       }
     ],
-    "cached_at": 1769723634125
+    "cached_at": 1769723634125,
+    "collection": {
+      "id": 2794,
+      "name": "Las crónicas de Riddick - Colección",
+      "poster_path": "/trOWPlKrbf5Sg0vKg14shhANewD.jpg",
+      "backdrop_path": "/n5jED8ITkX9VgFCZXsznhk9ERbA.jpg"
+    }
   },
   "Riddick 3.mkv": {
     "tmdb_id": 87421,
@@ -111214,7 +112600,13 @@
         "vote_average": 5.665
       }
     ],
-    "cached_at": 1769723634718
+    "cached_at": 1769723634718,
+    "collection": {
+      "id": 2794,
+      "name": "Las crónicas de Riddick - Colección",
+      "poster_path": "/trOWPlKrbf5Sg0vKg14shhANewD.jpg",
+      "backdrop_path": "/n5jED8ITkX9VgFCZXsznhk9ERbA.jpg"
+    }
   },
   "RoboCop (1987).mkv": {
     "tmdb_id": 5548,
@@ -111396,7 +112788,13 @@
         "vote_average": 7.477
       }
     ],
-    "cached_at": 1769723635369
+    "cached_at": 1769723635369,
+    "collection": {
+      "id": 5547,
+      "name": "RoboCop - Colección",
+      "poster_path": "/8n1z2sdjQyphvEANQl0sizGtCA1.jpg",
+      "backdrop_path": "/w3bJ67cDfdRqQPenb84eHUBbeys.jpg"
+    }
   },
   "RoboCop 2 (1990).mkv": {
     "tmdb_id": 5549,
@@ -111580,7 +112978,13 @@
         "vote_average": 6.423
       }
     ],
-    "cached_at": 1769723636093
+    "cached_at": 1769723636093,
+    "collection": {
+      "id": 5547,
+      "name": "RoboCop - Colección",
+      "poster_path": "/8n1z2sdjQyphvEANQl0sizGtCA1.jpg",
+      "backdrop_path": "/w3bJ67cDfdRqQPenb84eHUBbeys.jpg"
+    }
   },
   "RoboCop 3 (1993).mkv": {
     "tmdb_id": 5550,
@@ -111764,7 +113168,13 @@
         "vote_average": 10
       }
     ],
-    "cached_at": 1769723636753
+    "cached_at": 1769723636753,
+    "collection": {
+      "id": 5547,
+      "name": "RoboCop - Colección",
+      "poster_path": "/8n1z2sdjQyphvEANQl0sizGtCA1.jpg",
+      "backdrop_path": "/w3bJ67cDfdRqQPenb84eHUBbeys.jpg"
+    }
   },
   "Rumores que matan (2000).mp4": {
     "tmdb_id": 18041,
@@ -112307,7 +113717,13 @@
         "vote_average": 6.924
       }
     ],
-    "cached_at": 1769723638836
+    "cached_at": 1769723638836,
+    "collection": {
+      "id": 4246,
+      "name": "Scary Movie - Colección",
+      "poster_path": "/kxHEd7OGYx9OizI6QNVGNsvstQf.jpg",
+      "backdrop_path": "/4YFCPV5KXWgIfQ8oTEeIJvtuxVj.jpg"
+    }
   },
   "Scary Movie 2 (2001).mp4": {
     "tmdb_id": 4248,
@@ -112487,7 +113903,13 @@
         "vote_average": 7
       }
     ],
-    "cached_at": 1769723639480
+    "cached_at": 1769723639480,
+    "collection": {
+      "id": 4246,
+      "name": "Scary Movie - Colección",
+      "poster_path": "/kxHEd7OGYx9OizI6QNVGNsvstQf.jpg",
+      "backdrop_path": "/4YFCPV5KXWgIfQ8oTEeIJvtuxVj.jpg"
+    }
   },
   "Scary Movie 3 (2003).mp4": {
     "tmdb_id": 4256,
@@ -112667,7 +114089,13 @@
         "vote_average": 5.574
       }
     ],
-    "cached_at": 1769723640119
+    "cached_at": 1769723640119,
+    "collection": {
+      "id": 4246,
+      "name": "Scary Movie - Colección",
+      "poster_path": "/kxHEd7OGYx9OizI6QNVGNsvstQf.jpg",
+      "backdrop_path": "/4YFCPV5KXWgIfQ8oTEeIJvtuxVj.jpg"
+    }
   },
   "Scary Movie 4 (2006).mp4": {
     "tmdb_id": 4257,
@@ -112847,7 +114275,13 @@
         "vote_average": 6.211
       }
     ],
-    "cached_at": 1769723640794
+    "cached_at": 1769723640794,
+    "collection": {
+      "id": 4246,
+      "name": "Scary Movie - Colección",
+      "poster_path": "/kxHEd7OGYx9OizI6QNVGNsvstQf.jpg",
+      "backdrop_path": "/4YFCPV5KXWgIfQ8oTEeIJvtuxVj.jpg"
+    }
   },
   "Scary Movie 5 (2013).mp4": {
     "tmdb_id": 4258,
@@ -113027,7 +114461,13 @@
         "vote_average": 6.484
       }
     ],
-    "cached_at": 1769723641374
+    "cached_at": 1769723641374,
+    "collection": {
+      "id": 4246,
+      "name": "Scary Movie - Colección",
+      "poster_path": "/kxHEd7OGYx9OizI6QNVGNsvstQf.jpg",
+      "backdrop_path": "/4YFCPV5KXWgIfQ8oTEeIJvtuxVj.jpg"
+    }
   },
   "Secuestro en directo (2022).mp4": {
     "tmdb_id": 979924,
@@ -113742,7 +115182,13 @@
         "vote_average": 6.565
       }
     ],
-    "cached_at": 1769723644085
+    "cached_at": 1769723644085,
+    "collection": {
+      "id": 102322,
+      "name": "Sherlock Holmes - Colección",
+      "poster_path": "/4befCF6w7OdpJjrB6JJEzy9z0g0.jpg",
+      "backdrop_path": "/kT4Pz6QY29qHMVKULzNrVHg6Vwg.jpg"
+    }
   },
   "Sherlock Holmes Juego de sombras (2011).avi": {
     "tmdb_id": 58574,
@@ -113925,7 +115371,13 @@
         "vote_average": 6.334
       }
     ],
-    "cached_at": 1769723644653
+    "cached_at": 1769723644653,
+    "collection": {
+      "id": 102322,
+      "name": "Sherlock Holmes - Colección",
+      "poster_path": "/4befCF6w7OdpJjrB6JJEzy9z0g0.jpg",
+      "backdrop_path": "/kT4Pz6QY29qHMVKULzNrVHg6Vwg.jpg"
+    }
   },
   "Shooter El tirador (2007).mkv": {
     "tmdb_id": 7485,
@@ -114470,7 +115922,13 @@
         "vote_average": 5.216
       }
     ],
-    "cached_at": 1769723646523
+    "cached_at": 1769723646523,
+    "collection": {
+      "id": 124949,
+      "name": "Como Dios - Colección",
+      "poster_path": "/sWOXJkAUxL3afEgM471WhO55pxS.jpg",
+      "backdrop_path": "/fjYES2aMQ05mRcaRoUHACfloNM3.jpg"
+    }
   },
   "Silent Hill (2006).avi": {
     "tmdb_id": 588,
@@ -114651,7 +116109,13 @@
         "vote_average": 6.466
       }
     ],
-    "cached_at": 1769723647117
+    "cached_at": 1769723647117,
+    "collection": {
+      "id": 64748,
+      "name": "Silent Hill - Colección",
+      "poster_path": "/w3M2GggGGQsv3fNKqtvAUvN27hG.jpg",
+      "backdrop_path": "/jWF319ozJUsXY6x8y4XghLoX8cD.jpg"
+    }
   },
   "Sin City Ciudad del pecado (2005).avi": {
     "tmdb_id": 187,
@@ -114832,7 +116296,13 @@
         "vote_average": 7.476
       }
     ],
-    "cached_at": 1769723647743
+    "cached_at": 1769723647743,
+    "collection": {
+      "id": 135179,
+      "name": "Sin City - Colección",
+      "poster_path": "/tpexlF1tCpTM49yoXEnKN9DMrHf.jpg",
+      "backdrop_path": "/nrn5Uogru1UPhnGZdc0g5Kvkyni.jpg"
+    }
   },
   "Sin límites (2011).avi": {
     "tmdb_id": 51876,
@@ -115560,7 +117030,13 @@
         "vote_average": 6.539
       }
     ],
-    "cached_at": 1769723650394
+    "cached_at": 1769723650394,
+    "collection": {
+      "id": 484312,
+      "name": "Skyline - Colección",
+      "poster_path": "/oQGSzRmsjawPgbkerZtQIetmUIi.jpg",
+      "backdrop_path": "/b2JplRt6qfZKkupnoxl57n3r46y.jpg"
+    }
   },
   "Sol Naciente (1993).mp4": {
     "tmdb_id": 7007,
@@ -115925,7 +117401,13 @@
         "vote_average": 7.564
       }
     ],
-    "cached_at": 1769723651756
+    "cached_at": 1769723651756,
+    "collection": {
+      "id": 10713,
+      "name": "Soldado universal - Colección",
+      "poster_path": "/neguRuifIJMivoMIKZIyli3kvIR.jpg",
+      "backdrop_path": "/78pA17BW4BbcNlB2yBrOzQY1FrE.jpg"
+    }
   },
   "Soy Leyenda (2007).mkv": {
     "tmdb_id": 6479,
@@ -116107,7 +117589,13 @@
         "vote_average": 6.575
       }
     ],
-    "cached_at": 1769723652359
+    "cached_at": 1769723652359,
+    "collection": {
+      "id": 945984,
+      "name": "I Am Legend Collection",
+      "poster_path": "/kMWArwXFzMwCzRMRzJqZBC6d22A.jpg",
+      "backdrop_path": "/nvwI0ohPlC4M9rBMr3ZORFvcMQr.jpg"
+    }
   },
   "Soy espía (2002).mp4": {
     "tmdb_id": 8427,
@@ -117021,7 +118509,13 @@
         "vote_average": 6.387
       }
     ],
-    "cached_at": 1769723655718
+    "cached_at": 1769723655718,
+    "collection": {
+      "id": 1147209,
+      "name": "Spenser Confidential Collection",
+      "poster_path": "/6VwSP9P3vdCQZrFJoL1oFYppziQ.jpg",
+      "backdrop_path": null
+    }
   },
   "Spider-Man Homecoming (2017).avi": {
     "tmdb_id": 315635,
@@ -117203,7 +118697,13 @@
         "vote_average": 6.724
       }
     ],
-    "cached_at": 1769723656432
+    "cached_at": 1769723656432,
+    "collection": {
+      "id": 531241,
+      "name": "Spider-Man (Vengadores) - Colección",
+      "poster_path": "/2E7Jukg8JvyJgKlql7UIWqVwOMU.jpg",
+      "backdrop_path": "/AvnqpRwlEaYNVL6wzC4RN94EdSd.jpg"
+    }
   },
   "Spider-Man Lejos de casa (2019).mkv": {
     "tmdb_id": 429617,
@@ -117385,7 +118885,13 @@
         "vote_average": 5.897
       }
     ],
-    "cached_at": 1769723657146
+    "cached_at": 1769723657146,
+    "collection": {
+      "id": 531241,
+      "name": "Spider-Man (Vengadores) - Colección",
+      "poster_path": "/2E7Jukg8JvyJgKlql7UIWqVwOMU.jpg",
+      "backdrop_path": "/AvnqpRwlEaYNVL6wzC4RN94EdSd.jpg"
+    }
   },
   "Spider-Man No Way Home (2021).mkv": {
     "tmdb_id": 634649,
@@ -117567,7 +119073,13 @@
         "vote_average": 6.754
       }
     ],
-    "cached_at": 1769723657823
+    "cached_at": 1769723657823,
+    "collection": {
+      "id": 531241,
+      "name": "Spider-Man (Vengadores) - Colección",
+      "poster_path": "/2E7Jukg8JvyJgKlql7UIWqVwOMU.jpg",
+      "backdrop_path": "/AvnqpRwlEaYNVL6wzC4RN94EdSd.jpg"
+    }
   },
   "Spy Game (Juego de espías) (2001).avi": {
     "tmdb_id": 1535,
@@ -117931,7 +119443,13 @@
         "vote_average": 6.296
       }
     ],
-    "cached_at": 1769723659008
+    "cached_at": 1769723659008,
+    "collection": {
+      "id": 115575,
+      "name": "Star Trek: La realidad alternativa - Colección",
+      "poster_path": "/xVAWvH5izpy1frt5vxjLPF1g8Ka.jpg",
+      "backdrop_path": "/gWl5pN2FplE709aVtA4lakwsE6t.jpg"
+    }
   },
   "Star Trek En la oscuridad (2013).mkv": {
     "tmdb_id": 54138,
@@ -118113,7 +119631,13 @@
         "vote_average": 5.178
       }
     ],
-    "cached_at": 1769723659600
+    "cached_at": 1769723659600,
+    "collection": {
+      "id": 115575,
+      "name": "Star Trek: La realidad alternativa - Colección",
+      "poster_path": "/xVAWvH5izpy1frt5vxjLPF1g8Ka.jpg",
+      "backdrop_path": "/gWl5pN2FplE709aVtA4lakwsE6t.jpg"
+    }
   },
   "Star Trek II La ira de Khan (1982).mkv": {
     "tmdb_id": 154,
@@ -118296,7 +119820,13 @@
         "vote_average": 4.005
       }
     ],
-    "cached_at": 1769723660250
+    "cached_at": 1769723660250,
+    "collection": {
+      "id": 151,
+      "name": "Star Trek: La serie original - Colección",
+      "poster_path": "/eNzMNttF06ndvLqOdHOqSB66TBe.jpg",
+      "backdrop_path": "/qM8q2gWAeQF0XUpZ4XZc4CMX87a.jpg"
+    }
   },
   "Star Trek III En busca de Spock (1984).mkv": {
     "tmdb_id": 157,
@@ -118479,7 +120009,13 @@
         "vote_average": 5.884
       }
     ],
-    "cached_at": 1769723660888
+    "cached_at": 1769723660888,
+    "collection": {
+      "id": 151,
+      "name": "Star Trek: La serie original - Colección",
+      "poster_path": "/eNzMNttF06ndvLqOdHOqSB66TBe.jpg",
+      "backdrop_path": "/qM8q2gWAeQF0XUpZ4XZc4CMX87a.jpg"
+    }
   },
   "Star Trek IV. Misión salvar la Tierra (1986).mkv": {
     "tmdb_id": 168,
@@ -118660,7 +120196,13 @@
         "vote_average": 7.1
       }
     ],
-    "cached_at": 1769723661470
+    "cached_at": 1769723661470,
+    "collection": {
+      "id": 151,
+      "name": "Star Trek: La serie original - Colección",
+      "poster_path": "/eNzMNttF06ndvLqOdHOqSB66TBe.jpg",
+      "backdrop_path": "/qM8q2gWAeQF0XUpZ4XZc4CMX87a.jpg"
+    }
   },
   "Star Trek Insurrección (1998).mkv": {
     "tmdb_id": 200,
@@ -118843,7 +120385,13 @@
         "vote_average": 4.81
       }
     ],
-    "cached_at": 1769723662183
+    "cached_at": 1769723662183,
+    "collection": {
+      "id": 115570,
+      "name": "Star Trek: La nueva generación - Colección",
+      "poster_path": "/7XNleOypWWXEGOHk5UAo6jIp1ue.jpg",
+      "backdrop_path": "/r7MMQenUURHhAVHFymtOb8AX4Bm.jpg"
+    }
   },
   "Tucker, un hombre y su sueño (1988).avi": {
     "tmdb_id": 28176,
@@ -121019,7 +122567,13 @@
         "vote_average": 6.997
       }
     ],
-    "cached_at": 1769723671925
+    "cached_at": 1769723671925,
+    "collection": {
+      "id": 86311,
+      "name": "Los Vengadores - Colección",
+      "poster_path": "/xRgTmIWbsLjRIfFdOS6u5FTlAI2.jpg",
+      "backdrop_path": "/2UNUv4NJdC36E5myDHACBJ99EwL.jpg"
+    }
   },
   "Vengadores Infinity War (2018).mkv": {
     "tmdb_id": 299536,
@@ -121201,7 +122755,13 @@
         "vote_average": 6.788
       }
     ],
-    "cached_at": 1769723672534
+    "cached_at": 1769723672534,
+    "collection": {
+      "id": 86311,
+      "name": "Los Vengadores - Colección",
+      "poster_path": "/xRgTmIWbsLjRIfFdOS6u5FTlAI2.jpg",
+      "backdrop_path": "/2UNUv4NJdC36E5myDHACBJ99EwL.jpg"
+    }
   },
   "Vengadores La era de Ultrón (2015).mkv": {
     "tmdb_id": 99861,
@@ -121383,7 +122943,13 @@
         "vote_average": 6.768
       }
     ],
-    "cached_at": 1769723673217
+    "cached_at": 1769723673217,
+    "collection": {
+      "id": 86311,
+      "name": "Los Vengadores - Colección",
+      "poster_path": "/xRgTmIWbsLjRIfFdOS6u5FTlAI2.jpg",
+      "backdrop_path": "/2UNUv4NJdC36E5myDHACBJ99EwL.jpg"
+    }
   },
   "Venom (2018).mkv": {
     "tmdb_id": 335983,
@@ -121564,7 +123130,13 @@
         "vote_average": 7.042
       }
     ],
-    "cached_at": 1769723674057
+    "cached_at": 1769723674057,
+    "collection": {
+      "id": 558216,
+      "name": "Venom - Colección",
+      "poster_path": "/lzQgrRH0xkhlY0eTg8kFXlKd7KT.jpg",
+      "backdrop_path": "/vq340s8DxA5Q209FT8PHA6CXYOx.jpg"
+    }
   },
   "Venom El último baile (2024).mkv": {
     "tmdb_id": 912649,
@@ -121746,7 +123318,13 @@
         "vote_average": 6.719
       }
     ],
-    "cached_at": 1769723675036
+    "cached_at": 1769723675036,
+    "collection": {
+      "id": 558216,
+      "name": "Venom - Colección",
+      "poster_path": "/lzQgrRH0xkhlY0eTg8kFXlKd7KT.jpg",
+      "backdrop_path": "/vq340s8DxA5Q209FT8PHA6CXYOx.jpg"
+    }
   },
   "Venom habrá matanza (2021).mkv": {
     "tmdb_id": 580489,
@@ -121928,7 +123506,13 @@
         "vote_average": 7.5
       }
     ],
-    "cached_at": 1769723675595
+    "cached_at": 1769723675595,
+    "collection": {
+      "id": 558216,
+      "name": "Venom - Colección",
+      "poster_path": "/lzQgrRH0xkhlY0eTg8kFXlKd7KT.jpg",
+      "backdrop_path": "/vq340s8DxA5Q209FT8PHA6CXYOx.jpg"
+    }
   },
   "Vente A Alemania Pepe (1971).mp4": {
     "tmdb_id": 100039,
@@ -122262,7 +123846,13 @@
         "vote_average": 5.512
       }
     ],
-    "cached_at": 1769723676719
+    "cached_at": 1769723676719,
+    "collection": {
+      "id": 605516,
+      "name": "Viaje al centro de la Tierra Colección",
+      "poster_path": "/ony1wLjVtp9ZOqj51kfM0k8qNMe.jpg",
+      "backdrop_path": "/sK2254GsBZIEVIEChbrkyXzvlTm.jpg"
+    }
   },
   "Viaje al centro de la Tierra 2 La isla misteriosa (2012).mkv": {
     "tmdb_id": 72545,
@@ -122426,7 +124016,13 @@
         "vote_average": 7.305
       }
     ],
-    "cached_at": 1769723677313
+    "cached_at": 1769723677313,
+    "collection": {
+      "id": 605516,
+      "name": "Viaje al centro de la Tierra Colección",
+      "poster_path": "/ony1wLjVtp9ZOqj51kfM0k8qNMe.jpg",
+      "backdrop_path": "/sK2254GsBZIEVIEChbrkyXzvlTm.jpg"
+    }
   },
   "Virgen a los 40 (2005).mp4": {
     "tmdb_id": 6957,
@@ -123506,7 +125102,13 @@
         "vote_average": 4.7
       }
     ],
-    "cached_at": 1769723681467
+    "cached_at": 1769723681467,
+    "collection": {
+      "id": 87536,
+      "name": "Warlock - Colección",
+      "poster_path": "/oujdAIytXUwEHQY589ZGvrIpgOF.jpg",
+      "backdrop_path": "/oMHsUu1CPf8h9BLg7qSm7oPuFjS.jpg"
+    }
   },
   "Watchmen (2009).mp4": {
     "tmdb_id": 13183,
@@ -124052,7 +125654,13 @@
         "vote_average": 6.088
       }
     ],
-    "cached_at": 1769723683471
+    "cached_at": 1769723683471,
+    "collection": {
+      "id": 468552,
+      "name": "Wonder Woman - Colección",
+      "poster_path": "/dTpuMhFUMVnvrSKxn6nDmheljdN.jpg",
+      "backdrop_path": "/n9KlvCOBFDmSyw3BgNrkUkxMFva.jpg"
+    }
   },
   "X-Men Apocalipsis (2016).mp4": {
     "tmdb_id": 246655,
@@ -124235,7 +125843,13 @@
         "vote_average": 6.783
       }
     ],
-    "cached_at": 1769723684126
+    "cached_at": 1769723684126,
+    "collection": {
+      "id": 748,
+      "name": "X-Men - Colección",
+      "poster_path": "/fTx4vrq48SMd4D4r8Yxk34c070b.jpg",
+      "backdrop_path": "/ykVHlrE3aSvHYeIXOrWDsYZ18vv.jpg"
+    }
   },
   "X-Men La decisión final (2006).mp4": {
     "tmdb_id": 36668,
@@ -124418,7 +126032,13 @@
         "vote_average": 5.96
       }
     ],
-    "cached_at": 1769723684734
+    "cached_at": 1769723684734,
+    "collection": {
+      "id": 748,
+      "name": "X-Men - Colección",
+      "poster_path": "/fTx4vrq48SMd4D4r8Yxk34c070b.jpg",
+      "backdrop_path": "/ykVHlrE3aSvHYeIXOrWDsYZ18vv.jpg"
+    }
   },
   "X-Men Primera Generación (2011).mkv": {
     "tmdb_id": 49538,
@@ -124600,7 +126220,13 @@
         "vote_average": 6.565
       }
     ],
-    "cached_at": 1769723685481
+    "cached_at": 1769723685481,
+    "collection": {
+      "id": 748,
+      "name": "X-Men - Colección",
+      "poster_path": "/fTx4vrq48SMd4D4r8Yxk34c070b.jpg",
+      "backdrop_path": "/ykVHlrE3aSvHYeIXOrWDsYZ18vv.jpg"
+    }
   },
   "X-Men días del futuro pasado (2014).mkv": {
     "tmdb_id": 127585,
@@ -124782,7 +126408,13 @@
         "vote_average": 6.428
       }
     ],
-    "cached_at": 1769723686151
+    "cached_at": 1769723686151,
+    "collection": {
+      "id": 748,
+      "name": "X-Men - Colección",
+      "poster_path": "/fTx4vrq48SMd4D4r8Yxk34c070b.jpg",
+      "backdrop_path": "/ykVHlrE3aSvHYeIXOrWDsYZ18vv.jpg"
+    }
   },
   "X-Men orígenes Lobezno (2009).mp4": {
     "tmdb_id": 2080,
@@ -124964,7 +126596,13 @@
         "vote_average": 6.078
       }
     ],
-    "cached_at": 1769723686746
+    "cached_at": 1769723686746,
+    "collection": {
+      "id": 453993,
+      "name": "Lobezno - Colección",
+      "poster_path": "/9RaDz9aX9CPqN1h9QqpMiQdvlaY.jpg",
+      "backdrop_path": "/5HQnP60igRzNokf5jc6fCKemG4I.jpg"
+    }
   },
   "Y entonces llegó ella (2004).mkv": {
     "tmdb_id": 5966,
@@ -125686,7 +127324,13 @@
         "vote_average": 6.62
       }
     ],
-    "cached_at": 1769723689581
+    "cached_at": 1769723689581,
+    "collection": {
+      "id": 352789,
+      "name": "Zoolander - Colección",
+      "poster_path": "/87GRd4SsTueSQZUqmp0iOinNB0O.jpg",
+      "backdrop_path": "/xNTvMy84w8wnrEEzWBiTWL08fVo.jpg"
+    }
   },
   "xXx (2002).mp4": {
     "tmdb_id": 7451,
@@ -125870,7 +127514,13 @@
         "vote_average": 6.548
       }
     ],
-    "cached_at": 1769723690632
+    "cached_at": 1769723690632,
+    "collection": {
+      "id": 52785,
+      "name": "xXx - Colección",
+      "poster_path": "/s5m6a8uRG8BcJC7XsFF5bTJ5NLG.jpg",
+      "backdrop_path": "/jSfCi0onZRDxbeg2dPJgB5iAoxX.jpg"
+    }
   },
   "¡Qué bello es vivir! (1946).mp4": {
     "tmdb_id": 1585,
@@ -126794,10 +128444,442 @@
       "backdrop_path": "/mO7doOZpxTND8hEtsXMHgxynoin.jpg"
     }
   },
+  "Avatar El sentido del agua (2022).mp4": {
+    "tmdb_id": 76600,
+    "title": "Avatar: El sentido del agua",
+    "overview": "Más de una década después de los acontecimientos de 'Avatar', los Na'vi Jake Sully, Neytiri y sus hijos viven en paz en los bosques de Pandora hasta que regresan los hombres del cielo. Entonces comienzan los problemas que persiguen sin descanso a la familia Sully, que decide hacer un gran sacrificio para mantener a su pueblo a salvo y seguir ellos con vida.",
+    "poster_path": "https://image.tmdb.org/t/p/w342/ckeTumMS4G31UQ9NNkmtW2QhfMF.jpg",
+    "backdrop_path": "https://image.tmdb.org/t/p/w342/cd8YDn7M0lfaHhZdU6MvCDxPalP.jpg",
+    "release_date": "2022-12-14",
+    "vote_average": 7.6,
+    "genre_ids": [
+      28,
+      12,
+      878
+    ],
+    "runtime": 192,
+    "videos": [
+      {
+        "key": "RhOe2oCdclo",
+        "name": "Vuelve a los cines",
+        "type": "Teaser",
+        "url": "https://www.youtube.com/watch?v=RhOe2oCdclo"
+      },
+      {
+        "key": "syz0Pa3BKfE",
+        "name": "Disponible en Disney+",
+        "type": "Teaser",
+        "url": "https://www.youtube.com/watch?v=syz0Pa3BKfE"
+      },
+      {
+        "key": "GC8DgByCd_A",
+        "name": "Ya disponible en Disney+",
+        "type": "Teaser",
+        "url": "https://www.youtube.com/watch?v=GC8DgByCd_A"
+      },
+      {
+        "key": "9ZVuOkd9QyU",
+        "name": "Mañana disponible en Disney+",
+        "type": "Teaser",
+        "url": "https://www.youtube.com/watch?v=9ZVuOkd9QyU"
+      },
+      {
+        "key": "2Exo0feppsI",
+        "name": "7 de junio disponible en Disney+",
+        "type": "Teaser",
+        "url": "https://www.youtube.com/watch?v=2Exo0feppsI"
+      }
+    ],
+    "recommendations": [
+      {
+        "tmdb_id": 823999,
+        "title": "Diabolik: ¡Ginko al ataque!",
+        "overview": "Sigue a Diabolik y su cómplice Eva Kant en una nueva aventura contra un Inspector Ginko más combativo que nunca.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/wizq4IerXYT9pBmgpK45PqvGWZ4.jpg",
+        "release_date": "2022-11-17",
+        "vote_average": 5.975
+      },
+      {
+        "tmdb_id": 19995,
+        "title": "Avatar",
+        "overview": "Año 2154. Jake Sully, un exmarine en silla de ruedas, es enviado al planeta Pandora, donde se ha creado el programa Avatar, gracias al cual los seres humanos pueden controlar de forma remota un cuerpo biológico con apariencia y genética de la especie nativa. Pronto se encontrará con la encrucijada entre seguir las órdenes de sus superiores o defender al mundo que le ha acogido y siente como suyo.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/t5T3LPbLLgP2OP6kloM9p2PXpJL.jpg",
+        "release_date": "2009-12-16",
+        "vote_average": 7.6
+      },
+      {
+        "tmdb_id": 640146,
+        "title": "Ant-Man y la Avispa: Quantumanía",
+        "overview": "La pareja de superhéroes Scott Lang y Hope van Dyne regresa para continuar sus aventuras como Ant-Man y la Avispa. Los dos, junto a los padres de Hope, Hank Pym y Janet van Dyne y la hija de Scott, Cassie Lang, se dedican a explorar el Mundo Cuántico, interactuando con nuevas y extrañas criaturas y embarcándose en una aventura que les llevará más allá de los límites de lo que creían posible.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/lKHy0ntGPdQeFwvNq8gK1D0anEr.jpg",
+        "release_date": "2023-02-15",
+        "vote_average": 6.243
+      },
+      {
+        "tmdb_id": 661374,
+        "title": "Puñales por la espalda: El misterio de Glass Onion",
+        "overview": "Cuando el multimillonario Miles Bron invita a algunos de sus allegados a una escapada a su isla griega privada, pronto queda claro que no todo es perfecto en el paraíso. Y cuando alguien aparece muerto, ¿quién mejor que Benoit Blanc para desentrañar todas las capas del misterio?",
+        "poster_path": "https://image.tmdb.org/t/p/w342/yXGsWQURm614onIpb3iBcp1iLz8.jpg",
+        "release_date": "2022-11-23",
+        "vote_average": 7.034
+      },
+      {
+        "tmdb_id": 677179,
+        "title": "Creed III",
+        "overview": "Después de dominar el mundo del boxeo, Adonis Creed ha prosperado tanto en su carrera como en su vida familiar. Cuando un amigo de la infancia y ex prodigio de boxeo, Damien Anderson, resurge después de cumplir una larga sentencia en prisión, está ansioso por demostrar que merece su disparo en el ring. El enfrentamiento entre los antiguos amigos es más que una pelea. Para resolver el puntaje, Adonis debe poner su futuro en la línea para luchar contra Damien, un luchador que no tiene nada que perder.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/fcFMd3HdyX7r5gtFwVnn2qr5Yhq.jpg",
+        "release_date": "2023-03-01",
+        "vote_average": 7.1
+      },
+      {
+        "tmdb_id": 111332,
+        "title": "Avatar: La creación del mundo de Pandora",
+        "overview": "El \"como se hizo\" de Avatar, de James Cameron. Muestra partes interesantes del trabajo en los sets.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/d9oqcfeCyc3zmMal6eJbfj3gatc.jpg",
+        "release_date": "2010-02-07",
+        "vote_average": 6.4
+      },
+      {
+        "tmdb_id": 505642,
+        "title": "Black Panther: Wakanda Forever",
+        "overview": "La reina Ramonda, Shuri, M’Baku, Okoye y las Dora Milaje, luchan para proteger su nación de la injerencia de potencias mundiales a raíz de la muerte del rey T’Challa. Mientras los wakandianos se esfuerzan por adaptarse a su nueva etapa, los héroes deben actuar unidos, con la ayuda del Perro de la Guerra Nakia y Everett Ross, y forzar un nuevo destino para el reino de Wakanda.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/mYpT2R7639KvKZ668uoQGS2QNFp.jpg",
+        "release_date": "2022-11-09",
+        "vote_average": 7.015
+      },
+      {
+        "tmdb_id": 315162,
+        "title": "El Gato con Botas: El último deseo",
+        "overview": "El Gato con Botas se embarca en un viaje épico para encontrar al mítico Último Deseo y recuperar sus nueve vidas.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/b5Jb7GoQaqIXy4VEdnQa0UrQZI.jpg",
+        "release_date": "2022-12-07",
+        "vote_average": 8.205
+      },
+      {
+        "tmdb_id": 436270,
+        "title": "Black Adam",
+        "overview": "Casi 5000 años después de que los dioses antiguos le concediesen sus poderes y tras ser encarcelado, Black Adam queda liberado de su tumba terrenal y está listo para hacer justicia a su manera en el mundo moderno.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/moDLTCdLx38kMhN53KOTw0LdWMh.jpg",
+        "release_date": "2022-10-19",
+        "vote_average": 6.8
+      },
+      {
+        "tmdb_id": 946310,
+        "title": "Pirates Down the Street II: The Ninjas from Across",
+        "overview": "Los Piratas se sienten como en casa en Sandborough, pero el ambiente se enfría cuando los Ninjas vienen a vivir a la calle. ¡Después de todo, los piratas y los ninjas son enemigos jurados! Mientras el capitán pirata Hector Blunderbuss lucha por deshacerse de sus nuevos vecinos, su hijo Billy y su hija ninja Yuka se hacen amigos. Los Piratas desafían a los Ninjas a la batalla final en el hexatlón anual del pueblo. ¿Quién ganará el partido? Los ninjas son más rápidos y ágiles, por supuesto, pero los piratas son los mejores tramposos de los siete mares...",
+        "poster_path": "https://image.tmdb.org/t/p/w342/7AELgsqhyytLJnrYkl4nYkkJIwG.jpg",
+        "release_date": "2022-04-20",
+        "vote_average": 6.415
+      }
+    ],
+    "cast": [
+      {
+        "id": 65731,
+        "name": "Sam Worthington",
+        "character": "Jake Sully",
+        "photo": "https://image.tmdb.org/t/p/w342/mflBcox36s9ZPbsZPVOuhf6axaJ.jpg"
+      },
+      {
+        "id": 8691,
+        "name": "Zoe Saldaña",
+        "character": "Neytiri",
+        "photo": "https://image.tmdb.org/t/p/w342/eNuKic9TY7GNiIzEIfF9vuv3IH7.jpg"
+      },
+      {
+        "id": 10205,
+        "name": "Sigourney Weaver",
+        "character": "Kiri",
+        "photo": "https://image.tmdb.org/t/p/w342/wTSnfktNBLd6kwQxgvkqYw6vEon.jpg"
+      },
+      {
+        "id": 32747,
+        "name": "Stephen Lang",
+        "character": "Colonel Miles Quaritch",
+        "photo": "https://image.tmdb.org/t/p/w342/gnO5VfkDgA2fsHweD0622LUY3Hu.jpg"
+      },
+      {
+        "id": 204,
+        "name": "Kate Winslet",
+        "character": "Ronal",
+        "photo": "https://image.tmdb.org/t/p/w342/9xDnfZrWhM67wJlQJEsOOjQzDUQ.jpg"
+      },
+      {
+        "id": 7248,
+        "name": "Cliff Curtis",
+        "character": "Tonowari",
+        "photo": "https://image.tmdb.org/t/p/w342/3D6qz8vL6DWHAO3HeXeaSuwxq3s.jpg"
+      },
+      {
+        "id": 59231,
+        "name": "Joel David Moore",
+        "character": "Norm Spellman",
+        "photo": "https://image.tmdb.org/t/p/w342/mMVhVglj6BZFuvqAXnEibce08k7.jpg"
+      },
+      {
+        "id": 30485,
+        "name": "CCH Pounder",
+        "character": "Mo'at",
+        "photo": "https://image.tmdb.org/t/p/w342/mr6BLDN75T8DJl9dNK3hN4YwqJa.jpg"
+      },
+      {
+        "id": 36190,
+        "name": "Edie Falco",
+        "character": "General Frances Ardmore",
+        "photo": "https://image.tmdb.org/t/p/w342/jS2Hnr5OmntpX0J7EpH70zAG0mz.jpg"
+      },
+      {
+        "id": 55936,
+        "name": "Jemaine Clement",
+        "character": "Dr. Ian Garvin",
+        "photo": "https://image.tmdb.org/t/p/w342/6eiNbeurpHb2fxIeT0RrJ0wRI25.jpg"
+      },
+      {
+        "id": 1771,
+        "name": "Giovanni Ribisi",
+        "character": "Parker Selfridge",
+        "photo": "https://image.tmdb.org/t/p/w342/8EAiS9D3YtGOrwNM0OrwmDpWK7s.jpg"
+      },
+      {
+        "id": 1663672,
+        "name": "Britain Dalton",
+        "character": "Lo'ak",
+        "photo": "https://image.tmdb.org/t/p/w342/asX3eJr9oHNs1ZgRYGwsZRAntqS.jpg"
+      },
+      {
+        "id": 1729393,
+        "name": "Jamie Flatters",
+        "character": "Neteyam",
+        "photo": "https://image.tmdb.org/t/p/w342/4us0bbdSOPayvw3N1gT0wtap4fc.jpg"
+      },
+      {
+        "id": 1895788,
+        "name": "Trinity Jo-Li Bliss",
+        "character": "Tuktirey 'Tuk'",
+        "photo": "https://image.tmdb.org/t/p/w342/a3WQPKhMHOZ5TjdnqStTfquzVB7.jpg"
+      },
+      {
+        "id": 1895760,
+        "name": "Jack Champion",
+        "character": "Miles 'Spider' Socorro",
+        "photo": "https://image.tmdb.org/t/p/w342/8PXFKzhjFJ0oYP60Bj1kA44XBjY.jpg"
+      }
+    ],
+    "collection": {
+      "id": 87096,
+      "name": "Avatar - Colección",
+      "poster_path": "/bQo9IdxYRgvhfHcfJdo98PttTcG.jpg",
+      "backdrop_path": "/6qkJLRCZp9Y3ovXti5tSuhH0DpO.jpg"
+    },
+    "cached_at": 1769728742741
+  },
+  "El arte de la guerra.mp4": {
+    "tmdb_id": 11398,
+    "title": "El arte de la guerra",
+    "overview": "Antes de la celebración de una importante conferencia, Neil Shaw, agente del FBI, es acusado del asesinato del embajador chino en las Naciones Unidas. Pero, si Shaw quiere demostrar su inocencia, tendrá que desentrañar la conspiración política que hay detrás de ese crimen. Y para lograrlo tendrá que huir de la justicia y enfrentarse a los verdaderos culpables.",
+    "poster_path": "https://image.tmdb.org/t/p/w342/paYmKfHNOJk2FPub0dZnUq79GVB.jpg",
+    "backdrop_path": "https://image.tmdb.org/t/p/w342/dE6xTBdthy3d9GYIIbbndFr4AOD.jpg",
+    "release_date": "2000-08-25",
+    "vote_average": 5.72,
+    "genre_ids": [
+      28,
+      53,
+      80
+    ],
+    "runtime": 117,
+    "videos": [
+      {
+        "key": "LZUV6N7eTNU",
+        "name": "EL ARTE DE LA GUERRA - Tráiler Español [VHS][2000]",
+        "type": "Trailer",
+        "url": "https://www.youtube.com/watch?v=LZUV6N7eTNU"
+      }
+    ],
+    "recommendations": [
+      {
+        "tmdb_id": 552161,
+        "title": "The Art of Murder",
+        "overview": "Cuando la asistente de la galería de arte, Kate Miller, se encuentra con el heredero de una propiedad en decadencia, se topa con una obra maestra previamente no descubierta, y se ve empujada al mundo de subastas de alto valor del arte invaluable. Pero esos altos riesgos se vuelven mortales cuando la integridad y la autenticidad de la pintura se ponen en tela de juicio. Kate y la galería pronto descubren que están atrapados en medio de una conspiración de un millón de dólares. A medida que se cierra la fecha de la subasta, Kate se encuentra en peligro mortal cuando un acosador desesperado no se detendrá ante nada para evitar que la verdad salga a la luz.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/aFBG5IqTSoNXUeTVtSWUL2WUuuW.jpg",
+        "release_date": "2018-10-05",
+        "vote_average": 6.159
+      },
+      {
+        "tmdb_id": 265929,
+        "title": "Art and Craft",
+        "overview": "For several decades, gifted and incredibly prolific forger Mark Landis compulsively created impeccable copies of works by a variety of major artists, donating them to institutions across the country and landing pieces on many of their walls. ART AND CRAFT brings us into the cluttered and insular life of an unforgettable character just as he finds his foil in an equally obsessive art registrar.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/btMgA6RKOXWq5HaUjz00PJ6Nh2m.jpg",
+        "release_date": "2014-09-19",
+        "vote_average": 7.1
+      },
+      {
+        "tmdb_id": 13988,
+        "title": "El arte de la guerra 2: La traición",
+        "overview": "Cuando Neil Shaw recupera su trabajo como agente del orden se ve inmerso en una trama de corrupción y traiciones. Aunque se le asigna la misión de investigar una serie de asesinatos de senadores, no tarda en sospechar que está siendo utilizado como cebo para los criminales.  Secuela lanzada directamente al mercado doméstico del filme de acción \"El arte de la guerra\", que había tenido un cierto éxito en el año 2000, cuando su protagonista, Wesley Snipes (\"Blade\"), gozaba de un notable tirón comercial.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/lkEER8lRFz5yHHOE4XQTCiHkJXb.jpg",
+        "release_date": "2008-08-12",
+        "vote_average": 4.766
+      },
+      {
+        "tmdb_id": 397919,
+        "title": "Rammstein: In Amerika - Live from Madison Square Garden",
+        "overview": "A solo 20 minutos de la preventa, Madison Square Garden, Nueva York anuncia: ¡Agotado! La película del concierto celebra el espectáculo legendario de la banda en el Madison Square Garden de Nueva York: el regreso de Rammstein a los Estados Unidos después de una ausencia de diez años. En HD y sonido envolvente 5.1. Lista de temas: 01 Rammlied // 02 B******** // 03 Waidmanns Heil // 04 Keine Lust // 05 Weisses Fleisch // 06 Feuer Frei! // 07 Wiener Blut // 08 Frühling in Paris // 09 Ich tu Dir weh // 10 Du riechst so gut // 11 Benzin // 12 Links 2 3 4 // 13 Du hast // 14 Pussy // 15 Sonne // 16 Haifisch // 17 Ich will // 18 Engel",
+        "poster_path": "https://image.tmdb.org/t/p/w342/9KHdjsWYyVG6Url7nnIOFd89ERE.jpg",
+        "release_date": "2010-12-11",
+        "vote_average": 8.1
+      },
+      {
+        "tmdb_id": 18355,
+        "title": "Caza al terrorista",
+        "overview": "Annibal Ramírez, oficial de la marina americana, se convierte por azar en el centro de una operación secreta que llevan a cabo conjuntamente la CIA y el Mossad, ya que es el vivo retrato de Carlos Sánchez, alias el Chacal, el asesino más buscado del mundo.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/oPPhdsm82dFHMGX7v4h75EIpe5u.jpg",
+        "release_date": "1997-09-28",
+        "vote_average": 6.332
+      },
+      {
+        "tmdb_id": 117923,
+        "title": "La bala del asesino",
+        "overview": "El Agente del FBI Digs Robert es llamado por un embajador de gran importancia para localizar a un asesino que se retiró en el sórdido de Sofía, Bulgaria, y se dedica a asesinar a los terroristas mas buscados de Europa. Durante su investigación, Robert se cruza con una serie de personajes sospechosos.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/x8iJu3GXydp1xD8OJlBIoLZQbCu.jpg",
+        "release_date": "2012-08-01",
+        "vote_average": 3.9
+      },
+      {
+        "tmdb_id": 191504,
+        "title": "Represalia",
+        "overview": "El comandante de la unidad de fuerzas especiales Mike Stone (Michael Wong), tiene que encarar el mayor desafío de su carrera cuando su equipo tiene que enfrentarse a un grupo criminal que emplea tácticas de combate avanzadas. Stone averigua que sus rivales son un grupo de ex operativos del ejército estadounidense, comandados por algunos de sus antiguos camaradas. La próxima vez que las dos fuerzas se encuentren en el campo de batalla, Stone tendrá que diseñar una estrategia que supondrá la vida o la muerte de sus hombres.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/duxrh3Uewcntsl00Mv24sxZ1lRq.jpg",
+        "release_date": "1996-09-13",
+        "vote_average": 6
+      },
+      {
+        "tmdb_id": 11863,
+        "title": "Jade",
+        "overview": "David Corelli, un ambicioso asistente del fiscal de San Francisco, va como invitado a una elegante fiesta que dan sus amigos, Matt Gavin, un famoso abogado, y su mujer, Trina, una seductora psiquiatra que fue novia de David tiempo atrás. En plena fiesta, Corelli recibe una llamada: un conocido millonario ha sido asesinado en su casa. Al acudir al escenario del crimen, encuentra un pequeño camafeo con la palabra Jade grabada. Pronto descubrirá que la joya pertenecía a Trina, que era la amante del asesinado.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/kawjGSy1tXa9tJULQ48ScWtUuRa.jpg",
+        "release_date": "1995-10-13",
+        "vote_average": 5.5
+      },
+      {
+        "tmdb_id": 35837,
+        "title": "Boogie, el Aceitoso",
+        "overview": "Boogie el Aceitoso es el mejor asesino a sueldo de la ciudad, por lo menos es lo que él cree... Cuando el mafioso más importante necesita eliminar a un testigo le encarga el trabajo a Blackburn, quien de a poco está desplazando a Boogie. Cuando Boogie se entera de esto sale a demostrar que él sigue siendo el número uno.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/rom0NoTExJcBWSf1TqzUV5sgYdb.jpg",
+        "release_date": "2009-10-22",
+        "vote_average": 6.9
+      },
+      {
+        "tmdb_id": 618019,
+        "title": "Jaque al asesino",
+        "overview": "Un hombre se despierta en el hospital sin recordar quién es y descubre que la policía le busca por cometer una serie de asesinatos.",
+        "poster_path": "https://image.tmdb.org/t/p/w342/7nUd6rZ9Nmv8USawYaCOzVEkgfs.jpg",
+        "release_date": "2019-08-01",
+        "vote_average": 5.353
+      }
+    ],
+    "cast": [
+      {
+        "id": 10814,
+        "name": "Wesley Snipes",
+        "character": "Neil Shaw",
+        "photo": "https://image.tmdb.org/t/p/w342/232tIFkJYkmtQIM31Pi5dmLRR8p.jpg"
+      },
+      {
+        "id": 55636,
+        "name": "Donald Sutherland",
+        "character": "Douglas Thomas",
+        "photo": "https://image.tmdb.org/t/p/w342/yM8WO2BYqFvgQXAvf4CIuCYnY4j.jpg"
+      },
+      {
+        "id": 10427,
+        "name": "Anne Archer",
+        "character": "Eleanor Hooks",
+        "photo": "https://image.tmdb.org/t/p/w342/y1uFANprVvJ9cCqVKSl0umIpIXw.jpg"
+      },
+      {
+        "id": 7868,
+        "name": "Maury Chaykin",
+        "character": "Frank Capella",
+        "photo": "https://image.tmdb.org/t/p/w342/Aqmsu1UHo40Md4RlLGfotSt8Lrr.jpg"
+      },
+      {
+        "id": 25689,
+        "name": "Liliana Komorowska",
+        "character": "Jenna Novak",
+        "photo": "https://image.tmdb.org/t/p/w342/ovQVsXMWigEx3Qwb7UvRfSFox7t.jpg"
+      },
+      {
+        "id": 11398,
+        "name": "Cary-Hiroyuki Tagawa",
+        "character": "David Chan",
+        "photo": "https://image.tmdb.org/t/p/w342/5F8MQ4J4qIqUwGIfcWN4osrTUtP.jpg"
+      },
+      {
+        "id": 2712,
+        "name": "Michael Biehn",
+        "character": "Robert Bly",
+        "photo": "https://image.tmdb.org/t/p/w342/9oFLsADWQm2TvU8XzLIzBbjdMkU.jpg"
+      },
+      {
+        "id": 61696,
+        "name": "Marie Matiko",
+        "character": "Julia Fang",
+        "photo": "https://image.tmdb.org/t/p/w342/reI9c00M37RCJRWKnyvytYmZtR0.jpg"
+      },
+      {
+        "id": 20904,
+        "name": "James Hong",
+        "character": "Ambassador Wu",
+        "photo": "https://image.tmdb.org/t/p/w342/v3lfw5aHOy0paOCx6WHiSnwzbH0.jpg"
+      },
+      {
+        "id": 61703,
+        "name": "Ron Yuan",
+        "character": "Ming",
+        "photo": "https://image.tmdb.org/t/p/w342/7Co2MdR8T5zlXTrdZ9Z3qjlmKdV.jpg"
+      },
+      {
+        "id": 166963,
+        "name": "Glen Chin",
+        "character": "Ochai",
+        "photo": "https://image.tmdb.org/t/p/w342/dDe9EXi56xDYWhGIrWbi1Ffzxvh.jpg"
+      },
+      {
+        "id": 1330770,
+        "name": "Bonnie Mak",
+        "character": "Anna",
+        "photo": null
+      },
+      {
+        "id": 102853,
+        "name": "Paul Hopkins",
+        "character": "Ray",
+        "photo": "https://image.tmdb.org/t/p/w342/dIO8o7EudLvgiJgEXeWhmxFByLY.jpg"
+      },
+      {
+        "id": 115986,
+        "name": "Uni Park",
+        "character": "Tina Chan",
+        "photo": "https://image.tmdb.org/t/p/w342/g1tM99d5IECHoaTflVXPZb8XxeJ.jpg"
+      },
+      {
+        "id": 1501329,
+        "name": "Phil Chiu",
+        "character": "Triad Hood Driver",
+        "photo": null
+      }
+    ],
+    "collection": {
+      "id": 25410,
+      "name": "El arte de la guerra - Colección",
+      "poster_path": "/hJATciLinNnhsI06NjiLmohJl8i.jpg",
+      "backdrop_path": "/9G3CBEg7QlQ9MQcNgA5IwcghNYO.jpg"
+    },
+    "cached_at": 1769729374144
+  },
   "Milla 22 (2018).mp4": {
     "tmdb_id": 347375,
     "title": "Milla 22",
-    "overview": "James Silva (Mark Wahlberg) es un experimentado agente de la CIA al que envían a un país sospechoso de actividad nuclear. El funcionario Li (Iko Uwais) llegó a la embajada estadounidense buscando inte...",
+    "overview": "James Silva (Mark Wahlberg) es un experimentado agente de la CIA al que envían a un país sospechoso de actividad nuclear. El funcionario Li (Iko Uwais) llegó a la embajada estadounidense buscando intercambiar información sobre material radioactivo robado a cambio de su traslado seguro a los Estados Unidos. A Silva le asignan la peligrosa misión de transportarlo desde el centro de una ciudad hasta una pista de aterrizaje a 22 millas de distancia (unos 35 kilómetros).",
     "poster_path": "https://image.tmdb.org/t/p/w342/butXolfzlkbVL07HuIZeBmjuTyn.jpg",
     "backdrop_path": "https://image.tmdb.org/t/p/w342/wRKYpnFZCwzH8nOLjYryGryiE5M.jpg",
     "release_date": "2018-08-16",
@@ -126806,7 +128888,6 @@
       28,
       53
     ],
-    "cached_at": 1769724699629,
     "runtime": 94,
     "videos": [
       {
@@ -126989,6 +129070,8 @@
         "character": "Rook",
         "photo": "https://image.tmdb.org/t/p/w342/uzFxV2l3ODxfknHhIAgvLf0ihH6.jpg"
       }
-    ]
+    ],
+    "collection": null,
+    "cached_at": 1769729374757
   }
 }

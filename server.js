@@ -1211,7 +1211,7 @@ function launchDownloaderApp() {
 // POST /api/download-queue - Añadir URL a la cola de descargas
 app.post('/api/download-queue', async (req, res) => {
     try {
-        const { url, title } = req.body;
+        const { url, title, requestId } = req.body;
 
         if (!url) {
             return res.status(400).json({ error: 'URL requerida' });
@@ -1247,6 +1247,45 @@ app.post('/api/download-queue', async (req, res) => {
 
         console.log(`📥 URL añadida a cola de descargas: ${url}`);
 
+        // Actualizar estado de la petición a "downloading" si se proporciona requestId o coincide el título
+        let updatedRequest = null;
+        try {
+            const requestsData = await readRequests();
+            let requestToUpdate = null;
+
+            // Buscar por requestId si se proporciona
+            if (requestId) {
+                requestToUpdate = requestsData.requests.find(r => r.id === requestId);
+            }
+
+            // Si no hay requestId, buscar por título similar
+            if (!requestToUpdate && title) {
+                const normalizedTitle = title.toLowerCase()
+                    .replace(/[._-]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                requestToUpdate = requestsData.requests.find(r => {
+                    const reqTitle = (r.title || '').toLowerCase()
+                        .replace(/[._-]/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    return reqTitle.includes(normalizedTitle) || normalizedTitle.includes(reqTitle);
+                });
+            }
+
+            if (requestToUpdate && requestToUpdate.status !== 'server' && requestToUpdate.status !== 'downloading') {
+                requestToUpdate.status = 'downloading';
+                await writeRequests(requestsData);
+                updatedRequest = requestToUpdate;
+                console.log(`📋 Petición actualizada a "downloading": ${requestToUpdate.title}`);
+                // Notificar a todos los clientes SSE conectados
+                notifyRequestUpdate(requestToUpdate);
+            }
+        } catch (reqError) {
+            console.error('Error actualizando petición:', reqError.message);
+        }
+
         // Verificar si la app ya está ejecutándose
         const isRunning = await isDownloaderAppRunning();
         let appLaunched = false;
@@ -1269,7 +1308,8 @@ app.post('/api/download-queue', async (req, res) => {
             message,
             queueItem,
             appLaunched,
-            appWasRunning: isRunning
+            appWasRunning: isRunning,
+            updatedRequest: updatedRequest ? { id: updatedRequest.id, title: updatedRequest.title, status: 'downloading' } : null
         });
     } catch (error) {
         console.error('Error al añadir a cola:', error);
@@ -1293,6 +1333,119 @@ app.get('/api/download-queue', async (req, res) => {
         res.status(500).json({ error: 'Error al leer la cola' });
     }
 });
+
+// ============================================
+// MONITOR DE DESCARGAS COMPLETADAS
+// ============================================
+let lastQueueState = new Map(); // Guardar estado anterior de la cola
+
+// Función para limpiar título de descarga (quitar sufijos de yt-dlp)
+function cleanDownloadTitle(title) {
+    return (title || '')
+        // Quitar sufijos de yt-dlp como .fdash-audio_, .f137, etc.
+        .replace(/\.f\d+.*$/, '')
+        .replace(/\.fdash.*$/, '')
+        .replace(/\s*\(\d{4}\)\s*$/, '') // Quitar año al final
+        .trim();
+}
+
+// Función para normalizar título para comparación fuzzy
+function normalizeTitleFuzzy(title) {
+    return (title || '')
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+        .replace(/[^a-z0-9\s]/g, ' ') // Solo letras, números y espacios
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Extraer palabras clave (consonantes principales) para matching fuzzy
+function extractKeywords(title) {
+    const normalized = normalizeTitleFuzzy(title);
+    // Palabras de más de 2 caracteres
+    return normalized.split(' ').filter(w => w.length > 2);
+}
+
+// Calcular similitud entre dos títulos
+function titleSimilarity(title1, title2) {
+    const words1 = extractKeywords(title1);
+    const words2 = extractKeywords(title2);
+
+    if (words1.length === 0 || words2.length === 0) return 0;
+
+    let matches = 0;
+    for (const w1 of words1) {
+        for (const w2 of words2) {
+            // Coincidencia exacta o una contenida en la otra
+            if (w1 === w2 || w1.includes(w2) || w2.includes(w1)) {
+                matches++;
+                break;
+            }
+        }
+    }
+
+    // Porcentaje de palabras que coinciden
+    return matches / Math.min(words1.length, words2.length);
+}
+
+// Monitorear descargas completadas y actualizar peticiones
+async function checkCompletedDownloads() {
+    try {
+        const queue = await readDownloadQueue();
+
+        for (const item of queue) {
+            const prevStatus = lastQueueState.get(item.url);
+
+            // Si el estado cambió a "completed" y antes no lo estaba
+            if (item.status === 'completed' && prevStatus !== 'completed') {
+                console.log(`✅ Descarga completada detectada: ${item.title}`);
+
+                // Buscar la petición correspondiente y actualizarla
+                try {
+                    const requestsData = await readRequests();
+                    const cleanedTitle = cleanDownloadTitle(item.title);
+
+                    // Buscar la mejor coincidencia
+                    let bestMatch = null;
+                    let bestScore = 0;
+
+                    for (const r of requestsData.requests) {
+                        if (r.status === 'server' || r.status === 'downloaded') continue;
+
+                        const similarity = titleSimilarity(cleanedTitle, r.title);
+                        console.log(`   📊 Comparando "${cleanedTitle}" vs "${r.title}": ${(similarity * 100).toFixed(0)}%`);
+
+                        if (similarity > bestScore && similarity >= 0.5) { // Mínimo 50% de coincidencia
+                            bestScore = similarity;
+                            bestMatch = r;
+                        }
+                    }
+
+                    if (bestMatch) {
+                        bestMatch.status = 'downloaded';
+                        await writeRequests(requestsData);
+                        console.log(`📋 Petición "${bestMatch.title}" actualizada a "downloaded" (${(bestScore * 100).toFixed(0)}% coincidencia)`);
+                        // Notificar via SSE
+                        notifyRequestUpdate(bestMatch);
+                    } else {
+                        console.log(`   ⚠️ No se encontró petición coincidente para: ${cleanedTitle}`);
+                    }
+                } catch (e) {
+                    console.error('Error actualizando petición tras descarga:', e.message);
+                }
+            }
+
+            // Actualizar estado guardado
+            lastQueueState.set(item.url, item.status);
+        }
+    } catch (e) {
+        // Silenciar errores si el archivo no existe
+    }
+}
+
+// Iniciar monitor de descargas (cada 5 segundos)
+setInterval(checkCompletedDownloads, 5000);
+console.log('👀 Monitor de descargas completadas iniciado');
 
 // ============================================
 // BÚSQUEDA EN TODOTORRENTS (Tor Browser)

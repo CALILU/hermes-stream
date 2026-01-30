@@ -310,6 +310,29 @@ export default function HermesApp() {
       .catch(err => console.error('Error cargando config almacenamiento:', err));
   }, []);
 
+  // Estado para abrir modal de peticiones cuando los videos estén listos
+  const [pendingShowRequests, setPendingShowRequests] = useState(false);
+
+  // Detectar parámetro showRequests en URL (desde extensión Chrome)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('showRequests') === 'true') {
+      // Marcar como pendiente - se abrirá cuando los videos estén cargados
+      setPendingShowRequests(true);
+      // Limpiar el parámetro de la URL sin recargar
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // Abrir modal de peticiones cuando los videos estén cargados
+  useEffect(() => {
+    if (pendingShowRequests && !loading && videos.length > 0) {
+      setRequestsAdminModal(true);
+      setPendingShowRequests(false);
+      console.log('📋 Abriendo modal de peticiones (desde extensión Chrome)');
+    }
+  }, [pendingShowRequests, loading, videos.length]);
+
   // SSE para actualizaciones de peticiones en tiempo real
   useEffect(() => {
     if (!requestsAdminModal) return;
@@ -1566,6 +1589,13 @@ export default function HermesApp() {
       console.error('Error cargando peticiones:', error);
     }
   };
+
+  // Cargar peticiones cuando se abre el modal de admin
+  useEffect(() => {
+    if (requestsAdminModal && allRequests.length === 0) {
+      loadAllRequests();
+    }
+  }, [requestsAdminModal]);
 
   // Actualizar estado de una petición (admin)
   const updateRequestStatus = async (id, status) => {

@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IsiPrime Batch Converter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 30px;
+    }
+
+    .stat-box {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .folder-input {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .folder-input input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .folder-input input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(235, 51, 73, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+      color: #fff;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(74, 85, 104, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .options {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-label input {
+      width: 18px;
+      height: 18px;
+      accent-color: #667eea;
+    }
+
+    select {
+      padding: 10px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    /* Progress Section */
+    .progress-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .progress-text {
+      font-size: 0.95rem;
+      color: #aaa;
+    }
+
+    .progress-text strong {
+      color: #fff;
+    }
+
+    .progress-bar-container {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      border-radius: 6px;
+      transition: width 0.3s;
+    }
+
+    /* Main Content - Two Panels */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 500px;
+    }
+
+    .panel-header {
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-header .count {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .panel.pending .panel-header {
+      border-left: 4px solid #f39c12;
+    }
+
+    .panel.completed .panel-header {
+      border-left: 4px solid #27ae60;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .file-item {
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s;
+    }
+
+    .file-item:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .file-item.converting {
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.5);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .file-item.failed {
+      background: rgba(235, 51, 73, 0.2);
+      border: 1px solid rgba(235, 51, 73, 0.5);
+    }
+
+    .file-name {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 15px;
+    }
+
+    .file-size {
+      font-size: 0.8rem;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .file-saved {
+      font-size: 0.75rem;
+      color: #27ae60;
+      margin-left: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    /* File item with TMDB info */
+    .file-item {
+      cursor: pointer;
+    }
+
+    .file-item:hover .edit-btn {
+      opacity: 1;
+    }
+
+    .file-info {
+      flex: 1;
+      min-width: 0;
+      margin-right: 10px;
+    }
+
+    .file-original {
+      font-size: 0.85rem;
+      color: #888;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-tmdb {
+      font-size: 0.95rem;
+      color: #38ef7d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .file-tmdb .arrow {
+      color: #667eea;
+      font-size: 0.8rem;
+    }
+
+    .file-no-match {
+      font-size: 0.85rem;
+      color: #f39c12;
+      font-style: italic;
+    }
+
+    .edit-btn {
+      opacity: 0.4;
+      background: none;
+      border: none;
+      color: #667eea;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 5px;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .edit-btn:hover {
+      opacity: 1;
+      background: rgba(102, 126, 234, 0.2);
+    }
+
+    /* TMDB Search Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: #1e2a3a;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow: hidden;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-header h3 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .modal-close:hover {
+      opacity: 1;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(80vh - 150px);
+    }
+
+    .modal-file-info {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .modal-file-info .label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .modal-file-info .value {
+      font-size: 0.95rem;
+      color: #fff;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .search-results {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-result {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .search-result:hover {
+      background: rgba(102, 126, 234, 0.2);
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .search-result.selected {
+      background: rgba(56, 239, 125, 0.2);
+      border-color: rgba(56, 239, 125, 0.5);
+    }
+
+    .search-result-poster {
+      width: 45px;
+      height: 68px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .search-result-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .search-result-poster.no-poster {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 1.5rem;
+    }
+
+    .search-result-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .search-result-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .search-result-year {
+      font-size: 0.85rem;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .search-result-overview {
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+
+    .use-original-btn {
+      width: 100%;
+      padding: 12px;
+      background: rgba(243, 156, 18, 0.2);
+      border: 2px solid rgba(243, 156, 18, 0.5);
+      border-radius: 10px;
+      color: #f39c12;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 15px;
+    }
+
+    .use-original-btn:hover {
+      background: rgba(243, 156, 18, 0.3);
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 30px;
+      color: #667eea;
+    }
+
+    /* Converting indicator */
+    .converting-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .converting-name {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .converting-progress {
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    /* Upload Progress Section */
+    .upload-section {
+      background: rgba(17, 153, 142, 0.1);
+      border: 1px solid rgba(17, 153, 142, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .upload-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .upload-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: #38ef7d;
+    }
+
+    .upload-title .icon {
+      font-size: 1.2rem;
+    }
+
+    .upload-info {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .upload-file {
+      font-size: 0.9rem;
+      color: #aaa;
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .upload-stats {
+      font-size: 0.85rem;
+      color: #11998e;
+    }
+
+    .upload-progress-bar {
+      height: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .upload-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .btn-cancel-upload {
+      background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #555;
+      font-size: 0.85rem;
+    }
+
+    /* Scrollbar */
+    .panel-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .panel-content::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .panel-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .panel-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>IsiPrime Batch Converter</h1>
+      <div class="header-stats">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-pending">0</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-completed">0</div>
+          <div class="stat-label">Completados</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-saved">0 MB</div>
+          <div class="stat-label">Espacio Ahorrado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="folder-input">
+        <input type="text" id="folder-path" placeholder="Ruta de la carpeta con peliculas (ej: E:\Peliculas)">
+        <button class="btn btn-secondary" id="btn-browse" title="Explorar...">&#128193;</button>
+        <button class="btn btn-secondary" id="btn-open-folder" title="Abrir carpeta en Explorador" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">&#128194;</button>
+        <button class="btn btn-primary" id="btn-scan" style="padding: 10px 16px; font-size: 0.85rem;">Escanear</button>
+      </div>
+      <div class="options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chk-delete">
+          Eliminar originales
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="chk-rename" checked>
+          Renombrar (TMDB)
+        </label>
+        <select id="sel-gpu">
+          <option value="auto">GPU: Auto</option>
+          <option value="nvidia">NVIDIA</option>
+          <option value="intel">Intel</option>
+          <option value="amd">AMD</option>
+          <option value="none">Solo CPU</option>
+        </select>
+        <select id="sel-quality">
+          <option value="fast">Rapido</option>
+          <option value="balanced" selected>Balanceado</option>
+          <option value="quality">Calidad</option>
+        </select>
+      </div>
+      <button class="btn btn-success" id="btn-start" disabled>Iniciar</button>
+      <button class="btn btn-danger" id="btn-stop" disabled>Detener</button>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section" id="progress-section" style="display: none;">
+      <div class="progress-header">
+        <span class="progress-text">Convirtiendo: <strong id="current-file">-</strong></span>
+        <span class="progress-text"><strong id="progress-percent">0</strong>%</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Upload Section (FTP) -->
+    <div class="upload-section" id="upload-section" style="display: none;">
+      <div class="upload-header">
+        <div class="upload-title">
+          <span class="icon">📤</span>
+          <span id="upload-status-text">Subiendo al servidor FTP...</span>
+        </div>
+        <button class="btn btn-cancel-upload" id="btn-cancel-upload">Cancelar Subida</button>
+      </div>
+      <div class="upload-file" id="upload-filename">-</div>
+      <div class="upload-progress-bar">
+        <div class="upload-progress-bar-fill" id="upload-progress-bar" style="width: 0%"></div>
+      </div>
+      <div class="upload-info">
+        <span class="upload-stats" id="upload-stats">0% - 0 MB / 0 MB</span>
+      </div>
+    </div>
+
+    <!-- Main Content - Two Panels -->
+    <div class="main-content">
+      <!-- Pending Panel -->
+      <div class="panel pending">
+        <div class="panel-header">
+          <h2>Pendientes</h2>
+          <span class="count" id="pending-count">0</span>
+        </div>
+        <div class="panel-content" id="pending-list">
+          <div class="empty-state">
+            <div class="icon">📁</div>
+            <p>Introduce una ruta y pulsa Escanear</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Panel -->
+      <div class="panel completed">
+        <div class="panel-header">
+          <h2>Completados</h2>
+          <span class="count" id="completed-count">0</span>
+        </div>
+        <div class="panel-content" id="completed-list">
+          <div class="empty-state">
+            <div class="icon">✅</div>
+            <p>Los archivos convertidos apareceran aqui</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      IsiPrime Batch Converter - Conversion masiva con aceleracion GPU
+    </div>
+  </div>
+
+  <!-- TMDB Search Modal -->
+  <div class="modal-overlay" id="tmdb-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Buscar en TMDB</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-file-info">
+          <div class="label">Archivo original</div>
+          <div class="value" id="modal-filename">-</div>
+        </div>
+        <div class="search-box">
+          <input type="text" id="tmdb-search-input" placeholder="Buscar pelicula...">
+          <button class="btn btn-primary" id="tmdb-search-btn">Buscar</button>
+        </div>
+        <div class="search-results" id="search-results">
+          <div class="no-results">Escribe el nombre de la pelicula y pulsa Buscar</div>
+        </div>
+        <button class="use-original-btn" id="use-original-btn">Usar nombre original (sin renombrar)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Estado
+    let state = {
+      isRunning: false,
+      pending: [],
+      completed: [],
+      failed: [],
+      currentFile: null,
+      progress: 0,
+      stats: { savedBytes: 0 }
+    };
+
+    // Elementos
+    const elements = {
+      folderPath: document.getElementById('folder-path'),
+      btnBrowse: document.getElementById('btn-browse'),
+      btnOpenFolder: document.getElementById('btn-open-folder'),
+      btnScan: document.getElementById('btn-scan'),
+      btnStart: document.getElementById('btn-start'),
+      btnStop: document.getElementById('btn-stop'),
+      chkDelete: document.getElementById('chk-delete'),
+      chkRename: document.getElementById('chk-rename'),
+      selGpu: document.getElementById('sel-gpu'),
+      selQuality: document.getElementById('sel-quality'),
+      progressSection: document.getElementById('progress-section'),
+      currentFile: document.getElementById('current-file'),
+      progressPercent: document.getElementById('progress-percent'),
+      progressBar: document.getElementById('progress-bar'),
+      pendingList: document.getElementById('pending-list'),
+      completedList: document.getElementById('completed-list'),
+      pendingCount: document.getElementById('pending-count'),
+      completedCount: document.getElementById('completed-count'),
+      statPending: document.getElementById('stat-pending'),
+      statCompleted: document.getElementById('stat-completed'),
+      statSaved: document.getElementById('stat-saved'),
+      // Upload section
+      uploadSection: document.getElementById('upload-section'),
+      uploadStatusText: document.getElementById('upload-status-text'),
+      uploadFilename: document.getElementById('upload-filename'),
+      uploadProgressBar: document.getElementById('upload-progress-bar'),
+      uploadStats: document.getElementById('upload-stats'),
+      btnCancelUpload: document.getElementById('btn-cancel-upload')
+    };
+
+    // Formatear tamaño
+    function formatSize(bytes) {
+      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+      let i = 0;
+      while (bytes >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        i++;
+      }
+      return `${bytes.toFixed(1)} ${units[i]}`;
+    }
+
+    // Actualizar UI
+    function updateUI() {
+      // Stats
+      elements.statPending.textContent = state.pending.length;
+      elements.statCompleted.textContent = state.completed.length;
+      elements.statSaved.textContent = formatSize(state.stats?.savedBytes || 0);
+      elements.pendingCount.textContent = state.pending.length;
+      elements.completedCount.textContent = state.completed.length + (state.failed?.length || 0);
+
+      // Buttons
+      elements.btnStart.disabled = state.pending.length === 0 || state.isRunning;
+      elements.btnStop.disabled = !state.isRunning;
+      elements.btnScan.disabled = state.isRunning;
+      elements.btnOpenFolder.disabled = !elements.folderPath.value.trim();
+
+      // Progress
+      if (state.isRunning && state.currentFile) {
+        elements.progressSection.style.display = 'block';
+        elements.currentFile.textContent = state.currentFile;
+        elements.progressPercent.textContent = state.progress;
+        elements.progressBar.style.width = `${state.progress}%`;
+      } else {
+        elements.progressSection.style.display = 'none';
+      }
+
+      // Upload progress (FTP)
+      if (state.upload && state.upload.isUploading) {
+        elements.uploadSection.style.display = 'block';
+        elements.uploadFilename.textContent = state.upload.fileName || '-';
+        elements.uploadProgressBar.style.width = `${state.upload.progress || 0}%`;
+
+        const transferred = formatSize(state.upload.bytesTransferred || 0);
+        const total = formatSize(state.upload.totalBytes || 0);
+        elements.uploadStats.textContent = `${state.upload.progress || 0}% - ${transferred} / ${total}`;
+
+        if (state.upload.cancelled) {
+          elements.uploadStatusText.textContent = 'Subida cancelada';
+          elements.btnCancelUpload.disabled = true;
+        } else {
+          elements.uploadStatusText.textContent = 'Subiendo al servidor FTP...';
+          elements.btnCancelUpload.disabled = false;
+        }
+      } else {
+        elements.uploadSection.style.display = 'none';
+      }
+
+      // Pending list
+      if (state.pending.length === 0 && !state.isRunning) {
+        elements.pendingList.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📁</div>
+            <p>No hay archivos pendientes</p>
+          </div>
+        `;
+      } else {
+        let html = '';
+
+        // Converting indicator
+        if (state.isRunning && state.currentFile) {
+          html += `
+            <div class="converting-indicator">
+              <div class="spinner"></div>
+              <div class="converting-name">${state.currentFile}</div>
+              <div class="converting-progress">${state.progress}%</div>
+            </div>
+          `;
+        }
+
+        // Pending files
+        state.pending.forEach(file => {
+          const hasTmdb = file.tmdbMatch && elements.chkRename.checked;
+          html += `
+            <div class="file-item" onclick="openTmdbModal('${escapeHtml(file.name)}', '${escapeHtml(file.searchQuery || '')}')">
+              <div class="file-info">
+                ${hasTmdb ? `
+                  <div class="file-original">${file.name}</div>
+                  <div class="file-tmdb">
+                    <span class="arrow">-></span>
+                    ${file.tmdbMatch.title} (${file.tmdbMatch.year})
+                  </div>
+                ` : `
+                  <div class="file-name">${file.name}</div>
+                  ${elements.chkRename.checked ? `<div class="file-no-match">Sin coincidencia TMDB - clic para buscar</div>` : ''}
+                `}
+              </div>
+              <div class="file-size">${file.sizeHuman}</div>
+              <button class="edit-btn" title="Cambiar pelicula">&#9998;</button>
+            </div>
+          `;
+        });
+
+        elements.pendingList.innerHTML = html || `
+          <div class="empty-state">
+            <div class="icon">⏳</div>
+            <p>Procesando...</p>
+          </div>
+        `;
+      }
+
+      // Completed list
+      if (state.completed.length === 0 && (!state.failed || state.failed.length === 0)) {
+        elements.completedList.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">✅</div>
+            <p>Los archivos convertidos apareceran aqui</p>
+          </div>
+        `;
+      } else {
+        let html = '';
+
+        // Completed files
+        state.completed.forEach(file => {
+          const displayName = file.newName || file.name.replace(/\.(avi|mkv)$/i, '.mp4');
+          const wasRenamed = file.newName && file.newName !== file.name.replace(/\.(avi|mkv)$/i, '.mp4');
+          html += `
+            <div class="file-item">
+              <div class="file-name" title="${wasRenamed ? file.name + ' → ' + displayName : displayName}">
+                ${wasRenamed ? '<span style="color:#667eea">★</span> ' : ''}${displayName}
+              </div>
+              <div class="file-size">${file.newSize || file.sizeHuman}</div>
+              ${file.saved ? `<div class="file-saved">-${file.saved}</div>` : ''}
+            </div>
+          `;
+        });
+
+        // Failed files
+        (state.failed || []).forEach(file => {
+          html += `
+            <div class="file-item failed">
+              <div class="file-name" title="${file.name}">${file.name}</div>
+              <div class="file-size" style="color: #eb3349;">Error</div>
+            </div>
+          `;
+        });
+
+        elements.completedList.innerHTML = html;
+      }
+    }
+
+    // Escanear carpeta
+    async function scanFolder() {
+      const path = elements.folderPath.value.trim();
+      if (!path) {
+        alert('Introduce una ruta de carpeta');
+        return;
+      }
+
+      elements.btnScan.disabled = true;
+      elements.btnScan.textContent = 'Escaneando...';
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ directory: path })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          alert(data.error);
+        } else {
+          state.pending = data.files;
+          state.completed = [];
+          state.failed = [];
+          updateUI();
+        }
+      } catch (err) {
+        alert('Error al escanear: ' + err.message);
+      } finally {
+        elements.btnScan.disabled = false;
+        elements.btnScan.textContent = 'Escanear';
+      }
+    }
+
+    // Iniciar conversión
+    async function startConversion() {
+      // Guardar settings
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deleteOriginals: elements.chkDelete.checked,
+          renameWithTMDB: elements.chkRename.checked,
+          gpu: elements.selGpu.value,
+          quality: elements.selQuality.value
+        })
+      });
+
+      // Iniciar
+      const res = await fetch('/api/start', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+      }
+    }
+
+    // Detener conversión
+    async function stopConversion() {
+      await fetch('/api/stop', { method: 'POST' });
+    }
+
+    // Cancelar subida FTP
+    async function cancelUpload() {
+      elements.btnCancelUpload.disabled = true;
+      elements.uploadStatusText.textContent = 'Cancelando subida...';
+
+      try {
+        const res = await fetch('/api/cancel-upload', { method: 'POST' });
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message || 'Error al cancelar la subida');
+        }
+      } catch (err) {
+        alert('Error al cancelar: ' + err.message);
+      }
+    }
+
+    // Conectar SSE
+    function connectSSE() {
+      const eventSource = new EventSource('/api/events');
+
+      eventSource.onmessage = (event) => {
+        state = JSON.parse(event.data);
+        updateUI();
+      };
+
+      eventSource.onerror = () => {
+        setTimeout(connectSSE, 2000);
+      };
+    }
+
+    // Escapar HTML para evitar inyección
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    // Modal elements
+    const modalElements = {
+      overlay: document.getElementById('tmdb-modal'),
+      close: document.getElementById('modal-close'),
+      filename: document.getElementById('modal-filename'),
+      searchInput: document.getElementById('tmdb-search-input'),
+      searchBtn: document.getElementById('tmdb-search-btn'),
+      results: document.getElementById('search-results'),
+      useOriginal: document.getElementById('use-original-btn')
+    };
+
+    let currentEditingFile = null;
+
+    // Abrir modal de TMDB
+    function openTmdbModal(filename, searchQuery) {
+      if (state.isRunning) return; // No editar mientras convierte
+
+      currentEditingFile = filename;
+      modalElements.filename.textContent = filename;
+      modalElements.searchInput.value = searchQuery || filename.replace(/\.(avi|mkv)$/i, '').replace(/[\._-]/g, ' ');
+      modalElements.results.innerHTML = '<div class="no-results">Escribe el nombre de la pelicula y pulsa Buscar</div>';
+      modalElements.overlay.classList.add('active');
+      modalElements.searchInput.focus();
+
+      // Auto-buscar si hay query
+      if (searchQuery) {
+        searchTMDB();
+      }
+    }
+
+    // Cerrar modal
+    function closeTmdbModal() {
+      modalElements.overlay.classList.remove('active');
+      currentEditingFile = null;
+    }
+
+    // Buscar en TMDB
+    async function searchTMDB() {
+      const query = modalElements.searchInput.value.trim();
+      if (!query) return;
+
+      modalElements.results.innerHTML = '<div class="loading-spinner">Buscando...</div>';
+
+      try {
+        const res = await fetch(`/api/tmdb/search?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (data.results && data.results.length > 0) {
+          let html = '';
+          data.results.forEach(movie => {
+            html += `
+              <div class="search-result" onclick="selectTmdbResult(${JSON.stringify(movie).replace(/"/g, '&quot;')})">
+                <div class="search-result-poster ${movie.poster ? '' : 'no-poster'}">
+                  ${movie.poster ? `<img src="${movie.poster}" alt="">` : '🎬'}
+                </div>
+                <div class="search-result-info">
+                  <div class="search-result-title">${movie.title}</div>
+                  <div class="search-result-year">${movie.year || 'Año desconocido'}${movie.originalTitle !== movie.title ? ` - ${movie.originalTitle}` : ''}</div>
+                  <div class="search-result-overview">${movie.overview || ''}</div>
+                </div>
+              </div>
+            `;
+          });
+          modalElements.results.innerHTML = html;
+        } else {
+          modalElements.results.innerHTML = '<div class="no-results">No se encontraron resultados. Intenta con otro nombre.</div>';
+        }
+      } catch (err) {
+        modalElements.results.innerHTML = `<div class="no-results">Error al buscar: ${err.message}</div>`;
+      }
+    }
+
+    // Seleccionar resultado de TMDB
+    async function selectTmdbResult(movie) {
+      if (!currentEditingFile) return;
+
+      try {
+        await fetch('/api/files/update-match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: currentEditingFile,
+            tmdbMatch: {
+              title: movie.title,
+              year: movie.year,
+              tmdbId: movie.tmdbId,
+              originalTitle: movie.originalTitle
+            }
+          })
+        });
+        closeTmdbModal();
+      } catch (err) {
+        alert('Error al guardar: ' + err.message);
+      }
+    }
+
+    // Usar nombre original (no renombrar)
+    async function useOriginalName() {
+      if (!currentEditingFile) return;
+
+      try {
+        await fetch('/api/files/update-match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: currentEditingFile,
+            tmdbMatch: null
+          })
+        });
+        closeTmdbModal();
+      } catch (err) {
+        alert('Error al guardar: ' + err.message);
+      }
+    }
+
+    // Explorar carpeta (dialogo nativo Windows)
+    async function browseFolder() {
+      elements.btnBrowse.disabled = true;
+      elements.btnBrowse.textContent = '...';
+
+      try {
+        const currentPath = elements.folderPath.value.trim();
+        const url = '/api/browse-folder' + (currentPath ? `?initial=${encodeURIComponent(currentPath)}` : '');
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success && data.path) {
+          elements.folderPath.value = data.path;
+          // Auto-escanear después de seleccionar
+          scanFolder();
+        }
+      } catch (err) {
+        console.error('Error al explorar:', err);
+      } finally {
+        elements.btnBrowse.disabled = false;
+        elements.btnBrowse.innerHTML = '&#128193;';
+      }
+    }
+
+    // Abrir carpeta en el Explorador de Windows
+    async function openFolder() {
+      const path = elements.folderPath.value.trim();
+      if (!path) {
+        alert('No hay carpeta seleccionada');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/open-folder');
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || 'Error al abrir la carpeta');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Event listeners
+    elements.btnOpenFolder.addEventListener('click', openFolder);
+    elements.btnBrowse.addEventListener('click', browseFolder);
+    elements.btnScan.addEventListener('click', scanFolder);
+    elements.btnStart.addEventListener('click', startConversion);
+    elements.btnStop.addEventListener('click', stopConversion);
+    elements.btnCancelUpload.addEventListener('click', cancelUpload);
+    elements.folderPath.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') scanFolder();
+    });
+    elements.folderPath.addEventListener('input', () => {
+      elements.btnOpenFolder.disabled = !elements.folderPath.value.trim();
+    });
+
+    // Checkbox rename - actualizar UI cuando cambia
+    elements.chkRename.addEventListener('change', updateUI);
+
+    // Modal event listeners
+    modalElements.close.addEventListener('click', closeTmdbModal);
+    modalElements.overlay.addEventListener('click', (e) => {
+      if (e.target === modalElements.overlay) closeTmdbModal();
+    });
+    modalElements.searchBtn.addEventListener('click', searchTMDB);
+    modalElements.searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchTMDB();
+    });
+    modalElements.useOriginal.addEventListener('click', useOriginalName);
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeTmdbModal();
+    });
+
+    // Init
+    connectSSE();
+    updateUI();
+  </script>
+</body>
+</html>

@@ -2623,6 +2623,33 @@
     ],
     "cached_at": 1769522771145
   },
+  "25410": {
+    "id": 25410,
+    "name": "El arte de la guerra - Colección",
+    "overview": "Colección de películas \"El arte de la guerra\"",
+    "poster": "https://image.tmdb.org/t/p/w342/hJATciLinNnhsI06NjiLmohJl8i.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/9G3CBEg7QlQ9MQcNgA5IwcghNYO.jpg",
+    "movies": [
+      {
+        "filename": "El arte de la guerra.mp4",
+        "tmdb_id": 11398,
+        "title": "El arte de la guerra",
+        "poster": "https://image.tmdb.org/t/p/w342/paYmKfHNOJk2FPub0dZnUq79GVB.jpg",
+        "release_date": "2000-08-25",
+        "genre_ids": [
+          28,
+          53,
+          80
+        ]
+      }
+    ],
+    "genre_ids": [
+      28,
+      53,
+      80
+    ],
+    "cached_at": 1769728744126
+  },
   "31562": {
     "id": 31562,
     "name": "Bourne - Colección",
@@ -3354,7 +3381,7 @@
         "filename": "Avatar El sentido del agua (2022).mp4",
         "tmdb_id": 76600,
         "title": "Avatar: El sentido del agua",
-        "poster": "https://image.tmdb.org/t/p/w500/ckeTumMS4G31UQ9NNkmtW2QhfMF.jpg",
+        "poster": "https://image.tmdb.org/t/p/w342/ckeTumMS4G31UQ9NNkmtW2QhfMF.jpg",
         "release_date": "2022-12-14",
         "genre_ids": [
           28,
