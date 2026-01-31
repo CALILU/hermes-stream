@@ -858,7 +858,7 @@ async function getVideoInfo(filePath) {
       '-show_entries', 'format=duration',
       '-of', 'json',
       filePath
-    ]);
+    ], { windowsHide: true });
 
     let output = '';
     ffprobe.stdout.on('data', (data) => { output += data.toString(); });
@@ -1033,7 +1033,7 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
     console.log(`\n[${isRemuxMode ? 'REMUX' : 'Convirtiendo'}] ${file.name}`);
     console.log(`[Comando] ffmpeg ${ffmpegArgs.join(' ')}\n`);
 
-    const ffmpeg = spawn('ffmpeg', ffmpegArgs);
+    const ffmpeg = spawn('ffmpeg', ffmpegArgs, { windowsHide: true });
     currentFFmpegProcess = ffmpeg;
 
     let errorOutput = '';
@@ -1667,7 +1667,8 @@ try {
 `.trim();
 
   const powershell = spawn('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psScript], {
-    windowsHide: false
+    windowsHide: true,
+    stdio: ['pipe', 'pipe', 'pipe']
   });
 
   let output = '';
