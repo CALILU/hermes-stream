@@ -264,6 +264,7 @@ export default function HermesApp() {
   const [actorSearchLoading, setActorSearchLoading] = useState(false);
   const [requestsStats, setRequestsStats] = useState(null);
   const [requestsReadonly, setRequestsReadonly] = useState(false); // modo solo lectura para peticiones
+  const [requestsFilter, setRequestsFilter] = useState(null); // filtro: null=todos, 'pending', 'downloading', etc.
   const [requestDetailMovie, setRequestDetailMovie] = useState(null); // película para ver sinopsis completa
   const [downloadUrl, setDownloadUrl] = useState(''); // URL para añadir a cola de descargas
   const [downloadQueueStatus, setDownloadQueueStatus] = useState(null); // estado de la cola
@@ -3875,76 +3876,58 @@ export default function HermesApp() {
                 </button>
               </div>
 
-              {/* Estadísticas */}
+              {/* Estadísticas - Clicables para filtrar */}
               {requestsStats && (
-                <div className="px-6 py-3 bg-slate-800 border-b border-slate-700 flex gap-4 flex-shrink-0">
-                  <span className="text-sm">
+                <div className="px-6 py-3 bg-slate-800 border-b border-slate-700 flex gap-2 flex-wrap flex-shrink-0">
+                  <button
+                    onClick={() => setRequestsFilter(null)}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === null ? 'bg-slate-600 ring-2 ring-slate-400' : 'hover:bg-slate-700'}`}
+                  >
                     <span className="font-medium text-slate-200">Total:</span>{' '}
-                    <span className="text-slate-600">{requestsStats.total}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-amber-600">Pendientes:</span>{' '}
-                    <span className="text-amber-600">{requestsStats.pending}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-blue-600">Descargando:</span>{' '}
-                    <span className="text-blue-600">{requestsStats.downloading}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-green-600">Completadas:</span>{' '}
-                    <span className="text-green-600">{requestsStats.downloaded}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-purple-600">Convertidas:</span>{' '}
-                    <span className="text-purple-600">{requestsStats.mp4 || 0}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-emerald-600">En servidor:</span>{' '}
-                    <span className="text-emerald-600">{requestsStats.server || 0}</span>
-                  </span>
-                  <span className="text-sm">
-                    <span className="font-medium text-red-600">Rechazadas:</span>{' '}
-                    <span className="text-red-600">{requestsStats.rejected}</span>
-                  </span>
-                </div>
-              )}
-
-              {/* Añadir URL a cola de descargas */}
-              {!requestsReadonly && (
-                <div className="px-6 py-3 bg-slate-800/50 border-b border-slate-700 flex-shrink-0">
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-400 text-sm whitespace-nowrap">📥 Cola de descargas:</span>
-                    <input
-                      type="text"
-                      value={downloadUrl}
-                      onChange={(e) => setDownloadUrl(e.target.value)}
-                      placeholder="Pega aquí la URL de OK.ru (ej: https://ok.ru/video/123456)"
-                      className="flex-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          addToDownloadQueue(downloadUrl);
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => addToDownloadQueue(downloadUrl)}
-                      disabled={downloadQueueStatus?.type === 'loading'}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                        downloadQueueStatus?.type === 'loading'
-                          ? 'bg-slate-600 text-slate-400 cursor-wait'
-                          : 'bg-green-600 hover:bg-green-500 text-white'
-                      }`}
-                    >
-                      {downloadQueueStatus?.type === 'loading' ? '...' : '+ Añadir'}
-                    </button>
-                    {downloadQueueStatus && downloadQueueStatus.type !== 'loading' && (
-                      <span className={`text-sm ${
-                        downloadQueueStatus.type === 'success' ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {downloadQueueStatus.message}
-                      </span>
-                    )}
-                  </div>
+                    <span className="text-slate-400">{requestsStats.total}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('pending')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'pending' ? 'bg-amber-900/50 ring-2 ring-amber-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-amber-500">Pendientes:</span>{' '}
+                    <span className="text-amber-500">{requestsStats.pending}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('downloading')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'downloading' ? 'bg-blue-900/50 ring-2 ring-blue-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-blue-500">Descargando:</span>{' '}
+                    <span className="text-blue-500">{requestsStats.downloading}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('downloaded')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'downloaded' ? 'bg-green-900/50 ring-2 ring-green-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-green-500">Completadas:</span>{' '}
+                    <span className="text-green-500">{requestsStats.downloaded}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('mp4')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'mp4' ? 'bg-purple-900/50 ring-2 ring-purple-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-purple-500">Convertidas:</span>{' '}
+                    <span className="text-purple-500">{requestsStats.mp4 || 0}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('server')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'server' ? 'bg-emerald-900/50 ring-2 ring-emerald-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-emerald-500">En servidor:</span>{' '}
+                    <span className="text-emerald-500">{requestsStats.server || 0}</span>
+                  </button>
+                  <button
+                    onClick={() => setRequestsFilter('rejected')}
+                    className={`text-sm px-2 py-1 rounded transition-all ${requestsFilter === 'rejected' ? 'bg-red-900/50 ring-2 ring-red-500' : 'hover:bg-slate-700'}`}
+                  >
+                    <span className="font-medium text-red-500">Rechazadas:</span>{' '}
+                    <span className="text-red-500">{requestsStats.rejected}</span>
+                  </button>
                 </div>
               )}
 
@@ -3957,7 +3940,9 @@ export default function HermesApp() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {allRequests.map(request => (
+                    {allRequests
+                      .filter(r => requestsFilter === null || r.status === requestsFilter)
+                      .map(request => (
                       <div
                         key={request.id}
                         className={`flex items-center gap-4 p-4 rounded-xl border ${
