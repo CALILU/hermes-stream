@@ -948,6 +948,24 @@
       background: rgba(243, 156, 18, 0.15);
     }
 
+    .badge-audio-fix {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, rgba(235, 51, 73, 0.25) 0%, rgba(244, 92, 67, 0.25) 100%);
+      color: #f45c43;
+      border: 1px solid rgba(235, 51, 73, 0.4);
+      margin-left: 8px;
+      white-space: nowrap;
+      font-weight: 600;
+      animation: audio-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes audio-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
     /* Loading Overlay */
     .loading-overlay {
       position: fixed;
@@ -1197,6 +1215,12 @@
             <option value="xlarge">6 GB - 10 GB</option>
             <option value="xxlarge">> 10 GB</option>
           </select>
+          <select class="filter-select" id="filter-type">
+            <option value="">Todos los tipos</option>
+            <option value="avi-mkv">Solo AVI/MKV</option>
+            <option value="audio-fix">🔊 Solo audio bajo</option>
+            <option value="reencode">Solo recodificar</option>
+          </select>
           <select class="filter-select" id="filter-sort">
             <option value="">Sin ordenar</option>
             <option value="size-desc">Tamaño ↓ (mayor a menor)</option>
@@ -1206,7 +1230,8 @@
           </select>
           <div class="filter-stats">
             <span id="filter-visible">0</span> de <strong id="filter-total">0</strong> |
-            Excluidos: <span id="filter-excluded">0</span>
+            Excluidos: <span id="filter-excluded">0</span> |
+            <span id="filter-audio-fix" style="color: #f45c43;">🔊 0</span>
           </div>
         </div>
         <!-- Bulk Actions -->
@@ -1305,6 +1330,7 @@
     let filters = {
       name: '',
       size: '',
+      type: '',
       sort: ''
     };
 
@@ -1347,10 +1373,12 @@
       bulkActions: document.getElementById('bulk-actions'),
       filterName: document.getElementById('filter-name'),
       filterSize: document.getElementById('filter-size'),
+      filterType: document.getElementById('filter-type'),
       filterSort: document.getElementById('filter-sort'),
       filterVisible: document.getElementById('filter-visible'),
       filterTotal: document.getElementById('filter-total'),
-      filterExcluded: document.getElementById('filter-excluded')
+      filterExcluded: document.getElementById('filter-excluded'),
+      filterAudioFix: document.getElementById('filter-audio-fix')
     };
 
     // Filtrar y ordenar archivos
@@ -1380,6 +1408,22 @@
             case 'vlarge': if (sizeGB < 4 || sizeGB >= 6) return false; break;
             case 'xlarge': if (sizeGB < 6 || sizeGB >= 10) return false; break;
             case 'xxlarge': if (sizeGB < 10) return false; break;
+          }
+        }
+
+        // Filtro por tipo
+        if (filters.type) {
+          const ext = file.name.toLowerCase().split('.').pop();
+          switch (filters.type) {
+            case 'avi-mkv':
+              if (ext !== 'avi' && ext !== 'mkv') return false;
+              break;
+            case 'audio-fix':
+              if (!file.needsAudioFix) return false;
+              break;
+            case 'reencode':
+              if (!file.needsReencode) return false;
+              break;
           }
         }
 
@@ -1586,11 +1630,14 @@
       const excludedCount = Array.from(excludedFiles).filter(name =>
         state.pending.some(f => f.name === name)
       ).length;
+      const audioFixCount = state.pending.filter(f => f.needsAudioFix).length;
 
       // Update filter stats
       elements.filterTotal.textContent = state.pending.length;
       elements.filterVisible.textContent = filteredFiles.length;
       elements.filterExcluded.textContent = excludedCount;
+      elements.filterAudioFix.textContent = `🔊 ${audioFixCount}`;
+      elements.filterAudioFix.title = `${audioFixCount} archivos MP4 con audio bajo (≤200 kbps)`;
 
       // Pending list
       if (state.pending.length === 0 && !state.isRunning) {
@@ -1618,6 +1665,8 @@
         filteredFiles.forEach((file, index) => {
           const hasTmdb = file.tmdbMatch && elements.chkRename.checked;
           const isExcluded = excludedFiles.has(file.name);
+          const needsAudioFix = file.needsAudioFix;
+          const audioBadge = needsAudioFix ? `<span class="badge-audio-fix" title="Audio bajo - se arreglará automáticamente">🔊 ${file.audioBitrate || '?'} kbps</span>` : '';
           // Usar data-index para evitar problemas con caracteres especiales en nombres
           html += `
             <div class="file-item ${isExcluded ? 'excluded' : ''}" data-filename="${index}">
@@ -1627,13 +1676,13 @@
                      title="${isExcluded ? 'Incluir en conversión' : 'Excluir de conversión'}">
               <div class="file-info" data-index="${index}">
                 ${hasTmdb ? `
-                  <div class="file-original">${file.name}</div>
+                  <div class="file-original">${file.name}${audioBadge}</div>
                   <div class="file-tmdb">
                     <span class="arrow">-></span>
                     ${file.tmdbMatch.title} (${file.tmdbMatch.year})
                   </div>
                 ` : `
-                  <div class="file-name">${file.name}</div>
+                  <div class="file-name">${file.name}${audioBadge}</div>
                   ${elements.chkRename.checked ? `<div class="file-no-match">Sin coincidencia TMDB - clic para buscar</div>` : ''}
                 `}
               </div>
@@ -1775,9 +1824,11 @@
           excludedFiles.clear();
           filters.name = '';
           filters.size = '';
+          filters.type = '';
           filters.sort = '';
           elements.filterName.value = '';
           elements.filterSize.value = '';
+          elements.filterType.value = '';
           elements.filterSort.value = '';
 
           hideLoading();
@@ -2104,6 +2155,11 @@
 
     elements.filterSize.addEventListener('change', (e) => {
       filters.size = e.target.value;
+      updateUI();
+    });
+
+    elements.filterType.addEventListener('change', (e) => {
+      filters.type = e.target.value;
       updateUI();
     });
 

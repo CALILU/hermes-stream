@@ -7,11 +7,23 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/qVPChlozQ1BP3svfHjiAdNneMGA.jpg",
     "movies": [
       {
-        "filename": "El imperio contraataca (1980).avi",
+        "filename": "El imperio contraataca (1980).mp4",
         "tmdb_id": 1891,
         "title": "El imperio contraataca",
         "poster": "https://image.tmdb.org/t/p/w342/eU7KcNAOeZj9PBIcGUMSsuJz8qj.jpg",
         "release_date": "1980-05-20",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "El retorno del Jedi (1983).mp4",
+        "tmdb_id": 1892,
+        "title": "El retorno del Jedi",
+        "poster": "https://image.tmdb.org/t/p/w342/rKMmXzdm7eRgmlwYo7iq3klT7wJ.jpg",
+        "release_date": "1983-05-25",
         "genre_ids": [
           12,
           28,
@@ -67,11 +79,47 @@
         ]
       },
       {
-        "filename": "El retorno del Jedi (1983).avi",
-        "tmdb_id": 1892,
-        "title": "El retorno del Jedi",
-        "poster": "https://image.tmdb.org/t/p/w342/rKMmXzdm7eRgmlwYo7iq3klT7wJ.jpg",
-        "release_date": "1983-05-25",
+        "filename": "La guerra de las galaxias (1977).mp4",
+        "tmdb_id": 11,
+        "title": "La guerra de las galaxias",
+        "poster": "https://image.tmdb.org/t/p/w342/ahT4ObS7XKedQkOSpGr1wQ97aKA.jpg",
+        "release_date": "1977-05-25",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "La guerra de las galaxias. Episodio I La amenaza fantasma (1999).mp4",
+        "tmdb_id": 1893,
+        "title": "La guerra de las galaxias. Episodio I: La amenaza fantasma",
+        "poster": "https://image.tmdb.org/t/p/w342/4rjatbWmGGmu0DZs6WNpXaUWqWN.jpg",
+        "release_date": "1999-05-19",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "La guerra de las galaxias. Episodio II El ataque de los clones (2002).mp4",
+        "tmdb_id": 1894,
+        "title": "La guerra de las galaxias. Episodio II: El ataque de los clones",
+        "poster": "https://image.tmdb.org/t/p/w342/pwwBIUqVSWrCBuUAvbaNdf7VajF.jpg",
+        "release_date": "2002-05-15",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "La guerra de las galaxias. Episodio III La venganza de los Sith (2005).mp4",
+        "tmdb_id": 1895,
+        "title": "La guerra de las galaxias. Episodio III: La venganza de los Sith",
+        "poster": "https://image.tmdb.org/t/p/w342/5dj0ERxM8NxoiWBdlY6TT9PJmKi.jpg",
+        "release_date": "2005-05-17",
         "genre_ids": [
           12,
           28,
@@ -84,7 +132,7 @@
       28,
       878
     ],
-    "cached_at": 1769859915298
+    "cached_at": 1769940414626
   },
   "84": {
     "id": 84,
@@ -93,6 +141,17 @@
     "poster": "https://image.tmdb.org/t/p/w342/z1ZuPmh4gdwfDbCJmzbe8WJgZ0m.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/s4xWmz9PEjPERSRcd7H7xMJpYvE.jpg",
     "movies": [
+      {
+        "filename": "En busca del arca perdida (1981).mp4",
+        "tmdb_id": 85,
+        "title": "En busca del arca perdida",
+        "poster": "https://image.tmdb.org/t/p/w342/tECLVwLCMexSkls33RTCwedRZ6d.jpg",
+        "release_date": "1981-06-12",
+        "genre_ids": [
+          12,
+          28
+        ]
+      },
       {
         "filename": "Indiana Jones y el reino de la calavera de cristal (2008).mkv",
         "tmdb_id": 217,
@@ -127,11 +186,33 @@
         ]
       },
       {
-        "filename": "En busca del arca perdida (1981).mkv",
-        "tmdb_id": 85,
-        "title": "En busca del arca perdida",
-        "poster": "https://image.tmdb.org/t/p/w342/tECLVwLCMexSkls33RTCwedRZ6d.jpg",
-        "release_date": "1981-06-12",
+        "filename": "Indiana Jones y el reino de la calavera de cristal (2008).mp4",
+        "tmdb_id": 217,
+        "title": "Indiana Jones y el reino de la calavera de cristal",
+        "poster": "https://image.tmdb.org/t/p/w342/caC98g0VyWVztBStLu46rpKlbGw.jpg",
+        "release_date": "2008-05-21",
+        "genre_ids": [
+          12,
+          28
+        ]
+      },
+      {
+        "filename": "Indiana Jones y el templo maldito (1984).mp4",
+        "tmdb_id": 87,
+        "title": "Indiana Jones y el templo maldito",
+        "poster": "https://image.tmdb.org/t/p/w342/tLEaz41vKyKY7AgCTGgijLGWzbk.jpg",
+        "release_date": "1984-05-23",
+        "genre_ids": [
+          12,
+          28
+        ]
+      },
+      {
+        "filename": "Indiana Jones y la última cruzada (1989).mp4",
+        "tmdb_id": 89,
+        "title": "Indiana Jones y la última cruzada",
+        "poster": "https://image.tmdb.org/t/p/w342/5h45gK147AAJpLLC7Cicr597urz.jpg",
+        "release_date": "1989-05-24",
         "genre_ids": [
           12,
           28
@@ -142,7 +223,7 @@
       12,
       28
     ],
-    "cached_at": 1769859922136
+    "cached_at": 1769940433504
   },
   "119": {
     "id": 119,
@@ -152,7 +233,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/bccR2CGTWVVSZAG0yqmy3DIvhTX.jpg",
     "movies": [
       {
-        "filename": "El señor de los anillos El retorno del rey (2003).mkv",
+        "filename": "El señor de los anillos El retorno del rey (2003).mp4",
         "tmdb_id": 122,
         "title": "El señor de los anillos: El retorno del rey",
         "poster": "https://image.tmdb.org/t/p/w342/mWuFbQrXyLk2kMBKF9TUPtDwuPx.jpg",
@@ -164,7 +245,7 @@
         ]
       },
       {
-        "filename": "El señor de los anillos La comunidad del anillo (2001).mkv",
+        "filename": "El señor de los anillos La comunidad del anillo (2001).mp4",
         "tmdb_id": 120,
         "title": "El señor de los anillos: La comunidad del anillo",
         "poster": "https://image.tmdb.org/t/p/w342/9xtH1RmAzQ0rrMBNUMXstb2s3er.jpg",
@@ -176,7 +257,7 @@
         ]
       },
       {
-        "filename": "El señor de los anillos Las dos torres (2002).mkv",
+        "filename": "El señor de los anillos Las dos torres (2002).mp4",
         "tmdb_id": 121,
         "title": "El señor de los anillos: Las dos torres",
         "poster": "https://image.tmdb.org/t/p/w342/z632eZtXaw76ZE5mMMGOBXCpm1T.jpg",
@@ -193,7 +274,7 @@
       14,
       28
     ],
-    "cached_at": 1769860013083
+    "cached_at": 1769940427347
   },
   "151": {
     "id": 151,
@@ -285,7 +366,7 @@
       53,
       9648
     ],
-    "cached_at": 1769860034223
+    "cached_at": 1769940518622
   },
   "263": {
     "id": 263,
@@ -304,31 +385,6 @@
           18,
           80,
           28
-        ]
-      },
-      {
-        "filename": "El caballero oscuro (2008).mkv",
-        "tmdb_id": 155,
-        "title": "El caballero oscuro",
-        "poster": "https://image.tmdb.org/t/p/w342/8QDQExnfNFOtabLDKqfDQuHDsIg.jpg",
-        "release_date": "2008-07-16",
-        "genre_ids": [
-          28,
-          80,
-          53
-        ]
-      },
-      {
-        "filename": "El caballero oscuro La leyenda renace (2012).mkv",
-        "tmdb_id": 49026,
-        "title": "El caballero oscuro: La leyenda renace",
-        "poster": "https://image.tmdb.org/t/p/w342/rrS7K8tXVFUBliIKWaRuSq65nWr.jpg",
-        "release_date": "2012-07-17",
-        "genre_ids": [
-          28,
-          80,
-          18,
-          53
         ]
       },
       {
@@ -363,7 +419,7 @@
       28,
       53
     ],
-    "cached_at": 1769859954542
+    "cached_at": 1769940368065
   },
   "264": {
     "id": 264,
@@ -414,7 +470,7 @@
       35,
       878
     ],
-    "cached_at": 1769860004850
+    "cached_at": 1769940507278
   },
   "295": {
     "id": 295,
@@ -489,7 +545,7 @@
       14,
       28
     ],
-    "cached_at": 1769859991455
+    "cached_at": 1769940492766
   },
   "328": {
     "id": 328,
@@ -498,6 +554,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/cn1D5g7dFCNCcXiO070H89JuvnE.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/njFixYzIxX8jsn6KMSEtAzi4avi.jpg",
     "movies": [
+      {
+        "filename": "El mundo perdido Jurassic Park (1997).mp4",
+        "tmdb_id": 330,
+        "title": "El mundo perdido: Jurassic Park",
+        "poster": "https://image.tmdb.org/t/p/w342/80pXV9DEd81rBGqmlPBLbvr6h9a.jpg",
+        "release_date": "1997-05-23",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
       {
         "filename": "Jurassic Park (Parque Jurásico) (1993).mkv",
         "tmdb_id": 329,
@@ -535,11 +603,35 @@
         ]
       },
       {
-        "filename": "El mundo perdido Jurassic Park (1997).mkv",
-        "tmdb_id": 330,
-        "title": "El mundo perdido: Jurassic Park",
-        "poster": "https://image.tmdb.org/t/p/w342/80pXV9DEd81rBGqmlPBLbvr6h9a.jpg",
-        "release_date": "1997-05-23",
+        "filename": "Jurassic Park (Parque Jurásico) (1993).mp4",
+        "tmdb_id": 329,
+        "title": "Jurassic Park (Parque Jurásico)",
+        "poster": "https://image.tmdb.org/t/p/w342/63viWuPfYQjRYLSZSZNq7dglJP5.jpg",
+        "release_date": "1993-06-11",
+        "genre_ids": [
+          12,
+          878
+        ]
+      },
+      {
+        "filename": "Jurassic Park III (Parque Jurásico III) (2001).mp4",
+        "tmdb_id": 331,
+        "title": "Jurassic Park III (Parque Jurásico III)",
+        "poster": "https://image.tmdb.org/t/p/w342/5GM4Nqc79PFE3IOqNKwmOxAWkX1.jpg",
+        "release_date": "2001-07-18",
+        "genre_ids": [
+          12,
+          28,
+          53,
+          878
+        ]
+      },
+      {
+        "filename": "Jurassic World Dominion (2022).mp4",
+        "tmdb_id": 507086,
+        "title": "Jurassic World: Dominion",
+        "poster": "https://image.tmdb.org/t/p/w342/sXeWfpT1EhG7f4uBouqraOhmouH.jpg",
+        "release_date": "2022-06-01",
         "genre_ids": [
           12,
           28,
@@ -549,11 +641,11 @@
     ],
     "genre_ids": [
       12,
-      878,
       28,
+      878,
       53
     ],
-    "cached_at": 1769859941702
+    "cached_at": 1769940420059
   },
   "399": {
     "id": 399,
@@ -606,7 +698,7 @@
       12,
       53
     ],
-    "cached_at": 1769859923518
+    "cached_at": 1769940394088
   },
   "528": {
     "id": 528,
@@ -657,7 +749,7 @@
       53,
       878
     ],
-    "cached_at": 1769860046064
+    "cached_at": 1769940523182
   },
   "645": {
     "id": 645,
@@ -667,19 +759,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/dOSECZImeyZldoq0ObieBE0lwie.jpg",
     "movies": [
       {
-        "filename": "El hombre de la pistola de oro (1974).mkv",
-        "tmdb_id": 682,
-        "title": "El hombre de la pistola de oro",
-        "poster": "https://image.tmdb.org/t/p/w342/8EIjhHuUK3CdyGyLRMWXCYBtxUZ.jpg",
-        "release_date": "1974-12-04",
-        "genre_ids": [
-          12,
-          28,
-          53
-        ]
-      },
-      {
-        "filename": "James Bond contra Goldfinger (1964).mkv",
+        "filename": "James Bond contra Goldfinger (1964).mp4",
         "tmdb_id": 658,
         "title": "James Bond contra Goldfinger",
         "poster": "https://image.tmdb.org/t/p/w342/tA0AqFwuFvQCzLdBzEnIlK4RayX.jpg",
@@ -701,6 +781,18 @@
           28,
           53
         ]
+      },
+      {
+        "filename": "James Bond contra Goldfinger (1964).mkv",
+        "tmdb_id": 658,
+        "title": "James Bond contra Goldfinger",
+        "poster": "https://image.tmdb.org/t/p/w342/tA0AqFwuFvQCzLdBzEnIlK4RayX.jpg",
+        "release_date": "1964-09-20",
+        "genre_ids": [
+          12,
+          28,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -708,7 +800,7 @@
       28,
       53
     ],
-    "cached_at": 1769859913062
+    "cached_at": 1769940369220
   },
   "735": {
     "id": 735,
@@ -761,7 +853,7 @@
       53,
       878
     ],
-    "cached_at": 1769859959322
+    "cached_at": 1769940371651
   },
   "748": {
     "id": 748,
@@ -828,7 +920,7 @@
       14,
       53
     ],
-    "cached_at": 1769860069323
+    "cached_at": 1769940538369
   },
   "937": {
     "id": 937,
@@ -853,7 +945,7 @@
       35,
       80
     ],
-    "cached_at": 1769859964693
+    "cached_at": 1769944528189
   },
   "945": {
     "id": 945,
@@ -862,18 +954,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/58aDVHiRGvx1a1QLJsSHyOBAdAa.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/jSslTHuJS86fp4SVJKP9oBhE4s6.jpg",
     "movies": [
-      {
-        "filename": "Arma letal (1987).mp4",
-        "tmdb_id": 941,
-        "title": "Arma letal",
-        "poster": "https://image.tmdb.org/t/p/w342/bOmKVohi6yjxBnoP7XvX6tpXR56.jpg",
-        "release_date": "1987-03-06",
-        "genre_ids": [
-          28,
-          35,
-          53
-        ]
-      },
       {
         "filename": "Arma letal 2 (1989).mp4",
         "tmdb_id": 942,
@@ -914,16 +994,28 @@
           80,
           53
         ]
+      },
+      {
+        "filename": "Arma letal (1987).mp4",
+        "tmdb_id": 941,
+        "title": "Arma letal",
+        "poster": "https://image.tmdb.org/t/p/w342/bOmKVohi6yjxBnoP7XvX6tpXR56.jpg",
+        "release_date": "1987-03-06",
+        "genre_ids": [
+          28,
+          35,
+          53
+        ]
       }
     ],
     "genre_ids": [
       28,
-      35,
-      53,
       12,
-      80
+      35,
+      80,
+      53
     ],
-    "cached_at": 1769859943969
+    "cached_at": 1769940358703
   },
   "1006": {
     "id": 1006,
@@ -976,7 +1068,7 @@
       878,
       12
     ],
-    "cached_at": 1769859951153
+    "cached_at": 1769940364134
   },
   "1241": {
     "id": 1241,
@@ -1072,13 +1164,101 @@
           12,
           14
         ]
+      },
+      {
+        "filename": "Harry Potter y el cáliz de fuego (2005).mp4",
+        "tmdb_id": 674,
+        "title": "Harry Potter y el cáliz de fuego",
+        "poster": "https://image.tmdb.org/t/p/w342/5hrrncgY7GfRHz6JmnhPlvJUONe.jpg",
+        "release_date": "2005-11-16",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y el misterio del príncipe (2009).mp4",
+        "tmdb_id": 767,
+        "title": "Harry Potter y el misterio del príncipe",
+        "poster": "https://image.tmdb.org/t/p/w342/tO0UGkNuQoxyXve0mvwtXP49NAO.jpg",
+        "release_date": "2009-07-15",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y el prisionero de Azkaban (2004).mp4",
+        "tmdb_id": 673,
+        "title": "Harry Potter y el prisionero de Azkaban",
+        "poster": "https://image.tmdb.org/t/p/w342/wF9aoo4YZmpKP4bZPSy4Zwwek6G.jpg",
+        "release_date": "2004-05-31",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y la cámara secreta (2002).mp4",
+        "tmdb_id": 672,
+        "title": "Harry Potter y la cámara secreta",
+        "poster": "https://image.tmdb.org/t/p/w342/bhCfAzeMMg7GyLDT11yVM2i1NPh.jpg",
+        "release_date": "2002-11-13",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y la Orden del Fénix (2007).mp4",
+        "tmdb_id": 675,
+        "title": "Harry Potter y la Orden del Fénix",
+        "poster": "https://image.tmdb.org/t/p/w342/xxXiM2Ij7plbzibKWW9BfDk23aI.jpg",
+        "release_date": "2007-07-08",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y la piedra filosofal (2001).mp4",
+        "tmdb_id": 671,
+        "title": "Harry Potter y la piedra filosofal",
+        "poster": "https://image.tmdb.org/t/p/w342/3MKK7vAJLtSkBTABMTjxf6TOCo3.jpg",
+        "release_date": "2001-11-16",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y las Reliquias de la Muerte - Parte 1 (2010).mp4",
+        "tmdb_id": 12444,
+        "title": "Harry Potter y las Reliquias de la Muerte - Parte 1",
+        "poster": "https://image.tmdb.org/t/p/w342/w6wsYKdXERaXRdByPsI2O9rn20b.jpg",
+        "release_date": "2010-11-17",
+        "genre_ids": [
+          12,
+          14
+        ]
+      },
+      {
+        "filename": "Harry Potter y las Reliquias de la Muerte - Parte 2 (2011).mp4",
+        "tmdb_id": 12445,
+        "title": "Harry Potter y las Reliquias de la Muerte - Parte 2",
+        "poster": "https://image.tmdb.org/t/p/w342/aM1TuUiPtV8OAZyu61CTdy9Ymtk.jpg",
+        "release_date": "2011-07-12",
+        "genre_ids": [
+          12,
+          14
+        ]
       }
     ],
     "genre_ids": [
       12,
       14
     ],
-    "cached_at": 1769860048805
+    "cached_at": 1769940450771
   },
   "1570": {
     "id": 1570,
@@ -1087,6 +1267,17 @@
     "poster": "https://image.tmdb.org/t/p/w342/As8l0i21dtha874Tr0GYWsSGShW.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/nKShbIW0wJnSbl3t8uPje0QhTb7.jpg",
     "movies": [
+      {
+        "filename": "Jungla de cristal (1988).mp4",
+        "tmdb_id": 562,
+        "title": "Jungla de cristal",
+        "poster": "https://image.tmdb.org/t/p/w342/m54tK4wKjc1w2dp7QInG0munGao.jpg",
+        "release_date": "1988-07-15",
+        "genre_ids": [
+          28,
+          53
+        ]
+      },
       {
         "filename": "Jungla de cristal (1988).mkv",
         "tmdb_id": 562,
@@ -1130,13 +1321,46 @@
           28,
           53
         ]
+      },
+      {
+        "filename": "La jungla 2 Alerta roja (1990).mp4",
+        "tmdb_id": 1573,
+        "title": "La jungla 2: Alerta roja",
+        "poster": "https://image.tmdb.org/t/p/w342/19PBdteqhLAgN6rZUDIU0Ka6qLH.jpg",
+        "release_date": "1990-07-03",
+        "genre_ids": [
+          28,
+          53
+        ]
+      },
+      {
+        "filename": "La jungla 4.0 (2007).mp4",
+        "tmdb_id": 1571,
+        "title": "La jungla 4.0",
+        "poster": "https://image.tmdb.org/t/p/w342/8jC7C4dAohb2CdWrEmAPyeTMT3f.jpg",
+        "release_date": "2007-06-20",
+        "genre_ids": [
+          28,
+          53
+        ]
+      },
+      {
+        "filename": "La jungla de cristal La venganza 1995.mp4",
+        "tmdb_id": 1572,
+        "title": "Jungla de cristal: la venganza",
+        "poster": "https://image.tmdb.org/t/p/w342/uLVcPispwVVa5LMpAWwQngFcm8.jpg",
+        "release_date": "1995-05-19",
+        "genre_ids": [
+          28,
+          53
+        ]
       }
     ],
     "genre_ids": [
       28,
       53
     ],
-    "cached_at": 1769859940298
+    "cached_at": 1769940384361
   },
   "1709": {
     "id": 1709,
@@ -1146,22 +1370,22 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/wBiFfCAuYzuSOl0sFnkQMB5BEZx.jpg",
     "movies": [
       {
-        "filename": "La conquista del planeta de los simios (1973).mkv",
-        "tmdb_id": 1705,
-        "title": "La conquista del planeta de los simios",
-        "poster": "https://image.tmdb.org/t/p/w342/9kQ0wmBzoL4EZEF2jTft58AhBuv.jpg",
-        "release_date": "1973-06-15",
+        "filename": "Huida del planeta de los simios (1971).mkv",
+        "tmdb_id": 1687,
+        "title": "Huida del planeta de los simios",
+        "poster": "https://image.tmdb.org/t/p/w342/mCbFub0UiNQi3SBSOjwGNLhEroc.jpg",
+        "release_date": "1971-05-20",
         "genre_ids": [
           28,
           878
         ]
       },
       {
-        "filename": "La rebelión de los simios (1972).mkv",
-        "tmdb_id": 1688,
-        "title": "La rebelión de los simios",
-        "poster": "https://image.tmdb.org/t/p/w342/J80xXgT6Mw8EiiQeHcEdJ4LfxC.jpg",
-        "release_date": "1972-06-29",
+        "filename": "La conquista del planeta de los simios (1973).mkv",
+        "tmdb_id": 1705,
+        "title": "La conquista del planeta de los simios",
+        "poster": "https://image.tmdb.org/t/p/w342/9kQ0wmBzoL4EZEF2jTft58AhBuv.jpg",
+        "release_date": "1973-06-15",
         "genre_ids": [
           28,
           878
@@ -1180,11 +1404,44 @@
         ]
       },
       {
-        "filename": "Huida del planeta de los simios (1971).mkv",
+        "filename": "La rebelión de los simios (1972).mkv",
+        "tmdb_id": 1688,
+        "title": "La rebelión de los simios",
+        "poster": "https://image.tmdb.org/t/p/w342/J80xXgT6Mw8EiiQeHcEdJ4LfxC.jpg",
+        "release_date": "1972-06-29",
+        "genre_ids": [
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "Huida del planeta de los simios (1971).mp4",
         "tmdb_id": 1687,
         "title": "Huida del planeta de los simios",
         "poster": "https://image.tmdb.org/t/p/w342/mCbFub0UiNQi3SBSOjwGNLhEroc.jpg",
         "release_date": "1971-05-20",
+        "genre_ids": [
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "La conquista del planeta de los simios (1973).mp4",
+        "tmdb_id": 1705,
+        "title": "La conquista del planeta de los simios",
+        "poster": "https://image.tmdb.org/t/p/w342/9kQ0wmBzoL4EZEF2jTft58AhBuv.jpg",
+        "release_date": "1973-06-15",
+        "genre_ids": [
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "La rebelión de los simios (1972).mp4",
+        "tmdb_id": 1688,
+        "title": "La rebelión de los simios",
+        "poster": "https://image.tmdb.org/t/p/w342/J80xXgT6Mw8EiiQeHcEdJ4LfxC.jpg",
+        "release_date": "1972-06-29",
         "genre_ids": [
           28,
           878
@@ -1197,7 +1454,7 @@
       12,
       9648
     ],
-    "cached_at": 1769859951775
+    "cached_at": 1769940452999
   },
   "1733": {
     "id": 1733,
@@ -1206,6 +1463,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/k4LMa9UBVJwJyOLBkuc1BJJblJ8.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/1BeKi6IytbfQlQocJSvP2k6sO1a.jpg",
     "movies": [
+      {
+        "filename": "El regreso de la momia (2001).mp4",
+        "tmdb_id": 1734,
+        "title": "El regreso de la momia",
+        "poster": "https://image.tmdb.org/t/p/w342/x5CeEQ2iq9A20LbU0K4Q1TMxFDs.jpg",
+        "release_date": "2001-05-04",
+        "genre_ids": [
+          12,
+          28,
+          14
+        ]
+      },
       {
         "filename": "La momia (1999).mp4",
         "tmdb_id": 564,
@@ -1231,11 +1500,11 @@
         ]
       },
       {
-        "filename": "El regreso de la momia (2001).mkv",
-        "tmdb_id": 1734,
-        "title": "El regreso de la momia",
-        "poster": "https://image.tmdb.org/t/p/w342/x5CeEQ2iq9A20LbU0K4Q1TMxFDs.jpg",
-        "release_date": "2001-05-04",
+        "filename": "La momia La tumba del emperador Dragón (2008).mp4",
+        "tmdb_id": 1735,
+        "title": "La momia: La tumba del emperador Dragón",
+        "poster": "https://image.tmdb.org/t/p/w342/wktniKrRfM6yXI2zEsLz9M3gNWP.jpg",
+        "release_date": "2008-07-01",
         "genre_ids": [
           12,
           28,
@@ -1248,7 +1517,7 @@
       28,
       14
     ],
-    "cached_at": 1769859962807
+    "cached_at": 1769940424162
   },
   "1960": {
     "id": 1960,
@@ -1258,7 +1527,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/377E9KSoUGxKWuvyR1Zu9aXcU4I.jpg",
     "movies": [
       {
-        "filename": "El ejército de las tinieblas (1992).mkv",
+        "filename": "El ejército de las tinieblas (1992).mp4",
         "tmdb_id": 766,
         "title": "El ejército de las tinieblas",
         "poster": "https://image.tmdb.org/t/p/w342/aWko0iXOEbqvWZa8NVKrUbBMJYy.jpg",
@@ -1290,18 +1559,6 @@
           35,
           14
         ]
-      },
-      {
-        "filename": "El ejército de las tinieblas (1992).mp4",
-        "tmdb_id": 766,
-        "title": "El ejército de las tinieblas",
-        "poster": "https://image.tmdb.org/t/p/w342/aWko0iXOEbqvWZa8NVKrUbBMJYy.jpg",
-        "release_date": "1992-10-31",
-        "genre_ids": [
-          14,
-          27,
-          35
-        ]
       }
     ],
     "genre_ids": [
@@ -1309,7 +1566,7 @@
       27,
       35
     ],
-    "cached_at": 1769859901451
+    "cached_at": 1769940408650
   },
   "2248": {
     "id": 2248,
@@ -1382,7 +1639,7 @@
       35,
       80
     ],
-    "cached_at": 1769860053421
+    "cached_at": 1769940528196
   },
   "2344": {
     "id": 2344,
@@ -1402,6 +1659,29 @@
           28,
           12
         ]
+      },
+      {
+        "filename": "Matrix Resurrections (2021).mp4",
+        "tmdb_id": 624860,
+        "title": "Matrix Resurrections",
+        "poster": "https://image.tmdb.org/t/p/w342/NPLjpvhkDVTt8Gn3ITNQGABHhd.jpg",
+        "release_date": "2021-12-16",
+        "genre_ids": [
+          878,
+          28,
+          12
+        ]
+      },
+      {
+        "filename": "Matrix (1999).mkv",
+        "tmdb_id": 603,
+        "title": "Matrix",
+        "poster": "https://image.tmdb.org/t/p/w342/ejmTPNAkgZaVJ4AI9zb9SehAYU0.jpg",
+        "release_date": "1999-03-31",
+        "genre_ids": [
+          28,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -1409,7 +1689,7 @@
       28,
       12
     ],
-    "cached_at": 1769860080856
+    "cached_at": 1769940480575
   },
   "2366": {
     "id": 2366,
@@ -1434,7 +1714,7 @@
       27,
       53
     ],
-    "cached_at": 1769860052157
+    "cached_at": 1769940527201
   },
   "2467": {
     "id": 2467,
@@ -1473,7 +1753,7 @@
       28,
       14
     ],
-    "cached_at": 1769859973403
+    "cached_at": 1769944534693
   },
   "2794": {
     "id": 2794,
@@ -1505,6 +1785,28 @@
           28,
           53
         ]
+      },
+      {
+        "filename": "Las cronicas de Riddick (2004).mkv",
+        "tmdb_id": 2789,
+        "title": "Las crónicas de Riddick",
+        "poster": "https://image.tmdb.org/t/p/w342/9yLyUpZbEdymZKYQniWfFV7MNvd.jpg",
+        "release_date": "2004-06-11",
+        "genre_ids": [
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "Las cronicas de Riddick (2004).mp4",
+        "tmdb_id": 2789,
+        "title": "Las crónicas de Riddick",
+        "poster": "https://image.tmdb.org/t/p/w342/9yLyUpZbEdymZKYQniWfFV7MNvd.jpg",
+        "release_date": "2004-06-11",
+        "genre_ids": [
+          28,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -1512,7 +1814,7 @@
       28,
       53
     ],
-    "cached_at": 1769860010113
+    "cached_at": 1769940508801
   },
   "2980": {
     "id": 2980,
@@ -1542,13 +1844,35 @@
           35,
           14
         ]
+      },
+      {
+        "filename": "Los cazafantasmas (1984).mp4",
+        "tmdb_id": 620,
+        "title": "Los cazafantasmas",
+        "poster": "https://image.tmdb.org/t/p/w342/7eZUL4fvjVkmNPbD8IxQT4X9emt.jpg",
+        "release_date": "1984-06-08",
+        "genre_ids": [
+          35,
+          14
+        ]
+      },
+      {
+        "filename": "Los cazafantasmas II (1989).mp4",
+        "tmdb_id": 2978,
+        "title": "Los cazafantasmas II",
+        "poster": "https://image.tmdb.org/t/p/w342/tqFgvP61lOFegzsCiJOaeRfkogJ.jpg",
+        "release_date": "1989-06-16",
+        "genre_ids": [
+          35,
+          14
+        ]
       }
     ],
     "genre_ids": [
       35,
       14
     ],
-    "cached_at": 1769859985385
+    "cached_at": 1769944541088
   },
   "3167": {
     "id": 3167,
@@ -1557,18 +1881,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/5Tmxq1OtaLTj7cMo3jI5fkRXts3.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/81lmzeTuMAyrDpgX6um9PIYgw8Y.jpg",
     "movies": [
-      {
-        "filename": "Ace Ventura, un detective diferente (1994).mp4",
-        "tmdb_id": 3049,
-        "title": "Ace Ventura, un detective diferente",
-        "poster": "https://image.tmdb.org/t/p/w342/zByKfhPuFUEymc0uzHGdIfO7dx5.jpg",
-        "release_date": "1994-02-04",
-        "genre_ids": [
-          35,
-          9648,
-          80
-        ]
-      },
       {
         "filename": "Ace Ventura Operacion Africa (1995).mp4",
         "tmdb_id": 9273,
@@ -1580,15 +1892,27 @@
           35,
           12
         ]
+      },
+      {
+        "filename": "Ace Ventura, un detective diferente (1994).mp4",
+        "tmdb_id": 3049,
+        "title": "Ace Ventura, un detective diferente",
+        "poster": "https://image.tmdb.org/t/p/w342/zByKfhPuFUEymc0uzHGdIfO7dx5.jpg",
+        "release_date": "1994-02-04",
+        "genre_ids": [
+          35,
+          9648,
+          80
+        ]
       }
     ],
     "genre_ids": [
-      35,
-      9648,
       80,
-      12
+      35,
+      12,
+      9648
     ],
-    "cached_at": 1769859929299
+    "cached_at": 1769977025029
   },
   "4246": {
     "id": 4246,
@@ -1651,32 +1975,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769860013717
-  },
-  "4438": {
-    "id": 4438,
-    "name": "Odisea en el espacio - Colección",
-    "overview": "",
-    "poster": "https://image.tmdb.org/t/p/w342/3WDYzj45TjZdJ3B1PQHCg8T0e2g.jpg",
-    "backdrop": "https://image.tmdb.org/t/p/w342/mGeBxBuhU7yx2Ga4U2ST4reEDeb.jpg",
-    "movies": [
-      {
-        "filename": "2010 Odisea dos (1984).mp4",
-        "tmdb_id": 4437,
-        "title": "2010: Odisea dos",
-        "poster": "https://image.tmdb.org/t/p/w342/nMA0Z5Vw05GwHyugYl5s72Lf0Z.jpg",
-        "release_date": "1984-12-06",
-        "genre_ids": [
-          53,
-          878
-        ]
-      }
-    ],
-    "genre_ids": [
-      53,
-      878
-    ],
-    "cached_at": 1769859924118
+    "cached_at": 1769940510561
   },
   "5039": {
     "id": 5039,
@@ -1705,7 +2004,7 @@
       53,
       10752
     ],
-    "cached_at": 1769859930158
+    "cached_at": 1769977027045
   },
   "5547": {
     "id": 5547,
@@ -1762,7 +2061,7 @@
       12,
       80
     ],
-    "cached_at": 1769860010966
+    "cached_at": 1769940509053
   },
   "8050": {
     "id": 8050,
@@ -1789,7 +2088,7 @@
       28,
       14
     ],
-    "cached_at": 1769860063769
+    "cached_at": 1769940473926
   },
   "8091": {
     "id": 8091,
@@ -1828,7 +2127,7 @@
       28,
       53
     ],
-    "cached_at": 1769859936636
+    "cached_at": 1769944543854
   },
   "8580": {
     "id": 8580,
@@ -1857,7 +2156,7 @@
       18,
       10751
     ],
-    "cached_at": 1769860216825
+    "cached_at": 1769940460751
   },
   "8581": {
     "id": 8581,
@@ -1892,7 +2191,7 @@
       27,
       53
     ],
-    "cached_at": 1769859990396
+    "cached_at": 1769940492520
   },
   "8650": {
     "id": 8650,
@@ -1943,7 +2242,7 @@
       878,
       12
     ],
-    "cached_at": 1769860054309
+    "cached_at": 1769940528435
   },
   "8864": {
     "id": 8864,
@@ -1953,69 +2252,13 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/9YTAOy2WvO7XpkZYD2zfikRq1qG.jpg",
     "movies": [
       {
-        "filename": "Destino final 2 (2003).mkv",
-        "tmdb_id": 9358,
-        "title": "Destino final 2",
-        "poster": "https://image.tmdb.org/t/p/w342/6m4TTnatasZcMi6qE4Hbe9LdJgz.jpg",
-        "release_date": "2003-01-31",
+        "filename": "Destino final (2000).mkv",
+        "tmdb_id": 9532,
+        "title": "Destino final",
+        "poster": "https://image.tmdb.org/t/p/w342/6F3MEcGHeMAMxledi7vQfqkZRkc.jpg",
+        "release_date": "2000-03-17",
         "genre_ids": [
-          27,
-          9648
-        ]
-      },
-      {
-        "filename": "Destino final 3 (2006).mkv",
-        "tmdb_id": 9286,
-        "title": "Destino final 3",
-        "poster": "https://image.tmdb.org/t/p/w342/3PEVkIBOii1fxQxaQ0iKODGnBUp.jpg",
-        "release_date": "2006-02-09",
-        "genre_ids": [
-          27,
-          9648
-        ]
-      },
-      {
-        "filename": "Destino final 4 (2009).mkv",
-        "tmdb_id": 19912,
-        "title": "Destino final 4",
-        "poster": "https://image.tmdb.org/t/p/w342/8b1tsUQW8hogJRi6FFHHfO7D1fu.jpg",
-        "release_date": "2009-08-26",
-        "genre_ids": [
-          27,
-          9648
-        ]
-      },
-      {
-        "filename": "Destino final 5 (2011).mkv",
-        "tmdb_id": 55779,
-        "title": "Destino final 5",
-        "poster": "https://image.tmdb.org/t/p/w342/T0IGau7Alj52OLrrthzftkLMIA.jpg",
-        "release_date": "2011-08-12",
-        "genre_ids": [
-          27,
-          9648
-        ]
-      },
-      {
-        "filename": "Destino final Lazos de sangre (2025).mkv",
-        "tmdb_id": 574475,
-        "title": "Destino final: Lazos de sangre",
-        "poster": "https://image.tmdb.org/t/p/w342/frNkbclQpexf3aUzZrnixF3t5Hw.jpg",
-        "release_date": "2025-05-14",
-        "genre_ids": [
-          27,
-          9648
-        ]
-      },
-      {
-        "filename": "Destino final Lazos de sangre (2025).mp4",
-        "tmdb_id": 574475,
-        "title": "Destino final: Lazos de sangre",
-        "poster": "https://image.tmdb.org/t/p/w342/frNkbclQpexf3aUzZrnixF3t5Hw.jpg",
-        "release_date": "2025-05-14",
-        "genre_ids": [
-          27,
-          9648
+          27
         ]
       },
       {
@@ -2061,13 +2304,34 @@
           27,
           9648
         ]
+      },
+      {
+        "filename": "Destino final Lazos de sangre (2025).mp4",
+        "tmdb_id": 574475,
+        "title": "Destino final: Lazos de sangre",
+        "poster": "https://image.tmdb.org/t/p/w342/frNkbclQpexf3aUzZrnixF3t5Hw.jpg",
+        "release_date": "2025-05-14",
+        "genre_ids": [
+          27,
+          9648
+        ]
+      },
+      {
+        "filename": "Destino final (2000).mp4",
+        "tmdb_id": 9532,
+        "title": "Destino final",
+        "poster": "https://image.tmdb.org/t/p/w342/6F3MEcGHeMAMxledi7vQfqkZRkc.jpg",
+        "release_date": "2000-03-17",
+        "genre_ids": [
+          27
+        ]
       }
     ],
     "genre_ids": [
       27,
       9648
     ],
-    "cached_at": 1769859991922
+    "cached_at": 1769940395331
   },
   "9332": {
     "id": 9332,
@@ -2092,7 +2356,7 @@
       12,
       35
     ],
-    "cached_at": 1769859968601
+    "cached_at": 1769940380064
   },
   "9338": {
     "id": 9338,
@@ -2111,13 +2375,24 @@
           35,
           80
         ]
+      },
+      {
+        "filename": "Loca academia de policía (1984).mp4",
+        "tmdb_id": 9336,
+        "title": "Loca academia de policía",
+        "poster": "https://image.tmdb.org/t/p/w342/wmphZLnqARmCvjFvYkBAMhlsmNl.jpg",
+        "release_date": "1984-03-22",
+        "genre_ids": [
+          35,
+          80
+        ]
       }
     ],
     "genre_ids": [
       35,
       80
     ],
-    "cached_at": 1769859981448
+    "cached_at": 1769944539370
   },
   "9743": {
     "id": 9743,
@@ -2127,7 +2402,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/yiwhEr1BV3K9fCsZuFxUHtZezHZ.jpg",
     "movies": [
       {
-        "filename": "El silencio de los corderos (1991).avi",
+        "filename": "El silencio de los corderos (1991).mp4",
         "tmdb_id": 274,
         "title": "El silencio de los corderos",
         "poster": "https://image.tmdb.org/t/p/w342/8FdQQ3cUCs9goEOr1qUFaHackoJ.jpg",
@@ -2144,7 +2419,7 @@
       53,
       18
     ],
-    "cached_at": 1769860014336
+    "cached_at": 1769940427973
   },
   "9744": {
     "id": 9744,
@@ -2176,6 +2451,30 @@
           12,
           28
         ]
+      },
+      {
+        "filename": "Los 4 Fantásticos (2005).mp4",
+        "tmdb_id": 9738,
+        "title": "Los 4 fantásticos",
+        "poster": "https://image.tmdb.org/t/p/w342/l3Yk65bVdgiMOMeK6O8aZxEBt5J.jpg",
+        "release_date": "2005-06-29",
+        "genre_ids": [
+          28,
+          14,
+          878
+        ]
+      },
+      {
+        "filename": "Los 4 Fantásticos y Silver Surfer (2007).mp4",
+        "tmdb_id": 1979,
+        "title": "Los 4 fantásticos y Silver Surfer",
+        "poster": "https://image.tmdb.org/t/p/w342/pRXgCDTRKEIUy5cySYA4zC5to5B.jpg",
+        "release_date": "2007-06-13",
+        "genre_ids": [
+          878,
+          12,
+          28
+        ]
       }
     ],
     "genre_ids": [
@@ -2184,7 +2483,7 @@
       878,
       12
     ],
-    "cached_at": 1769859982927
+    "cached_at": 1769944540087
   },
   "10453": {
     "id": 10453,
@@ -2219,7 +2518,7 @@
       27,
       53
     ],
-    "cached_at": 1769859992769
+    "cached_at": 1769940493668
   },
   "10456": {
     "id": 10456,
@@ -2228,18 +2527,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/ffZKx4IIZuhVcLgObX0HiMgnaCB.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/nlpixhOhb3JmFqVXKjCwpYFpldf.jpg",
     "movies": [
-      {
-        "filename": "La lista negra (1988).mkv",
-        "tmdb_id": 10651,
-        "title": "La lista negra",
-        "poster": "https://image.tmdb.org/t/p/w342/7MxSnI2ck7pE8HTFWpV1dkP0CW3.jpg",
-        "release_date": "1988-07-13",
-        "genre_ids": [
-          28,
-          80,
-          53
-        ]
-      },
       {
         "filename": "Harry el ejecutor (1976).mkv",
         "tmdb_id": 10649,
@@ -2286,15 +2573,86 @@
           80,
           28
         ]
+      },
+      {
+        "filename": "La lista negra (1988).mkv",
+        "tmdb_id": 10651,
+        "title": "La lista negra",
+        "poster": "https://image.tmdb.org/t/p/w342/7MxSnI2ck7pE8HTFWpV1dkP0CW3.jpg",
+        "release_date": "1988-07-13",
+        "genre_ids": [
+          28,
+          80,
+          53
+        ]
+      },
+      {
+        "filename": "Harry el ejecutor (1976).mp4",
+        "tmdb_id": 10649,
+        "title": "Harry el ejecutor",
+        "poster": "https://image.tmdb.org/t/p/w342/5wRKjXMuHJhK3usSEVS0XZW9aER.jpg",
+        "release_date": "1976-12-16",
+        "genre_ids": [
+          80,
+          28
+        ]
+      },
+      {
+        "filename": "Harry el fuerte (1973).mp4",
+        "tmdb_id": 10648,
+        "title": "Harry el fuerte",
+        "poster": "https://image.tmdb.org/t/p/w342/zaiCwmc4iEBjAQgl7Xisg80B00l.jpg",
+        "release_date": "1973-12-13",
+        "genre_ids": [
+          18,
+          80,
+          28
+        ]
+      },
+      {
+        "filename": "Harry el sucio (1971).mp4",
+        "tmdb_id": 984,
+        "title": "Harry el sucio",
+        "poster": "https://image.tmdb.org/t/p/w342/gJ3VDY75PGksnba8aTOueb5Gtm4.jpg",
+        "release_date": "1971-12-23",
+        "genre_ids": [
+          28,
+          80,
+          53
+        ]
+      },
+      {
+        "filename": "Impacto súbito (1983).mp4",
+        "tmdb_id": 10650,
+        "title": "Impacto súbito",
+        "poster": "https://image.tmdb.org/t/p/w342/sIOF7hhwfN7wFJOtf3sVePjyuc9.jpg",
+        "release_date": "1983-12-08",
+        "genre_ids": [
+          53,
+          80,
+          28
+        ]
+      },
+      {
+        "filename": "La lista negra (1988).mp4",
+        "tmdb_id": 10651,
+        "title": "La lista negra",
+        "poster": "https://image.tmdb.org/t/p/w342/7MxSnI2ck7pE8HTFWpV1dkP0CW3.jpg",
+        "release_date": "1988-07-13",
+        "genre_ids": [
+          28,
+          80,
+          53
+        ]
       }
     ],
     "genre_ids": [
-      28,
       80,
-      53,
-      18
+      28,
+      18,
+      53
     ],
-    "cached_at": 1769859960622
+    "cached_at": 1769940450511
   },
   "10522": {
     "id": 10522,
@@ -2349,7 +2707,7 @@
       878,
       53
     ],
-    "cached_at": 1769860039645
+    "cached_at": 1769940519855
   },
   "10713": {
     "id": 10713,
@@ -2378,7 +2736,7 @@
       878,
       80
     ],
-    "cached_at": 1769860025558
+    "cached_at": 1769940515337
   },
   "10919": {
     "id": 10919,
@@ -2403,7 +2761,7 @@
       27,
       53
     ],
-    "cached_at": 1769859965844
+    "cached_at": 1769944529012
   },
   "10924": {
     "id": 10924,
@@ -2432,7 +2790,73 @@
       53,
       80
     ],
-    "cached_at": 1769859928307
+    "cached_at": 1769977022884
+  },
+  "14890": {
+    "id": 14890,
+    "name": "Dos policías rebeldes - Colección",
+    "overview": "Saga sobre el dúo de policías Mike Lowrey y Marcus Burnett, llena de acción y persecuciones de coches. Realizan el trabajo pero a un alto coste.",
+    "poster": "https://image.tmdb.org/t/p/w342/vpnAElpSww3nUdCLcFatC2Jb2Gc.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/r8kZJbi6UNhilLhM5WhauYELIR8.jpg",
+    "movies": [
+      {
+        "filename": "Dos policías rebeldes (1995).mkv",
+        "tmdb_id": 9737,
+        "title": "Dos policías rebeldes",
+        "poster": "https://image.tmdb.org/t/p/w342/ZYpSdXaTMFYCGbmVmXOFbdJmSv.jpg",
+        "release_date": "1995-04-07",
+        "genre_ids": [
+          28,
+          35,
+          80,
+          53
+        ]
+      },
+      {
+        "filename": "Dos policías rebeldes II (2003).mkv",
+        "tmdb_id": 8961,
+        "title": "Dos policías rebeldes II",
+        "poster": "https://image.tmdb.org/t/p/w342/qyHDZB87UQF9cu6uuQzhhaKGvuo.jpg",
+        "release_date": "2003-07-18",
+        "genre_ids": [
+          28,
+          80,
+          35
+        ]
+      },
+      {
+        "filename": "Dos policías rebeldes (1995).mp4",
+        "tmdb_id": 9737,
+        "title": "Dos policías rebeldes",
+        "poster": "https://image.tmdb.org/t/p/w342/ZYpSdXaTMFYCGbmVmXOFbdJmSv.jpg",
+        "release_date": "1995-04-07",
+        "genre_ids": [
+          28,
+          35,
+          80,
+          53
+        ]
+      },
+      {
+        "filename": "Dos policías rebeldes II (2003).mp4",
+        "tmdb_id": 8961,
+        "title": "Dos policías rebeldes II",
+        "poster": "https://image.tmdb.org/t/p/w342/qyHDZB87UQF9cu6uuQzhhaKGvuo.jpg",
+        "release_date": "2003-07-18",
+        "genre_ids": [
+          28,
+          80,
+          35
+        ]
+      }
+    ],
+    "genre_ids": [
+      28,
+      35,
+      80,
+      53
+    ],
+    "cached_at": 1769945178034
   },
   "17235": {
     "id": 17235,
@@ -2462,13 +2886,35 @@
           14,
           28
         ]
+      },
+      {
+        "filename": "Hellboy (2004).mp4",
+        "tmdb_id": 1487,
+        "title": "Hellboy",
+        "poster": "https://image.tmdb.org/t/p/w342/5PWLsq6g52HqBMVJPVj64Q77p1L.jpg",
+        "release_date": "2004-04-02",
+        "genre_ids": [
+          14,
+          28
+        ]
+      },
+      {
+        "filename": "Hellboy II El ejército dorado (2008).mp4",
+        "tmdb_id": 11253,
+        "title": "Hellboy II: El ejército dorado",
+        "poster": "https://image.tmdb.org/t/p/w342/2oJ8v3zmwD0MruokYiLkUivY9wl.jpg",
+        "release_date": "2008-07-11",
+        "genre_ids": [
+          14,
+          28
+        ]
       }
     ],
     "genre_ids": [
       14,
       28
     ],
-    "cached_at": 1769860051875
+    "cached_at": 1769940451252
   },
   "17255": {
     "id": 17255,
@@ -2557,7 +3003,34 @@
       878,
       12
     ],
-    "cached_at": 1769860007480
+    "cached_at": 1769940508153
+  },
+  "25410": {
+    "id": 25410,
+    "name": "El arte de la guerra - Colección",
+    "overview": "Colección de películas \"El arte de la guerra\"",
+    "poster": "https://image.tmdb.org/t/p/w342/hJATciLinNnhsI06NjiLmohJl8i.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/9G3CBEg7QlQ9MQcNgA5IwcghNYO.jpg",
+    "movies": [
+      {
+        "filename": "El arte de la guerra.mp4",
+        "tmdb_id": 11398,
+        "title": "El arte de la guerra",
+        "poster": "https://image.tmdb.org/t/p/w342/paYmKfHNOJk2FPub0dZnUq79GVB.jpg",
+        "release_date": "2000-08-25",
+        "genre_ids": [
+          28,
+          53,
+          80
+        ]
+      }
+    ],
+    "genre_ids": [
+      28,
+      53,
+      80
+    ],
+    "cached_at": 1769940402553
   },
   "31562": {
     "id": 31562,
@@ -2567,7 +3040,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/vA5xMglyZv7yzDTj1qUTU4OvelV.jpg",
     "movies": [
       {
-        "filename": "El legado de Bourne (2012).avi",
+        "filename": "El legado de Bourne (2012).mp4",
         "tmdb_id": 49040,
         "title": "El legado de Bourne",
         "poster": "https://image.tmdb.org/t/p/w342/pWVaLBdcVrTqSTBKIJLinmuxRso.jpg",
@@ -2578,7 +3051,7 @@
         ]
       },
       {
-        "filename": "El mito de Bourne (2004).avi",
+        "filename": "El mito de Bourne (2004).mp4",
         "tmdb_id": 2502,
         "title": "El mito de Bourne",
         "poster": "https://image.tmdb.org/t/p/w342/kTFFwQHdaTUb5MJmB8KBGO7lh7N.jpg",
@@ -2609,7 +3082,7 @@
       18,
       9648
     ],
-    "cached_at": 1769859999611
+    "cached_at": 1769940418650
   },
   "37139": {
     "id": 37139,
@@ -2656,7 +3129,7 @@
       35,
       80
     ],
-    "cached_at": 1769859931400
+    "cached_at": 1769977029906
   },
   "43055": {
     "id": 43055,
@@ -2695,7 +3168,7 @@
       14,
       28
     ],
-    "cached_at": 1769859972796
+    "cached_at": 1769940383179
   },
   "45154": {
     "id": 45154,
@@ -2722,7 +3195,30 @@
       878,
       53
     ],
-    "cached_at": 1769859986788
+    "cached_at": 1769940392380
+  },
+  "48037": {
+    "id": 48037,
+    "name": "Los albóndigas - Colección",
+    "overview": "Los albóndigas es una película de comedia canadiense de 1979 dirigida por Ivan Reitman. Se destaca por la primera aparición cinematográfica de Bill Murray en un papel protagónico y por lanzar la carrera de director de Reitman. Le siguieron varias secuelas, de las cuales solo Los albóndigas 3: Los chicos están calientes (1986) tenía alguna conexión con el original.",
+    "poster": "https://image.tmdb.org/t/p/w342/ycmrsQ36H77Q5lmOQbfM4emg5DF.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/plJy1OS6PSKp6PTpMDlk47u86E6.jpg",
+    "movies": [
+      {
+        "filename": "Los incorregibles albóndigas.mp4",
+        "tmdb_id": 14035,
+        "title": "Los incorregibles albóndigas",
+        "poster": "https://image.tmdb.org/t/p/w342/khCfHEFzYFXpOeEcuL6Emym8iXr.jpg",
+        "release_date": "1979-06-28",
+        "genre_ids": [
+          35
+        ]
+      }
+    ],
+    "genre_ids": [
+      35
+    ],
+    "cached_at": 1769940473610
   },
   "52785": {
     "id": 52785,
@@ -2753,7 +3249,7 @@
       80,
       18
     ],
-    "cached_at": 1769860069764
+    "cached_at": 1769940538849
   },
   "52984": {
     "id": 52984,
@@ -2787,6 +3283,32 @@
           9648,
           53
         ]
+      },
+      {
+        "filename": "La búsqueda (National Treasure) (2004).mp4",
+        "tmdb_id": 2059,
+        "title": "La búsqueda (National Treasure)",
+        "poster": "https://image.tmdb.org/t/p/w342/2c0gn21jGROhZEvdrraXV35mAKd.jpg",
+        "release_date": "2004-11-19",
+        "genre_ids": [
+          12,
+          28,
+          53,
+          9648
+        ]
+      },
+      {
+        "filename": "La búsqueda 2 El diario secreto (2007).mp4",
+        "tmdb_id": 6637,
+        "title": "La búsqueda 2: El diario secreto",
+        "poster": "https://image.tmdb.org/t/p/w342/9gVoUTjFqxdkNxywEySRzYNzzhk.jpg",
+        "release_date": "2007-12-19",
+        "genre_ids": [
+          28,
+          12,
+          9648,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -2795,7 +3317,7 @@
       53,
       9648
     ],
-    "cached_at": 1769859947856
+    "cached_at": 1769940463754
   },
   "63043": {
     "id": 63043,
@@ -2834,7 +3356,7 @@
       28,
       12
     ],
-    "cached_at": 1769860054832
+    "cached_at": 1769940528681
   },
   "64748": {
     "id": 64748,
@@ -2859,7 +3381,7 @@
       27,
       9648
     ],
-    "cached_at": 1769860021137
+    "cached_at": 1769940512969
   },
   "64751": {
     "id": 64751,
@@ -2898,7 +3420,7 @@
       53,
       80
     ],
-    "cached_at": 1769859980216
+    "cached_at": 1769940387998
   },
   "70068": {
     "id": 70068,
@@ -2942,6 +3464,42 @@
           18,
           36
         ]
+      },
+      {
+        "filename": "Ip Man (2008).mp4",
+        "tmdb_id": 14756,
+        "title": "Ip Man",
+        "poster": "https://image.tmdb.org/t/p/w342/6BNa7SL9qrs3iaoMtdXIYqF58s3.jpg",
+        "release_date": "2008-12-12",
+        "genre_ids": [
+          18,
+          28,
+          36
+        ]
+      },
+      {
+        "filename": "Ip Man 2 (2010).mp4",
+        "tmdb_id": 37472,
+        "title": "Ip Man 2",
+        "poster": "https://image.tmdb.org/t/p/w342/ype1J4olDfeQpseCiQob5I74oqg.jpg",
+        "release_date": "2010-04-29",
+        "genre_ids": [
+          28,
+          36,
+          18
+        ]
+      },
+      {
+        "filename": "Ip Man 3 (2015).mp4",
+        "tmdb_id": 365222,
+        "title": "Ip Man 3",
+        "poster": "https://image.tmdb.org/t/p/w342/1wBnEGU0OXtgtDvTtgvYEODwcwi.jpg",
+        "release_date": "2015-12-24",
+        "genre_ids": [
+          28,
+          18,
+          36
+        ]
       }
     ],
     "genre_ids": [
@@ -2949,7 +3507,7 @@
       28,
       36
     ],
-    "cached_at": 1769859927690
+    "cached_at": 1769940456135
   },
   "85861": {
     "id": 85861,
@@ -3000,7 +3558,7 @@
       80,
       28
     ],
-    "cached_at": 1769860042234
+    "cached_at": 1769940521489
   },
   "86055": {
     "id": 86055,
@@ -3009,6 +3567,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/1z9gqwqLGnnW4CltnKHzPIfhg7c.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/xKz6YaOvmnIJQ3MYIpnaa7FBaAB.jpg",
     "movies": [
+      {
+        "filename": "Hombres de negro II (2002).mkv",
+        "tmdb_id": 608,
+        "title": "Hombres de negro II",
+        "poster": "https://image.tmdb.org/t/p/w342/zX1Hi0j7Yn4jv2eDHyIMlHP8lDb.jpg",
+        "release_date": "2002-07-03",
+        "genre_ids": [
+          28,
+          35,
+          878
+        ]
+      },
       {
         "filename": "Men in Black (1997).mkv",
         "tmdb_id": 607,
@@ -3035,7 +3605,7 @@
         ]
       },
       {
-        "filename": "Hombres de negro II (2002).mkv",
+        "filename": "Hombres de negro II (2002).mp4",
         "tmdb_id": 608,
         "title": "Hombres de negro II",
         "poster": "https://image.tmdb.org/t/p/w342/zX1Hi0j7Yn4jv2eDHyIMlHP8lDb.jpg",
@@ -3045,15 +3615,40 @@
           35,
           878
         ]
+      },
+      {
+        "filename": "Men in Black (1997).mp4",
+        "tmdb_id": 607,
+        "title": "Men in Black",
+        "poster": "https://image.tmdb.org/t/p/w342/8HHIw2ZCyFp26EpZC8BW5jGP7kd.jpg",
+        "release_date": "1997-07-02",
+        "genre_ids": [
+          28,
+          12,
+          35,
+          878
+        ]
+      },
+      {
+        "filename": "Men in Black 3 (2012).mp4",
+        "tmdb_id": 41154,
+        "title": "Men in Black 3",
+        "poster": "https://image.tmdb.org/t/p/w342/rcVJtZCGnp39obbDKYred2mT9sE.jpg",
+        "release_date": "2012-05-23",
+        "genre_ids": [
+          28,
+          35,
+          878
+        ]
       }
     ],
     "genre_ids": [
       28,
-      12,
       35,
-      878
+      878,
+      12
     ],
-    "cached_at": 1769859900019
+    "cached_at": 1769940452142
   },
   "86083": {
     "id": 86083,
@@ -3072,13 +3667,24 @@
           10749,
           35
         ]
+      },
+      {
+        "filename": "Grease (1978).mp4",
+        "tmdb_id": 621,
+        "title": "Grease",
+        "poster": "https://image.tmdb.org/t/p/w342/flSy0dexE82TiS6Si2FtulSHk8o.jpg",
+        "release_date": "1978-06-16",
+        "genre_ids": [
+          10749,
+          35
+        ]
       }
     ],
     "genre_ids": [
       10749,
       35
     ],
-    "cached_at": 1769860044584
+    "cached_at": 1769940448139
   },
   "86119": {
     "id": 86119,
@@ -3101,7 +3707,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769860006123
+    "cached_at": 1769940507520
   },
   "86311": {
     "id": 86311,
@@ -3110,6 +3716,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/xRgTmIWbsLjRIfFdOS6u5FTlAI2.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/2UNUv4NJdC36E5myDHACBJ99EwL.jpg",
     "movies": [
+      {
+        "filename": "Los Vengadores (2012).mkv",
+        "tmdb_id": 24428,
+        "title": "Los Vengadores",
+        "poster": "https://image.tmdb.org/t/p/w342/ugX4WZJO3jEvTOerctAWJLinujo.jpg",
+        "release_date": "2012-04-25",
+        "genre_ids": [
+          878,
+          28,
+          12
+        ]
+      },
       {
         "filename": "Vengadores Endgame (2019).mkv",
         "tmdb_id": 299534,
@@ -3147,7 +3765,7 @@
         ]
       },
       {
-        "filename": "Los Vengadores (2012).mkv",
+        "filename": "Los Vengadores (2012).mp4",
         "tmdb_id": 24428,
         "title": "Los Vengadores",
         "poster": "https://image.tmdb.org/t/p/w342/ugX4WZJO3jEvTOerctAWJLinujo.jpg",
@@ -3160,11 +3778,11 @@
       }
     ],
     "genre_ids": [
-      12,
       878,
-      28
+      28,
+      12
     ],
-    "cached_at": 1769860061105
+    "cached_at": 1769940476551
   },
   "86780": {
     "id": 86780,
@@ -3174,7 +3792,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/vmE52XvE2yWWQFt4g1x17K070gY.jpg",
     "movies": [
       {
-        "filename": "Furia de titanes (2010).mkv",
+        "filename": "Furia de titanes (2010).mp4",
         "tmdb_id": 18823,
         "title": "Furia de titanes",
         "poster": "https://image.tmdb.org/t/p/w342/gn2q6HooPdGfFaOI2U2nbjw3BSZ.jpg",
@@ -3191,7 +3809,7 @@
       14,
       28
     ],
-    "cached_at": 1769860038145
+    "cached_at": 1769977037148
   },
   "87096": {
     "id": 87096,
@@ -3232,7 +3850,7 @@
       14,
       878
     ],
-    "cached_at": 1769859952263
+    "cached_at": 1769940364381
   },
   "87359": {
     "id": 87359,
@@ -3295,7 +3913,7 @@
       28,
       53
     ],
-    "cached_at": 1769859906776
+    "cached_at": 1769940483523
   },
   "87536": {
     "id": 87536,
@@ -3322,7 +3940,7 @@
       14,
       28
     ],
-    "cached_at": 1769860206823
+    "cached_at": 1769940537035
   },
   "89264": {
     "id": 89264,
@@ -3364,7 +3982,7 @@
       35,
       10749
     ],
-    "cached_at": 1769859958457
+    "cached_at": 1769940469252
   },
   "90863": {
     "id": 90863,
@@ -3415,7 +4033,7 @@
       35,
       80
     ],
-    "cached_at": 1769860053658
+    "cached_at": 1769940452390
   },
   "91697": {
     "id": 91697,
@@ -3442,7 +4060,7 @@
       10770,
       28
     ],
-    "cached_at": 1769859956011
+    "cached_at": 1769940369495
   },
   "91799": {
     "id": 91799,
@@ -3471,7 +4089,7 @@
       878,
       35
     ],
-    "cached_at": 1769860045600
+    "cached_at": 1769940522942
   },
   "93220": {
     "id": 93220,
@@ -3484,7 +4102,7 @@
         "filename": "Miss Agente Especial (2000).mp4",
         "tmdb_id": 1493,
         "title": "Miss Agente Especial",
-        "poster": "https://image.tmdb.org/t/p/w342/4z0pHg1zSVIbUXaal1Y0SWHYlkg.jpg",
+        "poster": "https://image.tmdb.org/t/p/w342/xQ7HpXuBo6Wp7FndrzFu9vGI1Rn.jpg",
         "release_date": "2000-12-22",
         "genre_ids": [
           35,
@@ -3509,7 +4127,7 @@
       80,
       28
     ],
-    "cached_at": 1769859908018
+    "cached_at": 1769940484252
   },
   "93295": {
     "id": 93295,
@@ -3518,6 +4136,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/mdNbPlji7Bz3UEAuV3r2f53qK61.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/53SfXzq0CuBMQNAJMnrvwePbRLN.jpg",
     "movies": [
+      {
+        "filename": "Límite 48 horas (1982).mp4",
+        "tmdb_id": 150,
+        "title": "Límite: 48 horas",
+        "poster": "https://image.tmdb.org/t/p/w342/cHE4O3MjvH8Pv3qXEYaRtKbTwdR.jpg",
+        "release_date": "1982-12-07",
+        "genre_ids": [
+          80,
+          28,
+          35
+        ]
+      },
       {
         "filename": "48 horas más (1990).mp4",
         "tmdb_id": 11595,
@@ -3530,27 +4160,15 @@
           35,
           80
         ]
-      },
-      {
-        "filename": "Límite 48 horas (1982).mp4",
-        "tmdb_id": 150,
-        "title": "Límite: 48 horas",
-        "poster": "https://image.tmdb.org/t/p/w342/cHE4O3MjvH8Pv3qXEYaRtKbTwdR.jpg",
-        "release_date": "1982-12-07",
-        "genre_ids": [
-          80,
-          28,
-          35
-        ]
       }
     ],
     "genre_ids": [
-      53,
+      80,
       28,
       35,
-      80
+      53
     ],
-    "cached_at": 1769859927459
+    "cached_at": 1769940477958
   },
   "95664": {
     "id": 95664,
@@ -3579,13 +4197,24 @@
           35,
           10749
         ]
+      },
+      {
+        "filename": "Gigoló (1999).mp4",
+        "tmdb_id": 10402,
+        "title": "Gigoló",
+        "poster": "https://image.tmdb.org/t/p/w342/LlFLmp7KYnN3na68PhkMYYYtHv.jpg",
+        "release_date": "1999-12-10",
+        "genre_ids": [
+          35,
+          10749
+        ]
       }
     ],
     "genre_ids": [
       35,
       10749
     ],
-    "cached_at": 1769859993013
+    "cached_at": 1769940395591
   },
   "98168": {
     "id": 98168,
@@ -3610,7 +4239,7 @@
       35,
       27
     ],
-    "cached_at": 1769859916325
+    "cached_at": 1769940488312
   },
   "101471": {
     "id": 101471,
@@ -3619,6 +4248,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/7ekXvck6C94gKbfH6WlKK2qqdVL.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/c5sDFadkYthAki1BEk66PYcW0WN.jpg",
     "movies": [
+      {
+        "filename": "El regreso de los muertos vivientes Necrópolis (2005).mp4",
+        "tmdb_id": 24935,
+        "title": "El regreso de los muertos vivientes: Necrópolis",
+        "poster": "https://image.tmdb.org/t/p/w342/lPm1ybrGkWPfoyveWprXbT1nhLu.jpg",
+        "release_date": "2005-10-15",
+        "genre_ids": [
+          28,
+          27,
+          10770
+        ]
+      },
       {
         "filename": "La divertida noche de los zombies (1988).avi",
         "tmdb_id": 24929,
@@ -3631,25 +4272,24 @@
         ]
       },
       {
-        "filename": "El regreso de los muertos vivientes Necrópolis (2005).avi",
-        "tmdb_id": 24935,
-        "title": "El regreso de los muertos vivientes: Necrópolis",
-        "poster": "https://image.tmdb.org/t/p/w342/lPm1ybrGkWPfoyveWprXbT1nhLu.jpg",
-        "release_date": "2005-10-15",
+        "filename": "La divertida noche de los zombies (1988).mp4",
+        "tmdb_id": 24929,
+        "title": "La divertida noche de los zombies",
+        "poster": "https://image.tmdb.org/t/p/w342/pTHy3CdDAcpmg5AwOSXObm2AsfK.jpg",
+        "release_date": "1988-01-15",
         "genre_ids": [
-          28,
           27,
-          10770
+          35
         ]
       }
     ],
     "genre_ids": [
-      27,
-      35,
       28,
-      10770
+      27,
+      10770,
+      35
     ],
-    "cached_at": 1769859953640
+    "cached_at": 1769940424422
   },
   "102322": {
     "id": 102322,
@@ -3691,7 +4331,7 @@
       80,
       9648
     ],
-    "cached_at": 1769860018206
+    "cached_at": 1769940511988
   },
   "105075": {
     "id": 105075,
@@ -3711,6 +4351,18 @@
           28,
           80
         ]
+      },
+      {
+        "filename": "La sombra (1994).mp4",
+        "tmdb_id": 8850,
+        "title": "La sombra",
+        "poster": "https://image.tmdb.org/t/p/w342/cC6uLcRdaoXyjzCbW9KxVUziXrz.jpg",
+        "release_date": "1994-07-01",
+        "genre_ids": [
+          14,
+          28,
+          80
+        ]
       }
     ],
     "genre_ids": [
@@ -3718,7 +4370,7 @@
       28,
       80
     ],
-    "cached_at": 1769859970259
+    "cached_at": 1769944532570
   },
   "108804": {
     "id": 108804,
@@ -3727,18 +4379,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/xiAWTgzyb1TxW8kN05qiVKNJFxb.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/lwO4ZAvRZvK0ubhDY39PJkQ9bRO.jpg",
     "movies": [
-      {
-        "filename": "El bunker (2008).avi",
-        "tmdb_id": 9017,
-        "title": "El bunker",
-        "poster": "https://image.tmdb.org/t/p/w342/qksbzx6WxwLXDOHg3HrPcFunMQz.jpg",
-        "release_date": "2008-03-11",
-        "genre_ids": [
-          28,
-          12,
-          27
-        ]
-      },
       {
         "filename": "El bunker (2008).mp4",
         "tmdb_id": 9017,
@@ -3757,7 +4397,7 @@
       12,
       27
     ],
-    "cached_at": 1769860073967
+    "cached_at": 1769940404402
   },
   "109592": {
     "id": 109592,
@@ -3800,7 +4440,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769859993679
+    "cached_at": 1769940493922
   },
   "112636": {
     "id": 112636,
@@ -3821,6 +4461,19 @@
           28,
           80
         ]
+      },
+      {
+        "filename": "Granujas a todo ritmo (The Blues Brothers) (1980).mp4",
+        "tmdb_id": 525,
+        "title": "Granujas a todo ritmo (The Blues Brothers)",
+        "poster": "https://image.tmdb.org/t/p/w342/rAeF8BlfaWnOBBI52x4hYztiDxY.jpg",
+        "release_date": "1980-06-16",
+        "genre_ids": [
+          10402,
+          35,
+          28,
+          80
+        ]
       }
     ],
     "genre_ids": [
@@ -3829,7 +4482,7 @@
       28,
       80
     ],
-    "cached_at": 1769860043905
+    "cached_at": 1769940447898
   },
   "115570": {
     "id": 115570,
@@ -3897,7 +4550,7 @@
       12,
       53
     ],
-    "cached_at": 1769860035227
+    "cached_at": 1769940518869
   },
   "115575": {
     "id": 115575,
@@ -3948,7 +4601,7 @@
       28,
       12
     ],
-    "cached_at": 1769860033201
+    "cached_at": 1769940518382
   },
   "115838": {
     "id": 115838,
@@ -3977,7 +4630,7 @@
       878,
       53
     ],
-    "cached_at": 1769859925494
+    "cached_at": 1769977017637
   },
   "116661": {
     "id": 116661,
@@ -3997,6 +4650,18 @@
           53,
           27
         ]
+      },
+      {
+        "filename": "Han llegado (1996).mp4",
+        "tmdb_id": 10547,
+        "title": "Han llegado",
+        "poster": "https://image.tmdb.org/t/p/w342/dK0iopuhTjLaEaZQreyVVyg5vQs.jpg",
+        "release_date": "1996-05-31",
+        "genre_ids": [
+          878,
+          53,
+          27
+        ]
       }
     ],
     "genre_ids": [
@@ -4004,7 +4669,7 @@
       53,
       27
     ],
-    "cached_at": 1769860047044
+    "cached_at": 1769940449862
   },
   "120794": {
     "id": 120794,
@@ -4068,7 +4733,7 @@
       878,
       12
     ],
-    "cached_at": 1769859953886
+    "cached_at": 1769940367794
   },
   "121938": {
     "id": 121938,
@@ -4078,19 +4743,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/7wO7MSnP5UcwR2cTHdJFF1vP4Ie.jpg",
     "movies": [
       {
-        "filename": "El hobbit La desolación de Smaug (2013).mp4",
-        "tmdb_id": 57158,
-        "title": "El hobbit: La desolación de Smaug",
-        "poster": "https://image.tmdb.org/t/p/w342/1s8xZDmG5IkDU0m1LeW28YcwTRx.jpg",
-        "release_date": "2013-12-11",
-        "genre_ids": [
-          14,
-          12,
-          28
-        ]
-      },
-      {
-        "filename": "El hobbit La batalla de los cinco ejércitos (2014).mkv",
+        "filename": "El hobbit La batalla de los cinco ejércitos (2014).mp4",
         "tmdb_id": 122917,
         "title": "El hobbit: La batalla de los cinco ejércitos",
         "poster": "https://image.tmdb.org/t/p/w342/6OiNSLcRKJsBLXwb6DEi6IQ0JFk.jpg",
@@ -4102,7 +4755,7 @@
         ]
       },
       {
-        "filename": "El hobbit La desolación de Smaug (2013).avi",
+        "filename": "El hobbit La desolación de Smaug (2013).mp4",
         "tmdb_id": 57158,
         "title": "El hobbit: La desolación de Smaug",
         "poster": "https://image.tmdb.org/t/p/w342/1s8xZDmG5IkDU0m1LeW28YcwTRx.jpg",
@@ -4110,18 +4763,6 @@
         "genre_ids": [
           14,
           12,
-          28
-        ]
-      },
-      {
-        "filename": "El hobbit Un viaje inesperado (2012).avi",
-        "tmdb_id": 49051,
-        "title": "El hobbit: Un viaje inesperado",
-        "poster": "https://image.tmdb.org/t/p/w342/3dJELUqdpGEkXVrMj7V3BiOjrtf.jpg",
-        "release_date": "2012-12-12",
-        "genre_ids": [
-          12,
-          14,
           28
         ]
       },
@@ -4136,26 +4777,14 @@
           14,
           28
         ]
-      },
-      {
-        "filename": "El hobbit La batalla de los cinco ejércitos (2014).mp4",
-        "tmdb_id": 122917,
-        "title": "El hobbit: La batalla de los cinco ejércitos",
-        "poster": "https://image.tmdb.org/t/p/w342/6OiNSLcRKJsBLXwb6DEi6IQ0JFk.jpg",
-        "release_date": "2014-12-10",
-        "genre_ids": [
-          28,
-          12,
-          14
-        ]
       }
     ],
     "genre_ids": [
-      14,
+      28,
       12,
-      28
+      14
     ],
-    "cached_at": 1769859898154
+    "cached_at": 1769940412803
   },
   "124949": {
     "id": 124949,
@@ -4193,7 +4822,7 @@
       35,
       10751
     ],
-    "cached_at": 1769859970015
+    "cached_at": 1769940381193
   },
   "125570": {
     "id": 125570,
@@ -4220,7 +4849,7 @@
       12,
       10752
     ],
-    "cached_at": 1769859926100
+    "cached_at": 1769977018889
   },
   "131292": {
     "id": 131292,
@@ -4229,6 +4858,42 @@
     "poster": "https://image.tmdb.org/t/p/w342/9IcmiJNK5cPiYwefR2915DCa9Y1.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/rI8zOWkRQJdlAyQ6WJOSlYK6JxZ.jpg",
     "movies": [
+      {
+        "filename": "Iron Man (2008).mp4",
+        "tmdb_id": 1726,
+        "title": "Iron Man",
+        "poster": "https://image.tmdb.org/t/p/w342/tFCTNx7foAsUQpgu2x1KjAJD1wT.jpg",
+        "release_date": "2008-04-30",
+        "genre_ids": [
+          28,
+          878,
+          12
+        ]
+      },
+      {
+        "filename": "Iron Man 2 (2010).mp4",
+        "tmdb_id": 10138,
+        "title": "Iron Man 2",
+        "poster": "https://image.tmdb.org/t/p/w342/ayyJVOV5I4MGjti7nIHC3mVCagR.jpg",
+        "release_date": "2010-04-28",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "Iron Man 3 (2013).mp4",
+        "tmdb_id": 68721,
+        "title": "Iron Man 3",
+        "poster": "https://image.tmdb.org/t/p/w342/cW0fOIZONkgeiMJDYzqUcgl4MUn.jpg",
+        "release_date": "2013-04-18",
+        "genre_ids": [
+          28,
+          12,
+          878
+        ]
+      },
       {
         "filename": "Iron Man (2008).mkv",
         "tmdb_id": 1726,
@@ -4271,7 +4936,7 @@
       878,
       12
     ],
-    "cached_at": 1769859929924
+    "cached_at": 1769940360716
   },
   "131295": {
     "id": 131295,
@@ -4335,7 +5000,7 @@
       878,
       12
     ],
-    "cached_at": 1769859965602
+    "cached_at": 1769940377201
   },
   "131296": {
     "id": 131296,
@@ -4389,7 +5054,7 @@
       878,
       35
     ],
-    "cached_at": 1769860051005
+    "cached_at": 1769940526583
   },
   "131635": {
     "id": 131635,
@@ -4409,14 +5074,51 @@
           28,
           878
         ]
+      },
+      {
+        "filename": "Los Juegos Hambre.mkv",
+        "tmdb_id": 131631,
+        "title": "Los Juegos del Hambre: Sinsajo - Parte 1",
+        "poster": "https://image.tmdb.org/t/p/w342/wfLsciidZamFPeOb4FD8ywk1Q9c.jpg",
+        "release_date": "2014-11-19",
+        "genre_ids": [
+          878,
+          12,
+          53
+        ]
+      },
+      {
+        "filename": "Los Juegos del Hambre En llamas (2013).mp4",
+        "tmdb_id": 101299,
+        "title": "Los Juegos del Hambre: En llamas",
+        "poster": "https://image.tmdb.org/t/p/w342/oxnKI1qiHz7xC0mNthC7dSqTcot.jpg",
+        "release_date": "2013-11-15",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
+      {
+        "filename": "Los Juegos Hambre.mp4",
+        "tmdb_id": 101299,
+        "title": "Los Juegos del Hambre: En llamas",
+        "poster": "https://image.tmdb.org/t/p/w342/oxnKI1qiHz7xC0mNthC7dSqTcot.jpg",
+        "release_date": "2013-11-15",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
       }
     ],
     "genre_ids": [
       12,
       28,
-      878
+      878,
+      53
     ],
-    "cached_at": 1769860067779
+    "cached_at": 1769940474948
   },
   "135179": {
     "id": 135179,
@@ -4435,13 +5137,26 @@
           80,
           53
         ]
+      },
+      {
+        "filename": "Sin City Una dama por la que matar (2014).mp4",
+        "tmdb_id": 189,
+        "title": "Sin City: Una dama por la que matar",
+        "poster": "https://image.tmdb.org/t/p/w342/xmCF5CB8ogqUy9K6AmYaAL7x0jV.jpg",
+        "release_date": "2014-08-20",
+        "genre_ids": [
+          28,
+          80,
+          53
+        ]
       }
     ],
     "genre_ids": [
       80,
-      53
+      53,
+      28
     ],
-    "cached_at": 1769860021751
+    "cached_at": 1769940513219
   },
   "135416": {
     "id": 135416,
@@ -4450,18 +5165,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/fdj2lntPpo6C49QlmgA8urf6JwK.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/cK83Pq8SJoeSTnLJucr8IWn35KF.jpg",
     "movies": [
-      {
-        "filename": "Alien Covenant (2017).mp4",
-        "tmdb_id": 126889,
-        "title": "Alien: Covenant",
-        "poster": "https://image.tmdb.org/t/p/w342/245tgZ3mTHWs0NRiPSwPjKobKHf.jpg",
-        "release_date": "2017-05-09",
-        "genre_ids": [
-          27,
-          878,
-          53
-        ]
-      },
       {
         "filename": "Prometheus (2012).mkv",
         "tmdb_id": 70981,
@@ -4473,16 +5176,27 @@
           12,
           9648
         ]
+      },
+      {
+        "filename": "Alien Covenant (2017).mp4",
+        "tmdb_id": 126889,
+        "title": "Alien: Covenant",
+        "poster": "https://image.tmdb.org/t/p/w342/245tgZ3mTHWs0NRiPSwPjKobKHf.jpg",
+        "release_date": "2017-05-09",
+        "genre_ids": [
+          27,
+          878
+        ]
       }
     ],
     "genre_ids": [
-      27,
       878,
-      53,
       12,
-      9648
+      9648,
+      27,
+      53
     ],
-    "cached_at": 1769859936147
+    "cached_at": 1769940495851
   },
   "135468": {
     "id": 135468,
@@ -4503,6 +5217,19 @@
           53,
           878
         ]
+      },
+      {
+        "filename": "G.I. Joe (2009).mp4",
+        "tmdb_id": 14869,
+        "title": "G.I. Joe",
+        "poster": "https://image.tmdb.org/t/p/w342/55BMS8gGhXhhVYEDnM0ktRgQNF.jpg",
+        "release_date": "2009-08-03",
+        "genre_ids": [
+          12,
+          28,
+          53,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -4511,7 +5238,7 @@
       53,
       878
     ],
-    "cached_at": 1769860039877
+    "cached_at": 1769940445385
   },
   "141086": {
     "id": 141086,
@@ -4542,7 +5269,7 @@
       14,
       10402
     ],
-    "cached_at": 1769860051253
+    "cached_at": 1769940451020
   },
   "151263": {
     "id": 151263,
@@ -4551,6 +5278,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/tPvDCajdnC6RpuKQqRI9G62IJ7f.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/tBWSIMflBa1tUvSVVqLCuwviW1y.jpg",
     "movies": [
+      {
+        "filename": "Juegos de guerra (1983).mp4",
+        "tmdb_id": 860,
+        "title": "Juegos de guerra",
+        "poster": "https://image.tmdb.org/t/p/w342/tFnhVopdrik99QC71sbbvLG6rLc.jpg",
+        "release_date": "1983-06-03",
+        "genre_ids": [
+          53,
+          878,
+          18
+        ]
+      },
       {
         "filename": "Juegos de guerra (1983).mkv",
         "tmdb_id": 860,
@@ -4569,7 +5308,7 @@
       878,
       18
     ],
-    "cached_at": 1769859936383
+    "cached_at": 1769940379819
   },
   "166698": {
     "id": 166698,
@@ -4596,7 +5335,7 @@
       878,
       37
     ],
-    "cached_at": 1769859938260
+    "cached_at": 1769944544520
   },
   "167456": {
     "id": 167456,
@@ -4606,7 +5345,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/nsBn1N9b2ok0O09OCwPm518nzmr.jpg",
     "movies": [
       {
-        "filename": "Flint, agente secreto (1966).avi",
+        "filename": "Flint, agente secreto (1966).mp4",
         "tmdb_id": 23728,
         "title": "Flint, agente secreto",
         "poster": "https://image.tmdb.org/t/p/w342/fMLtdONmIO588yHcKsbKgfYSHtW.jpg",
@@ -4625,7 +5364,7 @@
       12,
       878
     ],
-    "cached_at": 1769860037517
+    "cached_at": 1769940444663
   },
   "171439": {
     "id": 171439,
@@ -4635,7 +5374,18 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/pLj66wA3xzB9vyOlzZRevSKamoD.jpg",
     "movies": [
       {
-        "filename": "FX 2 Ilusiones mortales (1991).avi",
+        "filename": "FX Efectos mortales (1986).avi",
+        "tmdb_id": 9873,
+        "title": "FX: Efectos mortales",
+        "poster": "https://image.tmdb.org/t/p/w342/kDX8aw8ZfZKyUvPAs8akKPcaXR7.jpg",
+        "release_date": "1986-02-07",
+        "genre_ids": [
+          28,
+          53
+        ]
+      },
+      {
+        "filename": "FX 2 Ilusiones mortales (1991).mp4",
         "tmdb_id": 16820,
         "title": "FX 2 Ilusiones mortales",
         "poster": "https://image.tmdb.org/t/p/w342/zj7POQgldFnlOIryUW9Gg8j15uj.jpg",
@@ -4646,7 +5396,7 @@
         ]
       },
       {
-        "filename": "FX Efectos mortales (1986).avi",
+        "filename": "FX Efectos mortales (1986).mp4",
         "tmdb_id": 9873,
         "title": "FX: Efectos mortales",
         "poster": "https://image.tmdb.org/t/p/w342/kDX8aw8ZfZKyUvPAs8akKPcaXR7.jpg",
@@ -4661,7 +5411,7 @@
       28,
       53
     ],
-    "cached_at": 1769860039389
+    "cached_at": 1769940445144
   },
   "173710": {
     "id": 173710,
@@ -4671,7 +5421,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/iMhm0g555HgQNIXAMvnlgOiW5Rz.jpg",
     "movies": [
       {
-        "filename": "El origen del planeta de los simios (2011).mkv",
+        "filename": "El origen del planeta de los simios (2011).mp4",
         "tmdb_id": 61791,
         "title": "El origen del planeta de los simios",
         "poster": "https://image.tmdb.org/t/p/w342/6TqjIMQV11NkHMuriprN3xNoN6o.jpg",
@@ -4690,7 +5440,7 @@
       18,
       878
     ],
-    "cached_at": 1769860004621
+    "cached_at": 1769940420927
   },
   "179892": {
     "id": 179892,
@@ -4721,6 +5471,29 @@
           28,
           80
         ]
+      },
+      {
+        "filename": "Kick-Ass 2 Con un par (2013).mp4",
+        "tmdb_id": 59859,
+        "title": "Kick-Ass 2: Con un par",
+        "poster": "https://image.tmdb.org/t/p/w342/wjFX0jaUl7tfgN0CDAbdgqqRwOT.jpg",
+        "release_date": "2013-07-17",
+        "genre_ids": [
+          28,
+          12,
+          80
+        ]
+      },
+      {
+        "filename": "Kick-Ass Listo para machacar (2010).mp4",
+        "tmdb_id": 23483,
+        "title": "Kick-Ass: Listo para machacar",
+        "poster": "https://image.tmdb.org/t/p/w342/dyYP52hnVzioCxLSheogZBX0vXv.jpg",
+        "release_date": "2010-03-26",
+        "genre_ids": [
+          28,
+          80
+        ]
       }
     ],
     "genre_ids": [
@@ -4728,7 +5501,7 @@
       12,
       80
     ],
-    "cached_at": 1769859942878
+    "cached_at": 1769940461063
   },
   "180546": {
     "id": 180546,
@@ -4761,7 +5534,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769859913920
+    "cached_at": 1769940487222
   },
   "192492": {
     "id": 192492,
@@ -4805,6 +5578,17 @@
           18,
           53
         ]
+      },
+      {
+        "filename": "La caza del Octubre Rojo (1990).mp4",
+        "tmdb_id": 1669,
+        "title": "La caza del Octubre Rojo",
+        "poster": "https://image.tmdb.org/t/p/w342/6EGFvgiOaQB7HHV0gD581SKlPM9.jpg",
+        "release_date": "1990-03-02",
+        "genre_ids": [
+          28,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -4813,7 +5597,7 @@
       53,
       80
     ],
-    "cached_at": 1769859935167
+    "cached_at": 1769940457860
   },
   "209131": {
     "id": 209131,
@@ -4822,18 +5606,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/p3aMbHfdrzoJaEnRZ7HAyCLXBc6.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/rPaqhsSMCky0UXVW4qmNOJq5Orp.jpg",
     "movies": [
-      {
-        "filename": "El hombre de acero (2013).mkv",
-        "tmdb_id": 49521,
-        "title": "El hombre de acero",
-        "poster": "https://image.tmdb.org/t/p/w342/5JW44QGgpEWx4aWXM0uVSi2xtrI.jpg",
-        "release_date": "2013-06-12",
-        "genre_ids": [
-          28,
-          12,
-          878
-        ]
-      },
       {
         "filename": "Batman vs Superman El amanecer de la justicia (2016).mp4",
         "tmdb_id": 209112,
@@ -4862,10 +5634,10 @@
     "genre_ids": [
       28,
       12,
-      878,
-      14
+      14,
+      878
     ],
-    "cached_at": 1769859911686
+    "cached_at": 1769940368557
   },
   "256322": {
     "id": 256322,
@@ -4890,7 +5662,7 @@
       27,
       53
     ],
-    "cached_at": 1769859942167
+    "cached_at": 1769944546767
   },
   "261590": {
     "id": 261590,
@@ -4915,7 +5687,47 @@
       27,
       878
     ],
-    "cached_at": 1769860067084
+    "cached_at": 1769940401943
+  },
+  "277798": {
+    "id": 277798,
+    "name": "Isi/Disi - Colección",
+    "overview": "Isi y Disi, que ni son hermanos ni se llaman así, nacieron y se criaron en Leganés. Sus alias vienen de su desbocada pasión por AC/DC, que, según han oído siempre, en inglés se pronuncia isidisi.",
+    "poster": "https://image.tmdb.org/t/p/w342/zPUXIafjJMYyqWPBCUWWtEWP6G7.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/c5KeRD3y8IQgaJ606UxHwtMcHOV.jpg",
+    "movies": [
+      {
+        "filename": "Isi & Disi alto voltaje (2006).mp4",
+        "tmdb_id": 95932,
+        "title": "Isi & Disi: alto voltaje",
+        "poster": "https://image.tmdb.org/t/p/w342/74beRdQGnkCmzkCt2Tu8g2WnAYZ.jpg",
+        "release_date": "2006-12-01",
+        "genre_ids": [
+          12,
+          10402,
+          35
+        ]
+      },
+      {
+        "filename": "IsiDisi - Amor a lo bestia (2004).mp4",
+        "tmdb_id": 48635,
+        "title": "Isi/Disi - Amor a lo bestia",
+        "poster": "https://image.tmdb.org/t/p/w342/bn8JLZHxuHdwpjWdpXl1yld8TBG.jpg",
+        "release_date": "2004-07-23",
+        "genre_ids": [
+          35,
+          10402,
+          10749
+        ]
+      }
+    ],
+    "genre_ids": [
+      12,
+      10402,
+      35,
+      10749
+    ],
+    "cached_at": 1769966518982
   },
   "284433": {
     "id": 284433,
@@ -4959,6 +5771,42 @@
           12,
           28
         ]
+      },
+      {
+        "filename": "Guardianes de la galaxia (2014).mp4",
+        "tmdb_id": 118340,
+        "title": "Guardianes de la galaxia",
+        "poster": "https://image.tmdb.org/t/p/w342/zqZNnuMtrmK99Xux91KiCdnZxgb.jpg",
+        "release_date": "2014-07-30",
+        "genre_ids": [
+          28,
+          878,
+          12
+        ]
+      },
+      {
+        "filename": "Guardianes de la Galaxia Vol. 2 (2017).mp4",
+        "tmdb_id": 283995,
+        "title": "Guardianes de la Galaxia Vol. 2",
+        "poster": "https://image.tmdb.org/t/p/w342/kdg6Y06jfq9FV7qknWNcKLYtBJn.jpg",
+        "release_date": "2017-04-19",
+        "genre_ids": [
+          878,
+          12,
+          28
+        ]
+      },
+      {
+        "filename": "Guardianes de la Galaxia Volumen 3 (2023).mp4",
+        "tmdb_id": 447365,
+        "title": "Guardianes de la Galaxia: Volumen 3",
+        "poster": "https://image.tmdb.org/t/p/w342/6GkKzdNosVAL7UGgwTtCHSxLQ67.jpg",
+        "release_date": "2023-05-03",
+        "genre_ids": [
+          878,
+          12,
+          28
+        ]
       }
     ],
     "genre_ids": [
@@ -4966,7 +5814,7 @@
       878,
       12
     ],
-    "cached_at": 1769860045831
+    "cached_at": 1769940448752
   },
   "288280": {
     "id": 288280,
@@ -4991,7 +5839,7 @@
       10402,
       18
     ],
-    "cached_at": 1769860035837
+    "cached_at": 1769940442794
   },
   "295130": {
     "id": 295130,
@@ -5034,7 +5882,7 @@
       53,
       9648
     ],
-    "cached_at": 1769860080623
+    "cached_at": 1769940406988
   },
   "298820": {
     "id": 298820,
@@ -5057,7 +5905,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769859940061
+    "cached_at": 1769944545664
   },
   "304378": {
     "id": 304378,
@@ -5077,6 +5925,18 @@
           12,
           878
         ]
+      },
+      {
+        "filename": "Independence Day (1996).mp4",
+        "tmdb_id": 602,
+        "title": "Independence Day",
+        "poster": "https://image.tmdb.org/t/p/w342/puyuUUDcFDPggdWVvIWd7AWwOYm.jpg",
+        "release_date": "1996-06-25",
+        "genre_ids": [
+          28,
+          12,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -5084,7 +5944,7 @@
       12,
       878
     ],
-    "cached_at": 1769860054580
+    "cached_at": 1769940453251
   },
   "312977": {
     "id": 312977,
@@ -5104,6 +5964,18 @@
           35,
           878
         ]
+      },
+      {
+        "filename": "Iron Sky (2012).mp4",
+        "tmdb_id": 10679,
+        "title": "Iron Sky",
+        "poster": "https://image.tmdb.org/t/p/w342/jDrXLeRoh8pEkI1gteCRaX8GHEl.jpg",
+        "release_date": "2012-04-04",
+        "genre_ids": [
+          28,
+          35,
+          878
+        ]
       }
     ],
     "genre_ids": [
@@ -5111,7 +5983,7 @@
       35,
       878
     ],
-    "cached_at": 1769859931162
+    "cached_at": 1769940456852
   },
   "313576": {
     "id": 313576,
@@ -5120,6 +5992,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/ipmemRADUObIXU29g8nCIbqVO7W.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/noeTVcgpBiD48fDjFVic1Vz7ope.jpg",
     "movies": [
+      {
+        "filename": "Jacuzzi al pasado (2010).mp4",
+        "tmdb_id": 23048,
+        "title": "Jacuzzi al pasado",
+        "poster": "https://image.tmdb.org/t/p/w342/5U3qVbyhogGjP5so5zu0wgmvVUy.jpg",
+        "release_date": "2010-03-26",
+        "genre_ids": [
+          878,
+          35,
+          12
+        ]
+      },
       {
         "filename": "Jacuzzi al pasado (2010).avi",
         "tmdb_id": 23048,
@@ -5141,6 +6025,16 @@
         "genre_ids": [
           35
         ]
+      },
+      {
+        "filename": "Jacuzzi al pasado 2 (2015).mp4",
+        "tmdb_id": 243938,
+        "title": "Jacuzzi al pasado 2",
+        "poster": "https://image.tmdb.org/t/p/w342/ppxZ3dtdCDGS2yNfBVy0eK2WSZ0.jpg",
+        "release_date": "2015-02-20",
+        "genre_ids": [
+          35
+        ]
       }
     ],
     "genre_ids": [
@@ -5148,7 +6042,7 @@
       35,
       12
     ],
-    "cached_at": 1769859931656
+    "cached_at": 1769940366587
   },
   "327598": {
     "id": 327598,
@@ -5171,7 +6065,7 @@
     "genre_ids": [
       18
     ],
-    "cached_at": 1769860002908
+    "cached_at": 1769940506179
   },
   "328073": {
     "id": 328073,
@@ -5202,7 +6096,7 @@
       53,
       28
     ],
-    "cached_at": 1769859967618
+    "cached_at": 1769944530318
   },
   "330605": {
     "id": 330605,
@@ -5211,18 +6105,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/xmBBUh3WS56YtW6zTBi7KgYdv5h.jpg",
     "backdrop": null,
     "movies": [
-      {
-        "filename": "El golpe (1973).avi",
-        "tmdb_id": 9277,
-        "title": "El golpe",
-        "poster": "https://image.tmdb.org/t/p/w342/1CuTYAQrU3PVZFH4aPp6tQARmUt.jpg",
-        "release_date": "1973-12-25",
-        "genre_ids": [
-          35,
-          80,
-          18
-        ]
-      },
       {
         "filename": "El golpe (1973).mp4",
         "tmdb_id": 9277,
@@ -5241,7 +6123,7 @@
       80,
       18
     ],
-    "cached_at": 1769859908288
+    "cached_at": 1769940411020
   },
   "352789": {
     "id": 352789,
@@ -5264,7 +6146,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769860071709
+    "cached_at": 1769940540320
   },
   "363369": {
     "id": 363369,
@@ -5293,7 +6175,7 @@
       878,
       12
     ],
-    "cached_at": 1769859988745
+    "cached_at": 1769940490955
   },
   "391860": {
     "id": 391860,
@@ -5303,7 +6185,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/esDXPeq4eBLI5uIWH9QiyHkCUBB.jpg",
     "movies": [
       {
-        "filename": "El círculo (2017).mkv",
+        "filename": "El círculo (2017).mp4",
         "tmdb_id": 343668,
         "title": "Kingsman: El círculo de oro",
         "poster": "https://image.tmdb.org/t/p/w342/d0tCSswCeMBzaDsyXc82qfDDvPD.jpg",
@@ -5342,7 +6224,7 @@
         ]
       },
       {
-        "filename": "El círculo (2017).mp4",
+        "filename": "Kingsman El círculo de oro (2017).mp4",
         "tmdb_id": 343668,
         "title": "Kingsman: El círculo de oro",
         "poster": "https://image.tmdb.org/t/p/w342/d0tCSswCeMBzaDsyXc82qfDDvPD.jpg",
@@ -5353,6 +6235,19 @@
           35,
           80
         ]
+      },
+      {
+        "filename": "Kingsman Servicio secreto (2015).mp4",
+        "tmdb_id": 207703,
+        "title": "Kingsman: Servicio secreto",
+        "poster": "https://image.tmdb.org/t/p/w342/2RNABhJ8sTfenTz84ADVUbPllxq.jpg",
+        "release_date": "2015-01-24",
+        "genre_ids": [
+          80,
+          35,
+          28,
+          12
+        ]
       }
     ],
     "genre_ids": [
@@ -5361,7 +6256,7 @@
       35,
       80
     ],
-    "cached_at": 1769859899678
+    "cached_at": 1769940407596
   },
   "404609": {
     "id": 404609,
@@ -5370,6 +6265,29 @@
     "poster": "https://image.tmdb.org/t/p/w342/yq0BOIp4cMfGon8n1vAqnFy7BwN.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/fSwYa5q2xRkBoOOjueLpkLf3N1m.jpg",
     "movies": [
+      {
+        "filename": "John Wick (Otro día para matar) (2014).mp4",
+        "tmdb_id": 245891,
+        "title": "John Wick (Otro día para matar)",
+        "poster": "https://image.tmdb.org/t/p/w342/tDl5ac1VJwMRvlgINDCsDCqg9CE.jpg",
+        "release_date": "2014-10-22",
+        "genre_ids": [
+          28,
+          53
+        ]
+      },
+      {
+        "filename": "John Wick 4 (2023).mp4",
+        "tmdb_id": 603692,
+        "title": "John Wick 4",
+        "poster": "https://image.tmdb.org/t/p/w342/mj2Z9HnRSIEk3n7yVPoOY4Uzzfh.jpg",
+        "release_date": "2023-03-22",
+        "genre_ids": [
+          28,
+          53,
+          80
+        ]
+      },
       {
         "filename": "John Wick (Otro día para matar) (2014).avi",
         "tmdb_id": 245891,
@@ -5404,6 +6322,18 @@
           53,
           80
         ]
+      },
+      {
+        "filename": "John Wick Pacto de sangre (2017).mp4",
+        "tmdb_id": 324552,
+        "title": "John Wick: Pacto de sangre",
+        "poster": "https://image.tmdb.org/t/p/w342/tAAikrL3kH3TopsDC2Bgo4ARUiP.jpg",
+        "release_date": "2017-02-08",
+        "genre_ids": [
+          28,
+          53,
+          80
+        ]
       }
     ],
     "genre_ids": [
@@ -5411,7 +6341,7 @@
       53,
       80
     ],
-    "cached_at": 1769859933790
+    "cached_at": 1769940374016
   },
   "422834": {
     "id": 422834,
@@ -5462,7 +6392,7 @@
       28,
       12
     ],
-    "cached_at": 1769859942642
+    "cached_at": 1769944547015
   },
   "422837": {
     "id": 422837,
@@ -5489,7 +6419,7 @@
       18,
       53
     ],
-    "cached_at": 1769859959943
+    "cached_at": 1769940371895
   },
   "448150": {
     "id": 448150,
@@ -5541,7 +6471,7 @@
       35,
       878
     ],
-    "cached_at": 1769859989003
+    "cached_at": 1769940393458
   },
   "453993": {
     "id": 453993,
@@ -5550,6 +6480,18 @@
     "poster": "https://image.tmdb.org/t/p/w342/9RaDz9aX9CPqN1h9QqpMiQdvlaY.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/5HQnP60igRzNokf5jc6fCKemG4I.jpg",
     "movies": [
+      {
+        "filename": "X-Men orígenes Lobezno (2009).mp4",
+        "tmdb_id": 2080,
+        "title": "X-Men orígenes: Lobezno",
+        "poster": "https://image.tmdb.org/t/p/w342/k2wFS6LAYDjOdSAtRc1Ey7roB4G.jpg",
+        "release_date": "2009-04-28",
+        "genre_ids": [
+          12,
+          28,
+          878
+        ]
+      },
       {
         "filename": "Lobezno inmortal (2013).avi",
         "tmdb_id": 76170,
@@ -5563,24 +6505,24 @@
         ]
       },
       {
-        "filename": "X-Men orígenes Lobezno (2009).mp4",
-        "tmdb_id": 2080,
-        "title": "X-Men orígenes: Lobezno",
-        "poster": "https://image.tmdb.org/t/p/w342/k2wFS6LAYDjOdSAtRc1Ey7roB4G.jpg",
-        "release_date": "2009-04-28",
+        "filename": "Lobezno inmortal (2013).mp4",
+        "tmdb_id": 76170,
+        "title": "Lobezno inmortal",
+        "poster": "https://image.tmdb.org/t/p/w342/xsdBlh5Rg673dRmIblDZchuicWi.jpg",
+        "release_date": "2013-07-21",
         "genre_ids": [
-          12,
           28,
-          878
+          878,
+          12
         ]
       }
     ],
     "genre_ids": [
+      12,
       28,
-      878,
-      12
+      878
     ],
-    "cached_at": 1769859980832
+    "cached_at": 1769940538611
   },
   "466318": {
     "id": 466318,
@@ -5589,16 +6531,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/r5JhgAQZTxje5CXksJr3VWPBGRR.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/f2ckgUb2dR2bkjJ39fKCotT0Ypn.jpg",
     "movies": [
-      {
-        "filename": "Despedida de soltero (1984).avi",
-        "tmdb_id": 12309,
-        "title": "Despedida de soltero",
-        "poster": "https://image.tmdb.org/t/p/w342/veBT0wVpTdBT0wVly8uTdh9Zxqy.jpg",
-        "release_date": "1984-06-29",
-        "genre_ids": [
-          35
-        ]
-      },
       {
         "filename": "Despedida de soltero (1984).mp4",
         "tmdb_id": 12309,
@@ -5613,7 +6545,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769859991685
+    "cached_at": 1769940395083
   },
   "468552": {
     "id": 468552,
@@ -5640,7 +6572,7 @@
       12,
       14
     ],
-    "cached_at": 1769860068796
+    "cached_at": 1769940538125
   },
   "479888": {
     "id": 479888,
@@ -5684,6 +6616,30 @@
           878,
           9648
         ]
+      },
+      {
+        "filename": "La cosa (El enigma de otro mundo) (1982).mp4",
+        "tmdb_id": 1091,
+        "title": "La cosa (El enigma de otro mundo)",
+        "poster": "https://image.tmdb.org/t/p/w342/5hkM27bPdkgQli5g5zR5pp9bkNZ.jpg",
+        "release_date": "1982-06-25",
+        "genre_ids": [
+          27,
+          9648,
+          878
+        ]
+      },
+      {
+        "filename": "La cosa (The Thing) (2011).mp4",
+        "tmdb_id": 60935,
+        "title": "La cosa (The Thing)",
+        "poster": "https://image.tmdb.org/t/p/w342/p3ysBtfK6bPVLXRwsPzVdRlmkdI.jpg",
+        "release_date": "2011-10-12",
+        "genre_ids": [
+          27,
+          878,
+          9648
+        ]
       }
     ],
     "genre_ids": [
@@ -5691,7 +6647,7 @@
       9648,
       878
     ],
-    "cached_at": 1769859952024
+    "cached_at": 1769940466156
   },
   "484312": {
     "id": 484312,
@@ -5718,7 +6674,7 @@
       28,
       53
     ],
-    "cached_at": 1769860024194
+    "cached_at": 1769940514711
   },
   "492896": {
     "id": 492896,
@@ -5747,7 +6703,7 @@
       9648,
       53
     ],
-    "cached_at": 1769860023920
+    "cached_at": 1769940434150
   },
   "495527": {
     "id": 495527,
@@ -5789,7 +6745,7 @@
       35,
       28
     ],
-    "cached_at": 1769859938011
+    "cached_at": 1769940459327
   },
   "525891": {
     "id": 525891,
@@ -5814,7 +6770,7 @@
       28,
       53
     ],
-    "cached_at": 1769859992152
+    "cached_at": 1769940493014
   },
   "529892": {
     "id": 529892,
@@ -5841,7 +6797,7 @@
       12,
       878
     ],
-    "cached_at": 1769859958693
+    "cached_at": 1769940370783
   },
   "530064": {
     "id": 530064,
@@ -5866,7 +6822,7 @@
       27,
       53
     ],
-    "cached_at": 1769860010730
+    "cached_at": 1769940425848
   },
   "531241": {
     "id": 531241,
@@ -5917,7 +6873,7 @@
       12,
       878
     ],
-    "cached_at": 1769860030272
+    "cached_at": 1769940517701
   },
   "531242": {
     "id": 531242,
@@ -5926,18 +6882,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/qIWrWjm01lYjKrmjnefdXKtPGeV.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/e0uUxFdhdGLcvy9eC7WlO2eLusr.jpg",
     "movies": [
-      {
-        "filename": "El escuadrón suicida (2021).avi",
-        "tmdb_id": 436969,
-        "title": "El escuadrón suicida",
-        "poster": "https://image.tmdb.org/t/p/w342/fPJWlhXA2VXf4MlQ3JenVsz1iba.jpg",
-        "release_date": "2021-07-28",
-        "genre_ids": [
-          28,
-          35,
-          12
-        ]
-      },
       {
         "filename": "Escuadron suicida (2016).mp4",
         "tmdb_id": 297761,
@@ -5953,11 +6897,10 @@
     ],
     "genre_ids": [
       28,
-      35,
       12,
       14
     ],
-    "cached_at": 1769859902061
+    "cached_at": 1769940437789
   },
   "537982": {
     "id": 537982,
@@ -5982,7 +6925,7 @@
       35,
       27
     ],
-    "cached_at": 1769859957411
+    "cached_at": 1769940370120
   },
   "558216": {
     "id": 558216,
@@ -6032,7 +6975,7 @@
       28,
       12
     ],
-    "cached_at": 1769860061647
+    "cached_at": 1769940534117
   },
   "583555": {
     "id": 583555,
@@ -6070,7 +7013,7 @@
       35,
       37
     ],
-    "cached_at": 1769859975776
+    "cached_at": 1769944535845
   },
   "605516": {
     "id": 605516,
@@ -6113,7 +7056,7 @@
       35,
       10751
     ],
-    "cached_at": 1769860062914
+    "cached_at": 1769940534765
   },
   "608101": {
     "id": 608101,
@@ -6123,7 +7066,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/8FgE8oDOkldI9iAM6FxcByIlROz.jpg",
     "movies": [
       {
-        "filename": "El otro guardaespaldas (2017).mkv",
+        "filename": "El otro guardaespaldas (2017).mp4",
         "tmdb_id": 390043,
         "title": "El otro guardaespaldas",
         "poster": "https://image.tmdb.org/t/p/w342/uT29bkqVszT8r6DhC9lTuOx6rK.jpg",
@@ -6136,7 +7079,7 @@
         ]
       },
       {
-        "filename": "El otro guardaespaldas 2 (2021).avi",
+        "filename": "El otro guardaespaldas 2 (2021).mp4",
         "tmdb_id": 522931,
         "title": "El otro guardaespaldas 2",
         "poster": "https://image.tmdb.org/t/p/w342/mpfIHi2nT7hRGphllLz0Nz8fIFV.jpg",
@@ -6155,7 +7098,7 @@
       80,
       53
     ],
-    "cached_at": 1769860005112
+    "cached_at": 1769940421169
   },
   "618529": {
     "id": 618529,
@@ -6164,30 +7107,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/bS2ck2fPtMjCfUSCegCu6SwuWmB.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/t7Xl8fNVuETzrbpmf6dGosjIHPN.jpg",
     "movies": [
-      {
-        "filename": "Doctor Strange (2016).mkv",
-        "tmdb_id": 284052,
-        "title": "Doctor Strange",
-        "poster": "https://image.tmdb.org/t/p/w342/wJEZI3PWyMW7qcW6n9jyCh7Cclf.jpg",
-        "release_date": "2016-10-25",
-        "genre_ids": [
-          14,
-          12,
-          28
-        ]
-      },
-      {
-        "filename": "Doctor Strange en el multiverso de la locura.mkv",
-        "tmdb_id": 453395,
-        "title": "Doctor Strange en el multiverso de la locura",
-        "poster": "https://image.tmdb.org/t/p/w342/1w3MlLZPqr2Pm5loQ9h2gJwenMr.jpg",
-        "release_date": "2022-05-04",
-        "genre_ids": [
-          14,
-          28,
-          12
-        ]
-      },
       {
         "filename": "Doctor Strange (2016).mp4",
         "tmdb_id": 284052,
@@ -6218,7 +7137,7 @@
       12,
       28
     ],
-    "cached_at": 1769859995497
+    "cached_at": 1769940397379
   },
   "623911": {
     "id": 623911,
@@ -6245,7 +7164,7 @@
       12,
       878
     ],
-    "cached_at": 1769859964937
+    "cached_at": 1769940376968
   },
   "625812": {
     "id": 625812,
@@ -6254,20 +7173,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/3vo0mef33DOn4YzHdnkbcFEj9vC.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/nvlkWZRoWlef0aDTJDgXxhffQM2.jpg",
     "movies": [
-      {
-        "filename": "Dos hombres y un destino (1969).avi",
-        "tmdb_id": 642,
-        "title": "Dos hombres y un destino",
-        "poster": "https://image.tmdb.org/t/p/w342/2w6Ik8P1E20KOH5ykQlfTjawAIf.jpg",
-        "release_date": "1969-09-23",
-        "genre_ids": [
-          12,
-          37,
-          80,
-          18,
-          36
-        ]
-      },
       {
         "filename": "Dos hombres y un destino (1969).mp4",
         "tmdb_id": 642,
@@ -6290,7 +7195,7 @@
       18,
       36
     ],
-    "cached_at": 1769859997480
+    "cached_at": 1769940398614
   },
   "632730": {
     "id": 632730,
@@ -6313,7 +7218,7 @@
     "genre_ids": [
       35
     ],
-    "cached_at": 1769859984776
+    "cached_at": 1769944540777
   },
   "634390": {
     "id": 634390,
@@ -6322,18 +7227,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/qhmCZgD80VXMLpkLxJ61UYvvLsH.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/9zy1Y57oMMApCl1dVoKpeiCUEKE.jpg",
     "movies": [
-      {
-        "filename": "Doom (2005).mkv",
-        "tmdb_id": 8814,
-        "title": "Doom",
-        "poster": "https://image.tmdb.org/t/p/w342/gq8KfI7zv2XYRtAJ9YzJeb4o6hh.jpg",
-        "release_date": "2005-10-20",
-        "genre_ids": [
-          28,
-          27,
-          878
-        ]
-      },
       {
         "filename": "Doom (2005).mp4",
         "tmdb_id": 8814,
@@ -6352,7 +7245,7 @@
       27,
       878
     ],
-    "cached_at": 1769859996104
+    "cached_at": 1769940397988
   },
   "711707": {
     "id": 711707,
@@ -6375,7 +7268,7 @@
     "genre_ids": [
       37
     ],
-    "cached_at": 1769859906516
+    "cached_at": 1769940410080
   },
   "721111": {
     "id": 721111,
@@ -6385,7 +7278,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/e2e08PJii5xXSnSwsHDSkDhSP4Q.jpg",
     "movies": [
       {
-        "filename": "El fugitivo (1993).mkv",
+        "filename": "El fugitivo (1993).mp4",
         "tmdb_id": 5503,
         "title": "El fugitivo",
         "poster": "https://image.tmdb.org/t/p/w342/aLcB1uBxkNghyiD797ZRBBRz5lj.jpg",
@@ -6407,18 +7300,6 @@
           80,
           28
         ]
-      },
-      {
-        "filename": "El fugitivo (1993).mp4",
-        "tmdb_id": 5503,
-        "title": "El fugitivo",
-        "poster": "https://image.tmdb.org/t/p/w342/aLcB1uBxkNghyiD797ZRBBRz5lj.jpg",
-        "release_date": "1993-08-06",
-        "genre_ids": [
-          28,
-          53,
-          18
-        ]
       }
     ],
     "genre_ids": [
@@ -6427,7 +7308,7 @@
       18,
       80
     ],
-    "cached_at": 1769859907019
+    "cached_at": 1769940410394
   },
   "726871": {
     "id": 726871,
@@ -6452,7 +7333,7 @@
       878,
       12
     ],
-    "cached_at": 1769860212043
+    "cached_at": 1769940400076
   },
   "737031": {
     "id": 737031,
@@ -6472,6 +7353,18 @@
           80,
           53
         ]
+      },
+      {
+        "filename": "Hitman Agente 47 (2015).mp4",
+        "tmdb_id": 249070,
+        "title": "Hitman: Agente 47",
+        "poster": "https://image.tmdb.org/t/p/w342/jyJN2aij0laukipJXdJhMH8hEP6.jpg",
+        "release_date": "2015-08-20",
+        "genre_ids": [
+          28,
+          80,
+          53
+        ]
       }
     ],
     "genre_ids": [
@@ -6479,7 +7372,7 @@
       80,
       53
     ],
-    "cached_at": 1769860052762
+    "cached_at": 1769940451894
   },
   "769423": {
     "id": 769423,
@@ -6489,7 +7382,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/adCkjAt5Hc4uv0gouVslziGmB9d.jpg",
     "movies": [
       {
-        "filename": "Escape Room 2 Mueres por salir (2021).mkv",
+        "filename": "Escape Room 2 Mueres por salir (2021).mp4",
         "tmdb_id": 585216,
         "title": "Escape Room 2: Mueres por salir",
         "poster": "https://image.tmdb.org/t/p/w342/hEmpLIyeRGR683s31Q9oCwkSoCi.jpg",
@@ -6506,7 +7399,7 @@
       53,
       9648
     ],
-    "cached_at": 1769860030037
+    "cached_at": 1769940437554
   },
   "870339": {
     "id": 870339,
@@ -6515,18 +7408,6 @@
     "poster": "https://image.tmdb.org/t/p/w342/9y7nwUBXp50CA5kVarhE61mdJ2O.jpg",
     "backdrop": "https://image.tmdb.org/t/p/w342/p779p13IE06Wb2hfyosnI057uNx.jpg",
     "movies": [
-      {
-        "filename": "El contable (2016).avi",
-        "tmdb_id": 302946,
-        "title": "El contable",
-        "poster": "https://image.tmdb.org/t/p/w342/1Bd9ItSLT13u8Na0PApQAMcW1Jw.jpg",
-        "release_date": "2016-10-13",
-        "genre_ids": [
-          80,
-          53,
-          18
-        ]
-      },
       {
         "filename": "El contable (2016).mp4",
         "tmdb_id": 302946,
@@ -6545,7 +7426,7 @@
       53,
       18
     ],
-    "cached_at": 1769860080012
+    "cached_at": 1769940406745
   },
   "945984": {
     "id": 945984,
@@ -6572,7 +7453,7 @@
       878,
       53
     ],
-    "cached_at": 1769860026945
+    "cached_at": 1769940515989
   },
   "985085": {
     "id": 985085,
@@ -6599,7 +7480,7 @@
       9648,
       53
     ],
-    "cached_at": 1769860028783
+    "cached_at": 1769940436936
   },
   "1025281": {
     "id": 1025281,
@@ -6626,7 +7507,7 @@
       28,
       27
     ],
-    "cached_at": 1769859975543
+    "cached_at": 1769940385126
   },
   "1068899": {
     "id": 1068899,
@@ -6653,7 +7534,7 @@
       28,
       53
     ],
-    "cached_at": 1769860038760
+    "cached_at": 1769940444905
   },
   "1069584": {
     "id": 1069584,
@@ -6673,6 +7554,18 @@
           18,
           12
         ]
+      },
+      {
+        "filename": "Gladiator (2000).mp4",
+        "tmdb_id": 98,
+        "title": "Gladiator",
+        "poster": "https://image.tmdb.org/t/p/w342/p08mUnCktZ2opGihZTAn7OqzOoi.jpg",
+        "release_date": "2000-05-04",
+        "genre_ids": [
+          28,
+          18,
+          12
+        ]
       }
     ],
     "genre_ids": [
@@ -6680,7 +7573,7 @@
       18,
       12
     ],
-    "cached_at": 1769860041250
+    "cached_at": 1769940446022
   },
   "1129084": {
     "id": 1129084,
@@ -6705,7 +7598,7 @@
       28,
       53
     ],
-    "cached_at": 1769859913296
+    "cached_at": 1769940486980
   },
   "1147209": {
     "id": 1147209,
@@ -6732,7 +7625,7 @@
       28,
       53
     ],
-    "cached_at": 1769860029794
+    "cached_at": 1769940517467
   },
   "1240438": {
     "id": 1240438,
@@ -6742,7 +7635,7 @@
     "backdrop": "https://image.tmdb.org/t/p/w342/537TH9PnmUk5X0FZaRP0wH1PJqV.jpg",
     "movies": [
       {
-        "filename": "Five Nights at Freddy's 2 (2025).mkv",
+        "filename": "Five Nights at Freddy's 2 (2025).mp4",
         "tmdb_id": 1228246,
         "title": "Five Nights at Freddy's 2",
         "poster": "https://image.tmdb.org/t/p/w342/egHOFSRXrAaugFUD7VMEnXlTnzJ.jpg",
@@ -6757,7 +7650,7 @@
       27,
       53
     ],
-    "cached_at": 1769860036882
+    "cached_at": 1769940443920
   },
   "1434598": {
     "id": 1434598,
@@ -6767,7 +7660,7 @@
     "backdrop": null,
     "movies": [
       {
-        "filename": "El médico (2013).avi",
+        "filename": "El médico (2013).mp4",
         "tmdb_id": 169881,
         "title": "El médico",
         "poster": "https://image.tmdb.org/t/p/w342/QHzDzBdXQinLn1Az63aYaohUgV.jpg",
@@ -6784,7 +7677,7 @@
       18,
       36
     ],
-    "cached_at": 1769860003153
+    "cached_at": 1769940420300
   },
   "1497153": {
     "id": 1497153,
@@ -6809,7 +7702,7 @@
       35,
       878
     ],
-    "cached_at": 1769860070802
+    "cached_at": 1769944539078
   },
   "1540907": {
     "id": 1540907,
@@ -6836,6 +7729,46 @@
       12,
       28
     ],
-    "cached_at": 1769860043665
+    "cached_at": 1769940521736
+  },
+  "1629322": {
+    "id": 1629322,
+    "name": "周星驰  (系列)",
+    "overview": "",
+    "poster": "https://image.tmdb.org/t/p/w342/p7nAtX9wcaRWQJPG0KP5hNbGj9R.jpg",
+    "backdrop": "https://image.tmdb.org/t/p/w342/zsCfGNv8NOKCEBnNatlw6ZxE2WI.jpg",
+    "movies": [
+      {
+        "filename": "Kung Fu Sion (2004).mp4",
+        "tmdb_id": 9470,
+        "title": "Kung Fu Sion",
+        "poster": "https://image.tmdb.org/t/p/w342/cMVfbypyu34ckTBgMsoRT92j2pN.jpg",
+        "release_date": "2004-02-10",
+        "genre_ids": [
+          28,
+          35,
+          80,
+          14
+        ]
+      },
+      {
+        "filename": "Shaolin Soccer (2001).mp4",
+        "tmdb_id": 11770,
+        "title": "Shaolin Soccer",
+        "poster": "https://image.tmdb.org/t/p/w342/gMqHA1CoURwncG1iKBukFtTCSrG.jpg",
+        "release_date": "2001-07-05",
+        "genre_ids": [
+          28,
+          35
+        ]
+      }
+    ],
+    "genre_ids": [
+      28,
+      35,
+      80,
+      14
+    ],
+    "cached_at": 1770552349146
   }
 }

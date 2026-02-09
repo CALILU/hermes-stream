@@ -11,6 +11,10 @@ const axios = require('axios');
 const ftp = require('basic-ftp');
 require('dotenv').config(); // Cargar variables de entorno
 
+// ========== MÓDULOS COMPARTIDOS ==========
+const { normalizeText, cleanFilenameForSearch, formatBytes } = require('./lib/utils');
+const { createTMDBClient } = require('./lib/tmdb');
+
 // Configuración FTP
 const FTP_CONFIG = {
   host: process.env.FTP_HOST || "calilu.mooo.com",
@@ -90,38 +94,27 @@ loadStorageSettings();
 const app = express();
 const PORT = 4000;
 
-// TMDB API (con fallback a key de respaldo)
+// TMDB API
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_API_KEY_BACKUP = process.env.TMDB_API_KEY_BACKUP;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-let usingBackupKey = false;
 
 if (!TMDB_API_KEY) {
   console.warn('⚠️  TMDB_API_KEY no configurada en .env - La búsqueda de películas no funcionará');
 }
 
-// Función helper para obtener la key actual
-function getCurrentApiKey() {
-  return usingBackupKey ? TMDB_API_KEY_BACKUP : TMDB_API_KEY;
-}
+// Cliente TMDB con rate limiter y fallback de key (lib/tmdb.js)
+const tmdbClient = createTMDBClient({
+    apiKey: TMDB_API_KEY,
+    apiKeyBackup: TMDB_API_KEY_BACKUP
+});
+// Alias para compatibilidad
+const tmdbRequest = tmdbClient.fetch;
 
 // URL del servidor principal de IsiPrime
 const MAIN_SERVER_URL = 'http://localhost:8080';
 
-// Normalizar texto para comparación (quitar acentos, puntuación, etc.)
-function normalizeForComparison(text) {
-  return text
-    .toLowerCase()
-    // Reemplazar fracciones unicode por números
-    .replace(/⅓/g, '1 3').replace(/⅔/g, '2 3').replace(/½/g, '1 2').replace(/¼/g, '1 4').replace(/¾/g, '3 4')
-    // Quitar acentos
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    // Quitar puntuación y caracteres especiales
-    .replace(/[^a-z0-9\s]/g, ' ')
-    // Normalizar espacios
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+// normalizeText eliminada - reemplazada por normalizeText de lib/utils.js
 
 // Actualizar estado de petición en el servidor principal
 async function updateRequestStatus(movieTitle, movieYear, newStatus, tmdbId = null) {
@@ -131,7 +124,7 @@ async function updateRequestStatus(movieTitle, movieYear, newStatus, tmdbId = nu
     const requests = response.data.requests || [];
 
     // Normalizar título para comparación
-    const normalizedTitle = normalizeForComparison(movieTitle);
+    const normalizedTitle = normalizeText(movieTitle);
     console.log(`📋 Buscando petición: "${movieTitle}" → normalizado: "${normalizedTitle}" (año: ${movieYear || '-'}, tmdbId: ${tmdbId || '-'})`);
 
     // Buscar petición que coincida (prioridad: tmdbId > título+año)
@@ -148,7 +141,7 @@ async function updateRequestStatus(movieTitle, movieYear, newStatus, tmdbId = nu
     // 2. Si no hay match por tmdbId, buscar por título
     if (!matchingRequest) {
       matchingRequest = requests.find(req => {
-        const reqTitle = normalizeForComparison(req.title || '');
+        const reqTitle = normalizeText(req.title || '');
         const reqYear = req.year?.toString();
 
         // Comparar títulos normalizados (uno contiene al otro o son iguales)
@@ -183,14 +176,25 @@ async function updateRequestStatus(movieTitle, movieYear, newStatus, tmdbId = nu
   }
 }
 
-// Formatear bytes a tamaño legible
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+// Renombrar entrada en el cache del servidor principal
+// Útil cuando se crea un archivo .reencoded.mp4
+async function updateCacheRename(oldName, newName) {
+  try {
+    const response = await axios.post(`${MAIN_SERVER_URL}/api/cache/rename`, {
+      oldName,
+      newName
+    });
+    if (response.data.success) {
+      console.log(`📝 Cache actualizado: "${oldName}" → "${newName}"`);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Error actualizando cache:', error.message);
+    return null;
+  }
 }
+
+// formatBytes importada de lib/utils.js
 
 // Subir archivo convertido al servidor FTP
 async function uploadToFTP(localFilePath, filename) {
@@ -354,210 +358,9 @@ async function copyToLocal(localFilePath, filename, destPath) {
   });
 }
 
-// Función para hacer peticiones a TMDB con fallback
-async function tmdbRequest(url, params = {}) {
-  params.api_key = getCurrentApiKey();
-
-  try {
-    const response = await axios.get(url, { params, timeout: 10000 });
-    return response;
-  } catch (error) {
-    // Si falla, intentar con key de respaldo
-    if (!usingBackupKey && TMDB_API_KEY_BACKUP &&
-        (error.code === 'ECONNABORTED' || error.message?.includes('timeout') ||
-         error.response?.status === 401 || error.response?.status === 429)) {
-      console.log('🔄 Cambiando a API key de respaldo...');
-      usingBackupKey = true;
-      params.api_key = TMDB_API_KEY_BACKUP;
-      return await axios.get(url, { params, timeout: 10000 });
-    }
-    throw error;
-  }
-}
-
-// Limpiar nombre de archivo para búsqueda TMDB (versión mejorada)
-function cleanFilenameForSearch(filename) {
-  // Extraer año ANTES de limpiar (buscar patrones como (2024), .2024., 2024)
-  const yearPatterns = [
-    /\((\d{4})\)/,           // (2024)
-    /\[(\d{4})\]/,           // [2024]
-    /\.(\d{4})\./,           // .2024.
-    /\s(\d{4})\s/,           // espacio 2024 espacio
-    /[\.\s\-_](\d{4})$/,     // termina en .2024 o _2024
-  ];
-
-  let year = null;
-  for (const pattern of yearPatterns) {
-    const match = filename.match(pattern);
-    if (match) {
-      const possibleYear = parseInt(match[1]);
-      if (possibleYear >= 1900 && possibleYear <= 2030) {
-        year = match[1];
-        break;
-      }
-    }
-  }
-
-  let name = filename
-    // Quitar extensión
-    .replace(/\.(avi|mkv|mp4|mov|wmv|m4v|webm)$/i, '')
-    // Quitar URLs y dominios (www.xxx.com, xxx.com, etc.)
-    .replace(/www\.[a-z0-9\-]+\.(com|net|org|es|info|to|io|tv|cc|me)/gi, '')
-    .replace(/[a-z0-9\-]+\.(com|net|org|es|info|to|io|tv|cc|me)\b/gi, '')
-    // Quitar sitios de descarga comunes
-    .replace(/\b(newpct|pctmix|pctreload|elitetorrent|mejortorrent|divxtotal|gnula|pelisplus|cuevana|plusdede|seriesblanco|seriesdanko|todotorrents|grantorrent|dontorrent|atomixhq)\b/gi, '')
-    // Quitar contenido entre corchetes [xxx]
-    .replace(/\[[^\]]*\]/g, '')
-    // Quitar contenido entre llaves {xxx}
-    .replace(/\{[^\}]*\}/g, '')
-    // Reemplazar separadores por espacios
-    .replace(/[\._-]/g, ' ')
-    // Quitar año entre paréntesis
-    .replace(/\(\d{4}\)/g, '')
-    // Quitar patrones de calidad tipo M1080, M720, etc.
-    .replace(/\b[HM]\d{3,4}p?\b/gi, '')
-    // Quitar resoluciones sueltas al final (1080, 720, etc.)
-    .replace(/\s+(1080|720|480|2160)\s*$/gi, '')
-    // Quitar resoluciones y calidad
-    .replace(/\b(480p|576p|720p|1080p|1080i|2160p|4k|uhd|hd|sd|fullhd)\b/gi, '')
-    // Quitar codecs de video (incluye variantes con punto/espacio como H.264, H 264)
-    .replace(/\b(x264|x265|h[\.\s]?264|h[\.\s]?265|hevc|avc|xvid|divx|mpeg|mpeg2|av1|vp9|10bit|8bit|hdr|hdr10|dolby\s*vision|dv)\b/gi, '')
-    // Quitar codecs y canales de audio (DDP = Dolby Digital Plus)
-    .replace(/\b(aac|ac3|eac3|dts|dts-hd|dts-hdma|dtshd|truehd|flac|mp3|ogg|opus|atmos|ddp?\d?[\.\s]?\d?|5[\.\s]1|7[\.\s]1|2[\.\s]0|stereo|mono|dual|multi|ma)\b/gi, '')
-    // Quitar fuentes (incluye variaciones separadas como DL, Rip)
-    .replace(/\b(bluray|blu-ray|bdrip|brrip|dvdrip|dvdscr|dvd|hdtv|pdtv|dsr|webrip|web-dl|webdl|web|hdrip|hdcam|cam|ts|telesync|telecine|screener|r5|r6|vod|amzn|amazon|nf|netflix|hbo|hbomax|dsnp|disney|atvp|apple|hulu|pcok|peacock|rip|dl)\b/gi, '')
-    // Quitar idiomas
-    .replace(/\b(spanish|español|espanol|castellano|latino|latin|english|ingles|french|frances|german|aleman|italian|italiano|portuguese|hindi|russian|japanese|korean|chinese|multi|multilingual|dual\s*audio|dubbed|subbed|subs|subtitles|subtitulado|sub\s*esp|spa|eng|lat|ita|fre|ger)\b/gi, '')
-    // Quitar grupos de release y tags
-    .replace(/\b(yify|yts|rarbg|sparks|geckos|amiable|fgt|ntb|cmrg|evo|tigole|qxr|psa|ion10|megusta|stuttershit|edge2020|fleet|hqc|mkvcage|etrg|ettv|ethd|1337x|torrent|scene|release|proper|repack|rerip|internal|real|readnfo|nfo|sample|proof|mkvtv|crazy4ad|crazyhd|flux|ntg|nogrp|syncopy|cinephiles|playweb|ggez|dvsux|slowhd)\b/gi, '')
-    // Quitar versiones
-    .replace(/\b(extended|unrated|theatrical|directors?\s*cut|final\s*cut|special\s*edition|remastered|restored|anniversary|collectors|criterion|imax|3d|uncut|uncensored|limited|complete|proper|v2|v3)\b/gi, '')
-    // Quitar números de temporada/episodio (por si acaso)
-    .replace(/\bs\d{1,2}e\d{1,2}\b/gi, '')
-    .replace(/\bseason\s*\d+\b/gi, '')
-    .replace(/\bepisode\s*\d+\b/gi, '')
-    // Quitar guiones bajos y puntos restantes
-    .replace(/[_\.]/g, ' ')
-    // Quitar paréntesis vacíos
-    .replace(/\(\s*\)/g, '')
-    // Quitar múltiples espacios
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-
-  // Quitar el año del nombre si ya fue detectado (evitar duplicación)
-  if (year) {
-    name = name.replace(new RegExp('\\b' + year + '\\b', 'g'), '').replace(/\s{2,}/g, ' ').trim();
-  }
-
-  // Si el nombre quedó muy corto, intentar extraer algo del original
-  if (name.length < 2) {
-    name = filename
-      .replace(/\.(avi|mkv|mp4|mov|wmv)$/i, '')
-      .replace(/[\._-]/g, ' ')
-      .trim();
-  }
-
-  // Última limpieza: quitar palabras muy cortas al final (residuos)
-  name = name.replace(/\s+[a-z]{1,2}$/i, '').trim();
-
-  console.log(`[TMDB] Limpieza: "${filename}" → "${name}" (año: ${year || 'no detectado'})`);
-  return { name, year };
-}
-
-// Buscar película en TMDB con múltiples estrategias (usando axios como server.js)
-async function searchTMDB(query, year = null) {
-  const searchStrategies = [
-    { q: query, y: year },                    // Búsqueda exacta con año
-    { q: query, y: null },                    // Sin año (a veces el año está mal)
-    { q: query.split(' ').slice(0, 3).join(' '), y: year },  // Primeras 3 palabras con año
-    { q: query.split(' ').slice(0, 3).join(' '), y: null },  // Primeras 3 palabras sin año
-    { q: query.split(' ')[0], y: year },      // Solo primera palabra con año
-  ];
-
-  for (const strategy of searchStrategies) {
-    if (!strategy.q || strategy.q.length < 2) continue;
-
-    try {
-      const params = {
-        api_key: TMDB_API_KEY,
-        language: 'es-ES',
-        query: strategy.q
-      };
-      if (strategy.y) {
-        params.year = strategy.y;
-      }
-
-      console.log(`[TMDB] Buscando: "${strategy.q}" (año: ${strategy.y || 'cualquiera'})`);
-      const response = await tmdbRequest(`${TMDB_BASE_URL}/search/movie`, params);
-      const data = response.data;
-
-      if (data.results && data.results.length > 0) {
-        const movie = data.results[0];
-        const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
-
-        // Limpiar título para nombre de archivo
-        const cleanTitle = movie.title
-          .replace(/[<>:"/\\|?*]/g, '') // Caracteres no permitidos en Windows
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        console.log(`[TMDB] ✓ Encontrado: "${cleanTitle}" (${releaseYear})`);
-        return {
-          found: true,
-          title: cleanTitle,
-          year: releaseYear,
-          originalTitle: movie.original_title,
-          tmdbId: movie.id,
-          overview: movie.overview
-        };
-      }
-    } catch (error) {
-      console.error('[TMDB] Error en búsqueda:', error.message);
-    }
-  }
-
-  // Último intento: buscar en inglés
-  try {
-    console.log(`[TMDB] Buscando en inglés: "${query}"`);
-    const response = await tmdbRequest(`${TMDB_BASE_URL}/search/movie`, {
-      language: 'en-US',
-      query: query
-    });
-    const data = response.data;
-
-    if (data.results && data.results.length > 0) {
-      const movie = data.results[0];
-      const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : '';
-
-      // Obtener título en español
-      const detailResponse = await tmdbRequest(`${TMDB_BASE_URL}/movie/${movie.id}`, {
-        language: 'es-ES'
-      });
-      const detailData = detailResponse.data;
-
-      const spanishTitle = detailData.title || movie.title;
-      const cleanTitle = spanishTitle
-        .replace(/[<>:"/\\|?*]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      console.log(`[TMDB] ✓ Encontrado (EN→ES): "${cleanTitle}" (${releaseYear})`);
-      return {
-        found: true,
-        title: cleanTitle,
-        year: releaseYear,
-        originalTitle: movie.original_title,
-        tmdbId: movie.id,
-        overview: detailData.overview || movie.overview
-      };
-    }
-  } catch (error) {
-    console.error('[TMDB] Error en búsqueda inglés:', error.message);
-  }
-
-  console.log(`[TMDB] ✗ No encontrado: "${query}"`);
-  return { found: false };
-}
+// tmdbRequest, cleanFilenameForSearch, searchTMDB eliminadas
+// Reemplazadas por lib/tmdb.js (tmdbClient) y lib/utils.js (cleanFilenameForSearch)
+const searchTMDB = tmdbClient.searchMovie;
 
 // Generar nombre de archivo seguro
 function sanitizeFilename(name) {
@@ -623,16 +426,7 @@ function broadcastUpdate() {
   });
 }
 
-// Formatear tamaño
-function formatSize(bytes) {
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let i = 0;
-  while (bytes >= 1024 && i < units.length - 1) {
-    bytes /= 1024;
-    i++;
-  }
-  return `${bytes.toFixed(2)} ${units[i]}`;
-}
+// formatSize eliminada - reemplazada por formatBytes de lib/utils.js
 
 // Detectar GPU
 function detectGPU() {
@@ -742,23 +536,36 @@ function scanDirectory(directory) {
                     path: fullPath,
                     name: item,
                     size: stat.size,
-                    sizeHuman: formatSize(stat.size),
+                    sizeHuman: formatBytes(stat.size),
                     status: 'pending'
                   });
                 }
               }
-              // Para MP4: incluir solo si codec NO es compatible con navegadores
+              // Para MP4: incluir si codec NO es compatible O si audio tiene bitrate bajo
               else if (ext === '.mp4') {
                 const videoCodec = getVideoCodec(fullPath);
+                const audioBitrate = getAudioBitrate(fullPath);
+                const hasLowAudio = audioBitrate > 0 && audioBitrate <= AUDIO_BITRATE_THRESHOLD;
+
                 if (!videoCodec.isCompatible) {
                   files.push({
                     path: fullPath,
                     name: item,
                     size: stat.size,
-                    sizeHuman: formatSize(stat.size),
+                    sizeHuman: formatBytes(stat.size),
                     status: 'pending',
                     needsReencode: true,
                     codec: videoCodec.codec
+                  });
+                } else if (hasLowAudio) {
+                  files.push({
+                    path: fullPath,
+                    name: item,
+                    size: stat.size,
+                    sizeHuman: formatBytes(stat.size),
+                    status: 'pending',
+                    needsAudioFix: true,
+                    audioBitrate: audioBitrate
                   });
                 }
               }
@@ -775,6 +582,22 @@ function scanDirectory(directory) {
 
 // Codecs de video compatibles con navegadores web
 const BROWSER_COMPATIBLE_CODECS = ['h264', 'avc1', 'avc', 'hevc', 'h265', 'hvc1', 'hev1'];
+
+// Umbral de bitrate de audio bajo (kbps)
+const AUDIO_BITRATE_THRESHOLD = 200;
+
+// Detectar bitrate de audio
+function getAudioBitrate(filePath) {
+  try {
+    const result = execSync(
+      `ffprobe -v quiet -select_streams a:0 -show_entries stream=bit_rate -of csv=p=0 "${filePath}"`,
+      { stdio: 'pipe', timeout: 15000 }
+    ).toString().trim();
+    return Math.round(parseInt(result) / 1000) || 0;
+  } catch {
+    return 0;
+  }
+}
 
 // Detectar codec de video y verificar compatibilidad con navegadores
 function getVideoCodec(filePath) {
@@ -806,11 +629,15 @@ function getAudioMapping(filePath) {
       .map((track, idx) => ({
         index: idx,
         language: (track.tags?.language || 'und').toLowerCase(),
-        title: (track.tags?.title || '').toLowerCase()
+        title: (track.tags?.title || '').toLowerCase(),
+        channels: track.channels || 2
       }));
 
+    // Calcular máximo de canales
+    const maxChannels = audioTracks.reduce((max, t) => Math.max(max, t.channels), 2);
+
     if (audioTracks.length <= 1) {
-      return { maps: ['-map', '0:a?'], spanishFound: false, totalTracks: audioTracks.length, selectedTracks: 1 };
+      return { maps: ['-map', '0:a?'], spanishFound: false, totalTracks: audioTracks.length, selectedTracks: 1, maxChannels };
     }
 
     // Buscar pista en español
@@ -833,17 +660,17 @@ function getAudioMapping(filePath) {
       // Solo español
       maps.push('-map', `0:a:${spanishIdx}`);
       console.log(`[Audio] Español seleccionado (pista ${spanishIdx + 1})`);
-      return { maps, spanishFound: true, totalTracks: audioTracks.length, selectedTracks: 1 };
+      return { maps, spanishFound: true, totalTracks: audioTracks.length, selectedTracks: 1, maxChannels };
     }
 
     // Sin español: usar primera pista
     maps.push('-map', '0:a:0');
     console.log(`[Audio] Primera pista seleccionada (no hay español)`);
-    return { maps, spanishFound: false, totalTracks: audioTracks.length, selectedTracks: 1 };
+    return { maps, spanishFound: false, totalTracks: audioTracks.length, selectedTracks: 1, maxChannels };
 
   } catch (e) {
     console.log('[Audio] Error detectando pistas:', e.message);
-    return { maps: ['-map', '0:a?'], spanishFound: false, totalTracks: 0, selectedTracks: 1 };
+    return { maps: ['-map', '0:a?'], spanishFound: false, totalTracks: 0, selectedTracks: 1, maxChannels: 2 };
   }
 }
 
@@ -953,27 +780,41 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
 
     const ffmpegArgs = ['-y', '-hide_banner', '-loglevel', 'error', '-stats'];
     let isRemuxMode = conversionState.settings.mode === 'remux';
+    let isAudioFixMode = file.needsAudioFix === true;
 
     // Determinar si es MKV (puede tener subtítulos problemáticos como PGS y audio DTS)
     const isMKV = inputPath.toLowerCase().endsWith('.mkv');
+    const isMP4 = inputPath.toLowerCase().endsWith('.mp4');
 
     // Detectar codec de video para verificar compatibilidad con navegadores
     const videoCodec = getVideoCodec(inputPath);
     console.log(`[Video] Codec: ${videoCodec.codec} - Compatible con navegadores: ${videoCodec.isCompatible ? 'SÍ' : 'NO'}`);
 
+    // Si es MP4 con audio bajo, forzar modo audio fix (copiar video, arreglar audio)
+    if (isAudioFixMode) {
+      console.log(`[!] Audio bajo (${file.audioBitrate} kbps) → Solo arreglar audio (video copiado)`);
+      isRemuxMode = true; // Usar lógica de remux (copia video)
+    }
     // Si modo remux pero codec no compatible, forzar conversión
-    if (isRemuxMode && !videoCodec.isCompatible) {
+    else if (isRemuxMode && !videoCodec.isCompatible) {
       console.log(`[!] Codec "${videoCodec.codec}" no compatible con navegadores → Forzando CONVERSIÓN`);
       isRemuxMode = false; // Cambiar a modo convert
     }
 
-    if (isRemuxMode) {
-      // ========== MODO REMUX (copiar video, convertir audio a AAC) ==========
-      console.log(`\n[REMUX] ${file.name} (video copiado, audio → AAC)`);
+    if (isRemuxMode || isAudioFixMode) {
+      // ========== MODO REMUX/AUDIO FIX (copiar video, convertir audio a AAC) ==========
+      const modeLabel = isAudioFixMode ? 'AUDIO FIX' : 'REMUX';
+      console.log(`\n[${modeLabel}] ${file.name} (video copiado, audio → AAC)`);
 
       // Detectar pistas de audio y priorizar español
       const audioInfo = getAudioMapping(inputPath);
       console.log(`[Audio] ${audioInfo.totalTracks} pista(s) detectada(s), español: ${audioInfo.spanishFound ? 'SÍ' : 'NO'}`);
+
+      // Bitrate y filtro según canales (5.1+ = 384k, stereo = 256k)
+      const audioBitrate = audioInfo.maxChannels >= 6 ? '384k' : '256k';
+      const audioFilter = audioInfo.maxChannels >= 6
+        ? 'loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=5.1'
+        : 'loudnorm=I=-16:TP=-1.5:LRA=11';
 
       ffmpegArgs.push(
         '-i', inputPath,
@@ -981,8 +822,8 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
         ...audioInfo.maps,     // Pistas de audio (español primero si existe)
         '-c:v', 'copy',        // Copiar video sin recodificar (RÁPIDO)
         '-c:a', 'aac',         // Convertir audio a AAC (compatible con navegadores)
-        '-b:a', '192k',        // Bitrate de audio
-        '-ac', '2',            // Forzar stereo (evita problemas con 5.1/7.1)
+        '-b:a', audioBitrate,  // Bitrate según canales
+        '-af', audioFilter,    // Normalizar volumen
         '-movflags', '+faststart',  // Índice al principio para streaming
         '-sn'                  // Sin subtítulos (pueden ser incompatibles)
       );
@@ -1007,16 +848,22 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
       // Añadir mapeo de audio (español primero si existe)
       ffmpegArgs.push(...audioInfo.maps);
 
+      // Bitrate y filtro según canales (5.1+ = 384k, stereo = 256k)
+      const audioBitrate = audioInfo.maxChannels >= 6 ? '384k' : '256k';
+      const audioFilter = audioInfo.maxChannels >= 6
+        ? 'loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=5.1'
+        : 'loudnorm=I=-16:TP=-1.5:LRA=11';
+
       // Configuración de audio
       ffmpegArgs.push(
         '-c:a', 'aac',
-        '-b:a', '192k'
+        '-b:a', audioBitrate,
+        '-af', audioFilter     // Normalizar volumen
       );
 
       if (isMKV) {
-        // Para MKV: forzar stereo y sin subtítulos bitmap
+        // Para MKV: sin subtítulos bitmap
         ffmpegArgs.push(
-          '-ac', '2',            // Forzar stereo (evita problemas con 7.1/5.1)
           '-sn'                  // Sin subtítulos (PGS/VobSub no son compatibles con MP4)
         );
       } else {
@@ -1086,19 +933,43 @@ async function convertFile(file, encoder, deleteOriginal, renameWithTMDB) {
 
           conversionState.stats.savedBytes += savedBytes;
 
+          // Si es MP4 reencoded y se elimina el original, renombrar al nombre original
+          // para mantener compatibilidad con el cache de IsiPrime
+          let finalOutputPath = outputPath;
+          let finalOutputName = finalName;
+
           if (deleteOriginal) {
             fs.unlinkSync(inputPath);
+
+            // Si el output tiene .reencoded.mp4, renombrar al nombre original
+            if (outputPath.includes('.reencoded.mp4')) {
+              const originalName = outputPath.replace('.reencoded.mp4', '.mp4');
+              try {
+                fs.renameSync(outputPath, originalName);
+                finalOutputPath = originalName;
+                finalOutputName = path.basename(originalName);
+                console.log(`[Rename] ${path.basename(outputPath)} → ${finalOutputName}`);
+              } catch (renameErr) {
+                console.warn(`[Rename] No se pudo renombrar: ${renameErr.message}`);
+              }
+            }
+          } else if (outputPath.includes('.reencoded.mp4')) {
+            // Si NO se elimina el original pero es .reencoded, actualizar el cache
+            // para que IsiPrime reconozca el nuevo archivo
+            const originalBasename = file.name;
+            const newBasename = path.basename(outputPath);
+            updateCacheRename(originalBasename, newBasename);
           }
 
           const modeUsed = isRemuxMode ? 'remux' : 'convert';
           resolve({
             success: true,
             newSize,
-            newSizeHuman: formatSize(newSize),
+            newSizeHuman: formatBytes(newSize),
             savedBytes,
-            savedBytesHuman: formatSize(savedBytes),
-            finalName,
-            outputPath,
+            savedBytesHuman: formatBytes(savedBytes),
+            finalName: finalOutputName,
+            outputPath: finalOutputPath,
             tmdbInfo,
             mode: modeUsed
           });
@@ -1382,7 +1253,7 @@ app.post('/api/scan', async (req, res) => {
   res.json({
     success: true,
     count: files.length,
-    totalSize: formatSize(totalSize),
+    totalSize: formatBytes(totalSize),
     files
   });
 });
@@ -1405,7 +1276,7 @@ app.get('/api/tmdb/search', async (req, res) => {
     }
 
     console.log(`[TMDB] Buscando manualmente: "${query}"`);
-    const response = await tmdbRequest(`${TMDB_BASE_URL}/search/movie`, params);
+    const response = await tmdbRequest(`${TMDB_BASE_URL}/search/movie`, { params });
     const data = response.data;
     console.log(`[TMDB] Encontrados: ${data.results ? data.results.length : 0} resultados`);
 
@@ -1719,7 +1590,8 @@ app.post('/api/reset', (req, res) => {
     completed: [],
     failed: [],
     settings: conversionState.settings,
-    stats: { totalFiles: 0, totalSize: 0, savedBytes: 0, startTime: null }
+    stats: { totalFiles: 0, totalSize: 0, savedBytes: 0, startTime: null },
+    upload: { isUploading: false, fileName: null, progress: 0, bytesTransferred: 0, totalBytes: 0, cancelled: false }
   };
   broadcastUpdate();
   res.json({ success: true });
