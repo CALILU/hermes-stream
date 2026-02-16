@@ -78,10 +78,32 @@ export function useVideoProgress() {
     setSelectedVideo(null);
   };
 
+  // Obtener todos los progresos guardados (para "Continuar viendo")
+  const getAllVideoProgress = () => {
+    const result = {};
+    const now = Date.now();
+    const maxAge = 30 * 24 * 60 * 60 * 1000;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key.startsWith('video_progress_')) continue;
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        if (now - data.savedAt > maxAge) {
+          localStorage.removeItem(key);
+          continue;
+        }
+        const filename = key.replace('video_progress_', '');
+        result[filename] = data;
+      } catch { /* ignore */ }
+    }
+    return result;
+  };
+
   return {
     videoRef,
     saveVideoProgress,
     getVideoProgress,
+    getAllVideoProgress,
     handleTimeUpdate,
     handleVideoLoaded,
     closeVideoPlayer

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * IsiPrime Batch Converter
- * AVI / MKV → MP4 con soporte GPU
+ * AVI → MP4 con soporte GPU (MKV se reproduce directo)
  */
 
 const { spawn, execSync } = require('child_process');
@@ -52,13 +52,20 @@ function parseArgs() {
     parallel: 1,
     dryRun: false,
     quality: 23,
-    fixAudio: true  // Por defecto arreglar MP4 con audio bajo
+    fixAudio: true,  // Por defecto arreglar MP4 con audio bajo
+    type: 'all'      // all, avi, mp4-fix
   };
 
   for (const a of args) {
     if (a === '--delete') o.delete = true;
     else if (a === '--dry-run') o.dryRun = true;
     else if (a === '--no-fix-audio') o.fixAudio = false;
+    else if (a === '--only-avi') { o.type = 'avi'; o.fixAudio = false; }
+    else if (a === '--only-mp4-fix') { o.type = 'mp4-fix'; }
+    else if (a.startsWith('--type=')) {
+      o.type = a.split('=')[1];
+      if (o.type === 'avi') o.fixAudio = false;
+    }
     else if (a.startsWith('--gpu=')) o.gpu = a.split('=')[1];
     else if (a.startsWith('--parallel=')) o.parallel = Math.max(1, parseInt(a.split('=')[1]) || 1);
     else if (a.startsWith('--quality=')) o.quality = Math.min(28, Math.max(18, parseInt(a.split('=')[1]) || 23));
@@ -133,9 +140,11 @@ function getAudioBitrate(filePath) {
   }
 }
 
-function findFiles(dir, checkMp4Audio = true) {
+function findFiles(dir, opt) {
   const out = [];
   const mp4ToCheck = [];
+  const scanAvi = opt.type === 'all' || opt.type === 'avi';
+  const scanMp4 = opt.fixAudio && (opt.type === 'all' || opt.type === 'mp4-fix');
 
   // Primero recolectar todos los archivos
   function collect(d) {
@@ -144,9 +153,9 @@ function findFiles(dir, checkMp4Audio = true) {
         const p = path.join(d, i.name);
         if (i.isDirectory() && !i.name.startsWith('$')) {
           collect(p);
-        } else if (/\.(avi|mkv)$/i.test(i.name) && !fs.existsSync(p.replace(/\.(avi|mkv)$/i, '.mp4'))) {
+        } else if (scanAvi && /\.avi$/i.test(i.name) && !fs.existsSync(p.replace(/\.avi$/i, '.mp4'))) {
           out.push({ path: p, name: i.name, type: 'convert' });
-        } else if (checkMp4Audio && /\.mp4$/i.test(i.name) && !i.name.startsWith('_FIXING_')) {
+        } else if (scanMp4 && /\.mp4$/i.test(i.name) && !i.name.startsWith('_FIXING_')) {
           mp4ToCheck.push(p);
         }
       }
@@ -156,7 +165,7 @@ function findFiles(dir, checkMp4Audio = true) {
   collect(dir);
 
   // Ahora verificar bitrate de MP4 con progreso
-  if (checkMp4Audio && mp4ToCheck.length > 0) {
+  if (scanMp4 && mp4ToCheck.length > 0) {
     console.log(`\n${colors.cyan}Analizando ${mp4ToCheck.length} archivos MP4...${colors.reset}`);
     for (let i = 0; i < mp4ToCheck.length; i++) {
       process.stdout.write(`\r  Progreso: ${i + 1}/${mp4ToCheck.length}`);
@@ -202,7 +211,7 @@ function getAudioTracks(filePath) {
 function convertFile(file, enc, opt, idx, total) {
   return new Promise(resolve => {
     const isFixAudio = file.type === 'fix-audio';
-    const out = isFixAudio ? file.path : file.path.replace(/\.(avi|mkv)$/i, '.mp4');
+    const out = isFixAudio ? file.path : file.path.replace(/\.avi$/i, '.mp4');
     const tmp = isFixAudio ? file.path.replace('.mp4', '._FIXING_.mp4') : out + '.converting';
 
     // Detectar pistas de audio y priorizar español
@@ -325,11 +334,42 @@ async function main() {
   const opt = parseArgs();
   if (!fs.existsSync(opt.directory)) return log.error('Directorio inexistente');
 
+  // Menú interactivo de selección de tipo si no se especificó por argumento
+  const hasTypeArg = process.argv.slice(2).some(a =>
+    a === '--only-avi' || a === '--only-mp4-fix' || a.startsWith('--type=')
+  );
+
+  if (!hasTypeArg) {
+    console.log(`  ${colors.bright}¿Qué quieres procesar?${colors.reset}\n`);
+    console.log(`  ${colors.cyan}1${colors.reset} Solo AVI → MP4 (convertir)`);
+    console.log(`  ${colors.cyan}2${colors.reset} Solo MP4 con audio bajo (arreglar)`);
+    console.log(`  ${colors.cyan}3${colors.reset} Todo (AVI + MP4 audio)${colors.reset}`);
+    console.log();
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    const choice = await new Promise(r => rl.question(`  Opción [1/2/3]: `, a => r(a.trim())));
+    rl.close();
+
+    if (choice === '1') {
+      opt.type = 'avi';
+      opt.fixAudio = false;
+    } else if (choice === '2') {
+      opt.type = 'mp4-fix';
+    } else if (choice === '3') {
+      opt.type = 'all';
+    } else {
+      return log.error('Opción no válida');
+    }
+    console.log();
+  }
+
+  const typeLabels = { avi: 'Solo AVI → MP4', 'mp4-fix': 'Solo arreglar audio MP4', all: 'AVI + MP4 audio' };
+  log.info(`Modo: ${typeLabels[opt.type] || opt.type}`);
   log.info('Escaneando archivos...');
-  if (opt.fixAudio) {
+  if (opt.fixAudio && (opt.type === 'all' || opt.type === 'mp4-fix')) {
     log.info('Buscando tambien MP4 con audio bajo (puede tardar)...');
   }
-  const files = findFiles(path.resolve(opt.directory), opt.fixAudio);
+  const files = findFiles(path.resolve(opt.directory), opt);
   if (!files.length) return log.success('Nada que procesar');
 
   const toConvert = files.filter(f => f.type === 'convert');
@@ -339,7 +379,7 @@ async function main() {
 
   log.info(`Encoder: ${enc.name}`);
   log.info(`Paralelo: ${opt.parallel}`);
-  if (toConvert.length) log.info(`AVI/MKV a convertir: ${toConvert.length}`);
+  if (toConvert.length) log.info(`AVI a convertir: ${toConvert.length}`);
   if (toFix.length) log.info(`MP4 con audio bajo (≤200 kbps): ${toFix.length}`);
   if (opt.delete) log.warn('Se eliminarán originales');
 
@@ -350,9 +390,9 @@ async function main() {
 
   if (opt.dryRun) return;
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const ok = await new Promise(r => rl.question('¿Iniciar? (s/N): ', a => r(a.toLowerCase() === 's')));
-  rl.close();
+  const rl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const ok = await new Promise(r => rl2.question('¿Iniciar? (s/N): ', a => r(a.toLowerCase() === 's')));
+  rl2.close();
   if (!ok) return;
 
   let i = 0;

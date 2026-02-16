@@ -197,7 +197,7 @@ async function updateCacheRename(oldName, newName) {
 // formatBytes importada de lib/utils.js
 
 // Subir archivo convertido al servidor FTP
-async function uploadToFTP(localFilePath, filename) {
+async function uploadToFTP(localFilePath, filename, subDir) {
   const client = new ftp.Client();
   client.ftp.verbose = false;
   currentFtpClient = client;
@@ -205,6 +205,9 @@ async function uploadToFTP(localFilePath, filename) {
   // Obtener tamaño del archivo
   const fileStats = fs.statSync(localFilePath);
   const totalBytes = fileStats.size;
+
+  // Calcular ruta destino FTP (con subdirectorio si existe)
+  const ftpDestDir = subDir ? `${FTP_DEST_PATH}/${subDir.replace(/\\/g, '/')}` : FTP_DEST_PATH;
 
   // Inicializar estado de subida
   conversionState.upload = {
@@ -216,7 +219,7 @@ async function uploadToFTP(localFilePath, filename) {
     cancelled: false
   };
   broadcastUpdate();
-  console.log(`📤 Iniciando subida a FTP: ${filename} (${formatBytes(totalBytes)})`);
+  console.log(`📤 Iniciando subida a FTP: ${subDir ? subDir + '/' : ''}${filename} (${formatBytes(totalBytes)})`);
 
   try {
     await client.access({
@@ -225,8 +228,14 @@ async function uploadToFTP(localFilePath, filename) {
       passive: true
     });
 
+    // Crear subdirectorio en FTP si es necesario
+    if (subDir) {
+      await client.ensureDir(ftpDestDir);
+      console.log(`📁 Directorio FTP asegurado: ${ftpDestDir}`);
+    }
+
     // Verificar si ya existe en el servidor
-    const fileList = await client.list(FTP_DEST_PATH);
+    const fileList = await client.list(ftpDestDir);
     const exists = fileList.some(f => f.name === filename);
 
     if (exists) {
@@ -260,7 +269,7 @@ async function uploadToFTP(localFilePath, filename) {
     }
 
     // Subir el archivo
-    await client.uploadFrom(localFilePath, `${FTP_DEST_PATH}/${filename}`);
+    await client.uploadFrom(localFilePath, `${ftpDestDir}/${filename}`);
 
     client.trackProgress(); // Desactivar tracking
     console.log(`✅ Subido a FTP: ${filename}`);
@@ -286,11 +295,20 @@ async function uploadToFTP(localFilePath, filename) {
 }
 
 // Copiar archivo a ruta local (cuando está en modo local)
-async function copyToLocal(localFilePath, filename, destPath) {
-  const destFilePath = path.join(destPath, filename);
+async function copyToLocal(localFilePath, filename, destPath, subDir) {
+  // Calcular ruta destino final (con subdirectorio si existe)
+  const finalDestPath = subDir ? path.join(destPath, subDir) : destPath;
+
+  // Crear subdirectorio si es necesario
+  if (subDir && !fs.existsSync(finalDestPath)) {
+    fs.mkdirSync(finalDestPath, { recursive: true });
+    console.log(`📁 Directorio creado: ${finalDestPath}`);
+  }
+
+  const destFilePath = path.join(finalDestPath, filename);
 
   // Verificar si origen y destino son el mismo
-  if (path.dirname(localFilePath) === destPath) {
+  if (path.dirname(localFilePath) === finalDestPath) {
     console.log(`📂 Archivo ya está en destino: ${filename}`);
     return { success: true, alreadyInPlace: true };
   }
@@ -390,7 +408,8 @@ let conversionState = {
     gpu: 'auto',
     quality: 'balanced',  // fast, balanced, quality
     renameWithTMDB: true,  // Renombrar con nombre de TMDB
-    mode: 'convert'  // 'convert' (recodificar) o 'remux' (solo cambiar contenedor)
+    mode: 'convert',  // 'convert' (recodificar) o 'remux' (solo cambiar contenedor)
+    transferToServer: true  // Transferir al servidor tras conversión (FTP: subir, Local: no aplica)
   },
   stats: {
     totalFiles: 0,
@@ -1061,59 +1080,43 @@ async function runConversion() {
       // Recargar configuración de almacenamiento (puede haber cambiado)
       loadStorageSettings();
 
-      // Transferir al destino según modo de almacenamiento
-      if (storageConfig.mode === 'local' && storageConfig.localPath) {
-        // MODO LOCAL: copiar al destino local (o no hacer nada si ya está ahí)
-        const outputDir = path.dirname(result.outputPath);
-        const normalizedOutputDir = path.normalize(outputDir).toLowerCase();
-        const normalizedLocalPath = path.normalize(storageConfig.localPath).toLowerCase();
-
-        // Verificar si el archivo ya está en la ruta de destino
-        if (normalizedOutputDir === normalizedLocalPath || normalizedOutputDir.startsWith(normalizedLocalPath + path.sep)) {
-          // El archivo ya está en el destino local, no hay que copiarlo
-          console.log(`📂 Archivo ya está en destino local: ${result.finalName}`);
-          file.status = 'uploaded';
-          file.localMode = true;
-          // Actualizar estado de la petición a 'server' (ya está en destino)
-          updateRequestStatus(movieTitle, movieYear, 'server', tmdbId);
-        } else {
-          // El archivo está en otra ubicación, copiarlo al destino local
-          file.status = 'uploading';
-          broadcastUpdate();
-
-          const copyResult = await copyToLocal(result.outputPath, result.finalName, storageConfig.localPath);
-          if (copyResult.success) {
-            file.status = 'uploaded';
-            file.localMode = true;
-            // Actualizar estado de la petición a 'server'
-            updateRequestStatus(movieTitle, movieYear, 'server', tmdbId);
-
-            // Borrar archivo original después de copiar exitosamente
-            if (!copyResult.alreadyInPlace && !copyResult.alreadyExists) {
-              try {
-                fs.unlinkSync(result.outputPath);
-                console.log(`🗑️ Borrado origen: ${result.finalName}`);
-              } catch (delErr) {
-                console.error(`⚠️ No se pudo borrar origen ${result.finalName}: ${delErr.message}`);
-              }
-            }
-          } else {
-            file.uploadError = copyResult.error;
-            console.error(`❌ No se pudo copiar ${result.finalName}: ${copyResult.error}`);
-          }
+      // Calcular subdirectorio destino
+      // 1. Si el archivo tiene patrón de serie (S01E01), enviarlo a Series/nombre_serie/
+      // 2. Si no, mantener subdirectorio relativo del directorio escaneado
+      let subDir = '';
+      const finalFileName = result.finalName || file.name;
+      const seriesMatch = finalFileName.match(/^(.+?)[.\s_-]+S\d{1,2}E\d{1,2}/i);
+      if (seriesMatch) {
+        const seriesName = seriesMatch[1].replace(/[._]/g, ' ').replace(/\s+/g, ' ').trim();
+        subDir = path.join('Series', seriesName);
+        console.log(`📺 Serie detectada: "${seriesName}" → destino: ${subDir}`);
+      } else {
+        // Fallback: usar estructura de subdirectorios del directorio escaneado
+        const scanDir = conversionState.settings.directory;
+        const fileDir = path.dirname(file.path);
+        subDir = path.relative(scanDir, fileDir);
+        if (!subDir || subDir === '.') subDir = '';
+        if (subDir) {
+          console.log(`📁 Subdirectorio detectado: ${subDir}`);
         }
-      } else if (FTP_CONFIG.user && FTP_CONFIG.password) {
-        // MODO FTP: subir al servidor FTP
+      }
+
+      // Transferir al destino según modo de almacenamiento y setting de transferencia
+      // - Modo local: siempre se queda en el directorio de origen
+      // - Modo FTP + toggle activado: subir al servidor FTP
+      // - Modo FTP + toggle desactivado: se queda en el directorio de origen
+      const shouldTransfer = conversionState.settings.transferToServer && storageConfig.mode !== 'local';
+
+      if (shouldTransfer && FTP_CONFIG.user && FTP_CONFIG.password) {
+        // MODO FTP con transferencia activada: subir al servidor FTP
         file.status = 'uploading';
         broadcastUpdate();
 
-        const uploadResult = await uploadToFTP(result.outputPath, result.finalName);
+        const uploadResult = await uploadToFTP(result.outputPath, result.finalName, subDir);
         if (uploadResult.success) {
           file.status = 'uploaded';
-          // Actualizar estado de la petición a 'server'
           updateRequestStatus(movieTitle, movieYear, 'server', tmdbId);
 
-          // Borrar archivo local después de subir exitosamente
           try {
             fs.unlinkSync(result.outputPath);
             console.log(`🗑️ Borrado local: ${result.finalName}`);
@@ -1125,8 +1128,8 @@ async function runConversion() {
           console.error(`❌ No se pudo subir ${result.finalName}: ${uploadResult.error}`);
         }
       } else {
-        // Sin configuración de transferencia, mantener archivo donde está
-        console.log(`📁 Sin destino configurado, archivo conservado: ${result.finalName}`);
+        // NO TRANSFERIR: mantener archivo donde se convirtió
+        console.log(`📁 Archivo conservado en origen: ${result.finalName}${storageConfig.mode === 'local' ? ' (modo local)' : ' (transferencia desactivada)'}`);
       }
     } else {
       file.status = 'failed';
@@ -1337,7 +1340,7 @@ app.post('/api/exclude', (req, res) => {
 
 // Configurar opciones
 app.post('/api/settings', (req, res) => {
-  const { deleteOriginals, gpu, quality, renameWithTMDB, mode } = req.body;
+  const { deleteOriginals, gpu, quality, renameWithTMDB, mode, transferToServer } = req.body;
 
   if (deleteOriginals !== undefined) {
     conversionState.settings.deleteOriginals = deleteOriginals;
@@ -1353,6 +1356,9 @@ app.post('/api/settings', (req, res) => {
   }
   if (mode !== undefined) {
     conversionState.settings.mode = mode;
+  }
+  if (transferToServer !== undefined) {
+    conversionState.settings.transferToServer = transferToServer;
   }
 
   broadcastUpdate();

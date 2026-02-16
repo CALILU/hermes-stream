@@ -79,6 +79,69 @@ module.exports = function createTMDBRoutes(deps) {
         }
     });
 
+    // Búsqueda manual de series en TMDB
+    router.get('/search-tv', async (req, res) => {
+        try {
+            let { query, year } = req.query;
+
+            if (!query || query.trim().length < 2) {
+                return res.status(400).json({ error: 'Se requiere un término de búsqueda' });
+            }
+
+            let searchQuery = query.trim();
+            let searchYear = year || null;
+
+            const yearInParens = searchQuery.match(/\((\d{4})\)\s*$/);
+            if (yearInParens) {
+                searchYear = yearInParens[1];
+                searchQuery = searchQuery.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+            }
+
+            console.log(`🔎 Búsqueda manual TMDB (TV): "${searchQuery}"${searchYear ? ` (año: ${searchYear})` : ''}`);
+
+            const params = {
+                api_key: TMDB_API_KEY,
+                query: searchQuery,
+                language: 'es-ES',
+                include_adult: false
+            };
+
+            if (searchYear) {
+                params.first_air_date_year = searchYear;
+            }
+
+            const response = await tmdbFetch(`${TMDB_BASE_URL}/search/tv`, {
+                params,
+                timeout: 30000
+            });
+
+            if (response.data.results && response.data.results.length > 0) {
+                const results = response.data.results.slice(0, 12).map(show => ({
+                    tmdbId: show.id,
+                    title: show.name,
+                    originalTitle: show.original_name,
+                    overview: show.overview ? show.overview.substring(0, 200) + '...' : null,
+                    poster: show.poster_path ? `${TMDB_IMAGE_BASE}${show.poster_path}` : null,
+                    backdrop: show.backdrop_path ? `${TMDB_IMAGE_BASE}${show.backdrop_path}` : null,
+                    firstAirDate: show.first_air_date,
+                    year: show.first_air_date ? show.first_air_date.substring(0, 4) : null,
+                    rating: show.vote_average,
+                    genreIds: show.genre_ids || []
+                }));
+
+                console.log(`✅ Encontradas ${results.length} series para "${query}"`);
+                res.json({ success: true, results });
+            } else {
+                console.log(`❌ Sin resultados de series para "${query}"`);
+                res.json({ success: true, results: [] });
+            }
+
+        } catch (error) {
+            console.error('Error en búsqueda TMDB (TV):', error.message);
+            res.status(500).json({ error: 'Error al buscar series en TMDB' });
+        }
+    });
+
     // Obtener cast de una película por TMDB ID
     router.get('/cast/:tmdbId', async (req, res) => {
         try {

@@ -213,7 +213,7 @@ export function useSeries({ authState }) {
     loadingSeries, selectedSeries, selectedSeason, seasonEpisodes,
     loadingEpisodes, selectedEpisode, seriesSearchQuery, filteredSeries,
     // Setters
-    setViewMode, setSelectedSeriesGenre, setSeriesStatusFilter,
+    setViewMode, setSeries, setSelectedSeriesGenre, setSeriesStatusFilter,
     setSelectedSeason, setSelectedEpisode, setSeriesSearchQuery,
     // Functions
     loadSeries, selectSeries, markEpisodeWatched, closeSeriesDetail

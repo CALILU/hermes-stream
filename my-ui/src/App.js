@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, LogOut } from 'lucide-react';
+import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, LogOut, Heart, Shuffle } from 'lucide-react';
 import { API_BASE, CACHE_KEY, ALPHABET, genreEmojis } from './constants';
 import { authFetch, getSessionToken } from './utils/api';
 import { loadCache, saveCache } from './utils/cache';
@@ -11,6 +11,7 @@ import { useVideoProgress } from './hooks/useVideoProgress';
 import { useVideos } from './hooks/useVideos';
 import { useSeries } from './hooks/useSeries';
 import { useRequests } from './hooks/useRequests';
+import { useCast } from './hooks/useCast';
 import ContextMenu from './components/ContextMenu';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
 import ConversionProgressModal from './components/ConversionProgressModal';
@@ -22,18 +23,24 @@ import RequestDetailModal from './components/RequestDetailModal';
 import RequestsAdminModal from './components/RequestsAdminModal';
 import SeriesDetailModal from './components/SeriesDetailModal';
 import EpisodePlayerModal from './components/EpisodePlayerModal';
+import RenameEpisodesModal from './components/RenameEpisodesModal';
 import SettingsModal from './components/SettingsModal';
+import CastDeviceModal from './components/CastDeviceModal';
+import RandomPickerModal from './components/RandomPickerModal';
+import RecommendationsSection from './components/RecommendationsSection';
+import { useRecommendations } from './hooks/useRecommendations';
 
 export default function HermesApp() {
   // ========== HOOKS EXTRAIDOS ==========
   const { authState, setAuthState, loginForm, setLoginForm, loginError, loginLoading, handleLogin, handleLogout } = useAuth();
-  const { videoRef, saveVideoProgress, handleTimeUpdate: _handleTimeUpdate, handleVideoLoaded: _handleVideoLoaded, closeVideoPlayer: _closeVideoPlayer } = useVideoProgress();
+  const { videoRef, saveVideoProgress, getAllVideoProgress, handleTimeUpdate: _handleTimeUpdate, handleVideoLoaded: _handleVideoLoaded, closeVideoPlayer: _closeVideoPlayer } = useVideoProgress();
 
   const {
     videos, genres, loading, collections, generatingCollections,
     selectedGenre, selectedLetter, searchQuery,
     selectedCollection, showCollections,
     selectedDecade, selectedYear, showDecades, showRecent,
+    favorites, showFavorites,
     galleryActorQuery, galleryActorMovieIds, galleryActorLoading, galleryActorName,
     filteredVideos, displayedVideos, hasMoreVideos, loadMoreRef,
     lettersWithMovies, decadesData,
@@ -41,8 +48,10 @@ export default function HermesApp() {
     setSelectedGenre, setSelectedLetter, setSearchQuery,
     setSelectedCollection, setShowCollections,
     setSelectedDecade, setSelectedYear, setShowDecades, setShowRecent,
+    setShowFavorites,
     setGalleryActorQuery,
     enrichmentDone,
+    toggleFavorite,
     generateCollections, handleGalleryActorSearch, clearGalleryActorSearch
   } = useVideos({ authState, setAuthState });
 
@@ -50,7 +59,7 @@ export default function HermesApp() {
     viewMode, series, seriesGenres, selectedSeriesGenre, seriesStatusFilter,
     loadingSeries, selectedSeries, selectedSeason, seasonEpisodes,
     loadingEpisodes, selectedEpisode, seriesSearchQuery, filteredSeries,
-    setViewMode, setSelectedSeriesGenre, setSeriesStatusFilter,
+    setViewMode, setSeries, setSelectedSeriesGenre, setSeriesStatusFilter,
     setSelectedSeason, setSelectedEpisode, setSeriesSearchQuery,
     selectSeries, markEpisodeWatched, closeSeriesDetail
   } = useSeries({ authState });
@@ -75,10 +84,41 @@ export default function HermesApp() {
 
   const { volumeBoost, setVolumeBoost, showVolumeBoost, setShowVolumeBoost } = useVolumeBoost(videoRef, selectedVideo);
 
+  // DLNA Cast a TV
+  const {
+    devices: castDevices, scanning: castScanning, activeDevice: castActiveDevice,
+    castStatus, casting, scanDevices: castScanDevices,
+    castToDevice, pauseCast, resumeCast, stopCast, seekCast, setVolume: setCastVolume
+  } = useCast();
+  const [showCastModal, setShowCastModal] = useState(false);
+
+  const handleCastToDevice = async (device) => {
+    if (!selectedVideo) return;
+    await castToDevice(device, selectedVideo);
+  };
+
   // Wrappers para pasar selectedVideo a los handlers de useVideoProgress
   const handleTimeUpdate = () => _handleTimeUpdate(selectedVideo);
   const handleVideoLoaded = () => _handleVideoLoaded(selectedVideo);
   const closeVideoPlayer = () => _closeVideoPlayer(selectedVideo, setSelectedVideo);
+
+  // "Continuar viendo" - peliculas con progreso parcial
+  const continueWatching = useMemo(() => {
+    if (!videos || videos.length === 0) return [];
+    const allProgress = getAllVideoProgress();
+    return videos
+      .map(video => {
+        const prog = allProgress[video.filename];
+        if (!prog || prog.progress < 5 || prog.progress > 95) return null;
+        return { ...video, _progress: prog.progress, _savedAt: prog.savedAt, _currentTime: prog.currentTime, _duration: prog.duration };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b._savedAt - a._savedAt)
+      .slice(0, 10);
+  }, [videos, selectedVideo, getAllVideoProgress]); // selectedVideo como dependencia para refrescar al cerrar el player
+
+  // Recomendaciones IA personalizadas
+  const aiRecommendations = useRecommendations(videos, favorites, getAllVideoProgress(), genres);
 
   // Estados para menú contextual
   const [contextMenu, setContextMenu] = useState(null);
@@ -88,6 +128,15 @@ export default function HermesApp() {
   const [posterSearchQuery, setPosterSearchQuery] = useState('');
   const [posterSearchResults, setPosterSearchResults] = useState([]);
   const [posterSearchLoading, setPosterSearchLoading] = useState(false);
+
+  // Estados para modal de búsqueda de carátula de SERIES
+  const [seriesPosterSearchModal, setSeriesPosterSearchModal] = useState(null);
+  const [seriesPosterSearchQuery, setSeriesPosterSearchQuery] = useState('');
+  const [seriesPosterSearchResults, setSeriesPosterSearchResults] = useState([]);
+  const [seriesPosterSearchLoading, setSeriesPosterSearchLoading] = useState(false);
+
+  // Estado para modal de renombrado de episodios
+  const [renameEpisodesModal, setRenameEpisodesModal] = useState(null);
 
   // Estado para confirmación de borrado
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -105,6 +154,7 @@ export default function HermesApp() {
 
   // Estado para modal de configuración
   const [settingsModal, setSettingsModal] = useState(false);
+  const [showRandomModal, setShowRandomModal] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
   const [cacheProgress, setCacheProgress] = useState({ current: 0, total: 0, status: '' });
 
@@ -369,6 +419,90 @@ export default function HermesApp() {
     setPosterSearchModal(null);
     setPosterSearchQuery('');
     setPosterSearchResults([]);
+  };
+
+  // === FUNCIONES DE CARÁTULA PARA SERIES ===
+
+  // Buscar series en TMDB
+  const searchSeriesPosters = async (query) => {
+    if (!query || query.trim().length < 2) return;
+
+    setSeriesPosterSearchLoading(true);
+    setSeriesPosterSearchResults([]);
+
+    try {
+      const res = await authFetch(`${API_BASE}/api/tmdb/search-tv?query=${encodeURIComponent(query)}`);
+      const data = await res.json();
+
+      if (data.success && data.results) {
+        setSeriesPosterSearchResults(data.results);
+      }
+    } catch (error) {
+      console.error('Error buscando carátulas de series:', error);
+    } finally {
+      setSeriesPosterSearchLoading(false);
+    }
+  };
+
+  // Seleccionar nueva carátula para serie
+  const selectSeriesPoster = async (serie, newMetadata) => {
+    console.log(`🎨 Actualizando carátula de serie: ${serie.folder_name}`);
+
+    try {
+      const response = await authFetch(`${API_BASE}/api/series/update-poster`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folderName: serie.folder_name,
+          metadata: newMetadata
+        })
+      });
+      const result = await response.json();
+      if (result.success && result.metadata) {
+        const m = result.metadata;
+        // Actualizar estado local con datos completos del backend
+        setSeries(prevSeries => prevSeries.map(s =>
+          s.folder_name === serie.folder_name
+            ? {
+                ...s,
+                tmdb_id: m.tmdb_id || newMetadata.tmdbId || s.tmdb_id,
+                title: m.title || newMetadata.title || s.title,
+                poster: m.poster || newMetadata.poster || s.poster,
+                backdrop: m.backdrop || newMetadata.backdrop || s.backdrop,
+                overview: m.overview || newMetadata.overview || s.overview,
+                vote_average: m.vote_average || newMetadata.rating || s.vote_average,
+                genre_ids: m.genre_ids || newMetadata.genreIds || s.genre_ids,
+                status: m.status || s.status,
+                number_of_seasons: m.number_of_seasons || s.number_of_seasons,
+                number_of_episodes: m.number_of_episodes || s.number_of_episodes,
+                cast: m.cast || s.cast,
+                seasons_info: m.seasons_info || s.seasons_info,
+                first_air_date: m.first_air_date || s.first_air_date,
+                needs_enrichment: false
+              }
+            : s
+        ));
+        console.log(`✅ Carátula de serie actualizada: ${serie.folder_name} (${m.cast?.length || 0} actores)`);
+      }
+    } catch (error) {
+      console.error('Error actualizando carátula de serie:', error);
+    }
+
+    // Cerrar modal
+    setSeriesPosterSearchModal(null);
+    setSeriesPosterSearchQuery('');
+    setSeriesPosterSearchResults([]);
+  };
+
+  // Manejar clic derecho en carátula de serie
+  const handleSeriesContextMenu = (e, serie) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Abrir directamente el modal de búsqueda (sin menú contextual intermedio)
+    setSeriesPosterSearchModal(serie);
+    setSeriesPosterSearchQuery(serie.title || serie.folder_name);
+    setSeriesPosterSearchResults([]);
+    searchSeriesPosters(serie.title || serie.folder_name);
   };
 
   // Manejar clic derecho en carátula - mostrar menú contextual
@@ -889,6 +1023,7 @@ export default function HermesApp() {
               onClick={() => {
                 setShowRecent(!showRecent);
                 if (!showRecent) {
+                  setShowFavorites(false);
                   setSelectedGenre(null);
                   setSelectedCollection(null);
                   setSelectedDecade(null);
@@ -906,6 +1041,42 @@ export default function HermesApp() {
               title="Últimas películas añadidas"
             >
               🆕
+            </button>
+          )}
+          {/* Botón Favoritos (móvil) - Solo visible en modo películas */}
+          {viewMode === 'movies' && (
+            <button
+              onClick={() => {
+                setShowFavorites(!showFavorites);
+                if (!showFavorites) {
+                  setShowRecent(false);
+                  setSelectedGenre(null);
+                  setSelectedCollection(null);
+                  setSelectedDecade(null);
+                  setSelectedYear(null);
+                  setSelectedLetter(null);
+                  clearGalleryActorSearch();
+                  setSearchQuery('');
+                }
+              }}
+              className={`p-3 rounded-xl hover:shadow-md transition-all ${
+                showFavorites
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+                  : 'bg-slate-800/80 text-white border border-slate-600'
+              }`}
+              title="Películas favoritas"
+            >
+              <Heart size={18} fill={showFavorites ? "white" : "none"} />
+            </button>
+          )}
+          {/* Botón Sorprendeme (móvil) - Solo visible en modo películas */}
+          {viewMode === 'movies' && filteredVideos.length > 0 && (
+            <button
+              onClick={() => setShowRandomModal(true)}
+              className="p-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl hover:shadow-md transition-all text-white"
+              title="Pelicula aleatoria"
+            >
+              <Shuffle size={18} />
             </button>
           )}
           {/* Botón Pedir Película (móvil) - Solo visible en modo películas */}
@@ -1028,7 +1199,7 @@ export default function HermesApp() {
             onClick={() => {
               setShowRecent(!showRecent);
               if (!showRecent) {
-                // Limpiar otros filtros al activar recientes
+                setShowFavorites(false);
                 setSelectedGenre(null);
                 setSelectedCollection(null);
                 setSelectedDecade(null);
@@ -1047,6 +1218,40 @@ export default function HermesApp() {
           >
             🆕 Recientes
           </button>
+          {/* Botón Favoritos (desktop) */}
+          <button
+            onClick={() => {
+              setShowFavorites(!showFavorites);
+              if (!showFavorites) {
+                setShowRecent(false);
+                setSelectedGenre(null);
+                setSelectedCollection(null);
+                setSelectedDecade(null);
+                setSelectedYear(null);
+                setSelectedLetter(null);
+                clearGalleryActorSearch();
+                setSearchQuery('');
+              }
+            }}
+            className={`px-4 py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 ${
+              showFavorites
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white'
+                : 'bg-slate-800/80 text-slate-200 border border-slate-600 hover:bg-slate-700'
+            }`}
+            title="Películas favoritas"
+          >
+            <Heart size={16} fill={showFavorites ? "white" : "none"} /> Favoritos
+          </button>
+          {/* Botón Sorprendeme (desktop) */}
+          {viewMode === 'movies' && filteredVideos.length > 0 && (
+            <button
+              onClick={() => setShowRandomModal(true)}
+              className="px-4 py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600"
+              title="Pelicula aleatoria"
+            >
+              <Shuffle size={16} /> Sorprendeme
+            </button>
+          )}
           {/* Botón Pedir Película (desktop) */}
           <button
             onClick={openRequestsModal}
@@ -1488,6 +1693,63 @@ export default function HermesApp() {
         {viewMode === 'movies' ? (
           /* ========== VISTA DE PELÍCULAS ========== */
           <>
+            {/* ===== CONTINUAR VIENDO ===== */}
+            {continueWatching.length > 0 && !selectedGenre && !selectedCollection && !selectedLetter && !searchQuery && (
+              <section className="mb-8">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <Play size={20} className="text-amber-400" />
+                  Continuar viendo
+                </h3>
+                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                  {continueWatching.map(video => (
+                    <div
+                      key={video.filename}
+                      onClick={() => handlePlayClick(video)}
+                      className="flex-shrink-0 w-36 md:w-40 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
+                    >
+                      <div className="aspect-[3/4] rounded-2xl bg-slate-800 border border-slate-700 shadow-lg relative overflow-hidden">
+                        {video.poster ? (
+                          <img
+                            src={video.poster}
+                            alt={video.title || video.filename}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
+                            <span className="text-3xl">🎬</span>
+                          </div>
+                        )}
+                        {/* Overlay con play */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                          <Play size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="white" />
+                        </div>
+                        {/* Barra de progreso */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
+                          <div
+                            className="h-full bg-amber-400 rounded-r-full"
+                            style={{ width: `${video._progress}%` }}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-300 mt-2 truncate text-center" title={video.title || video.filename}>
+                        {video.title || video.filename?.replace(/\.[^.]+$/, '')}
+                      </p>
+                      <p className="text-[10px] text-slate-500 text-center">
+                        {video._progress}% · {Math.floor(video._currentTime / 60)}:{String(Math.floor(video._currentTime % 60)).padStart(2, '0')}
+                        /{Math.floor(video._duration / 60)}:{String(Math.floor(video._duration % 60)).padStart(2, '0')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ===== RECOMENDADAS PARA TI ===== */}
+            {!selectedGenre && !selectedCollection && !selectedLetter && !searchQuery && (
+              <RecommendationsSection recommendations={aiRecommendations} onPlay={handlePlayClick} />
+            )}
+
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
               {selectedCollection ? <Layers className="text-indigo-400" /> : <HardDrive className="text-indigo-400" />}
               {selectedCollection
@@ -1523,7 +1785,6 @@ export default function HermesApp() {
                   onContextMenu={(e) => handlePosterContextMenu(e, video)}
                   className="cursor-pointer group transition-transform duration-200 hover:-translate-y-2"
                   title="Clic derecho para cambiar carátula"
-                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 350px' }}
                 >
                   <div className={`aspect-[3/4] rounded-[2.5rem] ${
                     !video.poster
@@ -1534,9 +1795,11 @@ export default function HermesApp() {
                       <img
                         src={video.poster}
                         alt={video.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        loading={idx < 10 ? "eager" : "lazy"}
                         decoding="async"
+                        style={{ opacity: 0 }}
+                        onLoad={(e) => { e.target.style.opacity = '1'; }}
                       />
                     ) : null}
                     <Play className="text-white opacity-0 group-hover:opacity-100 transition-opacity scale-150 z-10 drop-shadow-lg" fill="white" />
@@ -1554,6 +1817,21 @@ export default function HermesApp() {
                         </div>
                       </div>
                     )}
+                    {/* Botón Favorito en esquina superior izquierda */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(video.filename);
+                      }}
+                      className={`absolute top-3 left-3 p-2 rounded-full shadow-lg transition-all z-20 hover:scale-110 ${
+                        favorites.has(video.filename)
+                          ? 'bg-pink-600 text-white opacity-100'
+                          : 'bg-black/40 text-white opacity-0 group-hover:opacity-70 hover:!opacity-100'
+                      }`}
+                      title={favorites.has(video.filename) ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                    >
+                      <Heart size={16} fill={favorites.has(video.filename) ? "white" : "none"} />
+                    </button>
                     {/* Botón Trailer en esquina superior derecha */}
                     {video.videos && video.videos.length > 0 && (
                       <button
@@ -1637,7 +1915,9 @@ export default function HermesApp() {
                   <div
                     key={serie.folder_name}
                     onClick={() => selectSeries(serie)}
+                    onContextMenu={(e) => handleSeriesContextMenu(e, serie)}
                     className="cursor-pointer group transition-transform duration-200 hover:-translate-y-2"
+                    title="Clic derecho para cambiar caratula"
                   >
                     <div className={`aspect-[2/3] rounded-[2.5rem] ${
                       !serie.poster
@@ -1766,12 +2046,43 @@ export default function HermesApp() {
         }}
         onPlayClick={handlePlayClick}
         onAddRecommendationToRequests={addRecommendationToRequests}
+        casting={casting}
+        onCastClick={() => setShowCastModal(true)}
         onActorClick={(actor) => {
           closeVideoPlayer();
           setActorSearchResult(null);
           setActorSearchQuery(actor.name);
           openRequestsModal();
         }}
+      />
+
+      {/* Aleatorio inteligente */}
+      <RandomPickerModal
+        show={showRandomModal}
+        onClose={() => setShowRandomModal(false)}
+        videos={filteredVideos}
+        favorites={favorites}
+        allProgress={getAllVideoProgress()}
+        onPlay={handlePlayClick}
+      />
+
+      {/* Cast a TV (DLNA) */}
+      <CastDeviceModal
+        show={showCastModal}
+        onClose={() => setShowCastModal(false)}
+        devices={castDevices}
+        scanning={castScanning}
+        casting={casting}
+        activeDevice={castActiveDevice}
+        castStatus={castStatus}
+        onScan={castScanDevices}
+        onCast={handleCastToDevice}
+        onPause={pauseCast}
+        onResume={resumeCast}
+        onStop={stopCast}
+        onSeek={seekCast}
+        onVolume={setCastVolume}
+        videoTitle={selectedVideo?.title}
       />
 
       {/* Menú Contextual */}
@@ -1816,6 +2127,19 @@ export default function HermesApp() {
         onSearch={searchPosters}
         onSelect={selectPoster}
         onClose={() => setPosterSearchModal(null)}
+      />
+
+      {/* Modal Búsqueda de Carátula de Serie */}
+      <PosterSearchModal
+        posterSearchModal={seriesPosterSearchModal}
+        posterSearchQuery={seriesPosterSearchQuery}
+        posterSearchResults={seriesPosterSearchResults}
+        posterSearchLoading={seriesPosterSearchLoading}
+        onQueryChange={setSeriesPosterSearchQuery}
+        onSearch={searchSeriesPosters}
+        onSelect={selectSeriesPoster}
+        onClose={() => setSeriesPosterSearchModal(null)}
+        mode="series"
       />
 
       <RequestFormModal
@@ -1879,6 +2203,7 @@ export default function HermesApp() {
           });
         }}
         onMarkWatched={markEpisodeWatched}
+        onRenameEpisodes={() => setRenameEpisodesModal(selectedSeries)}
         onClose={closeSeriesDetail}
       />
 
@@ -1887,6 +2212,20 @@ export default function HermesApp() {
         onMarkWatched={markEpisodeWatched}
         onClose={() => setSelectedEpisode(null)}
       />
+
+      {/* Modal Renombrar Episodios */}
+      {renameEpisodesModal && (
+        <RenameEpisodesModal
+          series={renameEpisodesModal}
+          onClose={() => setRenameEpisodesModal(null)}
+          onRenamed={() => {
+            // Recargar episodios de la temporada actual
+            if (selectedSeries?.tmdb_id && selectedSeason) {
+              // Forzar recarga cerrando el modal
+            }
+          }}
+        />
+      )}
 
       <SettingsModal
         settingsModal={settingsModal}

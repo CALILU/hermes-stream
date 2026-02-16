@@ -27,6 +27,25 @@ export function useVideos({ authState, setAuthState }) {
   const [showDecades, setShowDecades] = useState(false);
   const [showRecent, setShowRecent] = useState(false);
 
+  // Favorites
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('isiprime_favorites');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  const toggleFavorite = (filename) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(filename)) next.delete(filename);
+      else next.add(filename);
+      try { localStorage.setItem('isiprime_favorites', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
+
   // Pagination
   const [visibleCount, setVisibleCount] = useState(LOAD_MORE_COUNT);
 
@@ -369,13 +388,17 @@ export function useVideos({ authState, setAuthState }) {
         .sort((a, b) => new Date(b.addedDate) - new Date(a.addedDate));
     }
 
+    if (showFavorites) {
+      result = result.filter(v => favorites.has(v.filename));
+    }
+
     return result;
-  }, [videos, searchQuery, selectedGenre, selectedLetter, selectedCollection, collections, selectedDecade, selectedYear, galleryActorMovieIds, showRecent]);
+  }, [videos, searchQuery, selectedGenre, selectedLetter, selectedCollection, collections, selectedDecade, selectedYear, galleryActorMovieIds, showRecent, showFavorites, favorites]);
 
   // Reset pagination when filters change
   useEffect(() => {
     setVisibleCount(50);
-  }, [searchQuery, selectedGenre, selectedLetter, selectedCollection, selectedDecade, selectedYear, galleryActorMovieIds, showRecent]);
+  }, [searchQuery, selectedGenre, selectedLetter, selectedCollection, selectedDecade, selectedYear, galleryActorMovieIds, showRecent, showFavorites]);
 
   // Displayed videos (paginated)
   const displayedVideos = useMemo(() => {
@@ -444,6 +467,7 @@ export function useVideos({ authState, setAuthState }) {
     selectedGenre, selectedLetter, searchQuery,
     selectedCollection, showCollections,
     selectedDecade, selectedYear, showDecades, showRecent,
+    favorites, showFavorites,
     galleryActorQuery, galleryActorMovieIds, galleryActorLoading, galleryActorName,
     filteredVideos, displayedVideos, hasMoreVideos, loadMoreRef,
     lettersWithMovies, decadesData,
@@ -452,10 +476,12 @@ export function useVideos({ authState, setAuthState }) {
     setSelectedGenre, setSelectedLetter, setSearchQuery,
     setCollections, setSelectedCollection, setShowCollections,
     setSelectedDecade, setSelectedYear, setShowDecades, setShowRecent,
+    setShowFavorites,
     setGalleryActorQuery,
     // Refs
     enrichmentDone,
     // Functions
+    toggleFavorite,
     generateCollections, handleGalleryActorSearch, clearGalleryActorSearch
   };
 }

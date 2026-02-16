@@ -447,7 +447,7 @@ const seriesManager = createSeriesManager({
     FTP_CONFIG,
     withFTPClient
 });
-const { readSeriesCache, writeSeriesCache, updateSeriesCacheEntry, readSeriesEpisodes, writeSeriesEpisodes, parseSeriesFilename, searchTVShowTMDB, getSeasonEpisodesTMDB, scanSeriesFolder, TV_GENRES } = seriesManager;
+const { readSeriesCache, writeSeriesCache, updateSeriesCacheEntry, readSeriesEpisodes, writeSeriesEpisodes, parseSeriesFilename, searchTVShowTMDB, getSeriesDetailsByTmdbId, getSeasonEpisodesTMDB, scanSeriesFolder, TV_GENRES } = seriesManager;
 
 // ========== GESTOR DE PETICIONES (lib/requests-helpers.js) ==========
 const requestsHelpers = createRequestsHelpers({
@@ -500,7 +500,7 @@ app.use('/api', require('./routes/videos')({
 app.use(require('./routes/series')({
     storageConfig, FTP_CONFIG, SERIES_FOLDER,
     readSeriesCache, writeSeriesCache, readSeriesEpisodes, writeSeriesEpisodes,
-    parseSeriesFilename, searchTVShowTMDB, getSeasonEpisodesTMDB,
+    parseSeriesFilename, searchTVShowTMDB, getSeriesDetailsByTmdbId, getSeasonEpisodesTMDB,
     scanSeriesFolder, TV_GENRES,
     isCacheExpired
 }));
@@ -543,6 +543,10 @@ app.use('/api/convert', require('./routes/conversion')({
     readCache, writeCache,
     readCollections, writeCollections
 }));
+
+// DLNA/Cast a TV
+const dlnaService = require('./lib/dlna');
+app.use('/api/dlna', require('./routes/dlna').initRoutes({ storageConfig }));
 
 app.use('/api', require('./routes/misc')({
     storageConfig, FTP_CONFIG,
@@ -625,10 +629,17 @@ async function startServer() {
         }
     }
 
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Servidor Hermes activo en puerto ${PORT}`);
-        console.log(`📍 Escuchando en http://localhost:${PORT}`);
+        console.log(`📍 Escuchando en http://0.0.0.0:${PORT} (accesible desde la red local)`);
         console.log('⏳ Servidor en ejecución... (presiona Ctrl+C para detener)');
+
+        // Iniciar servicio DLNA para descubrimiento de TVs
+        try {
+            dlnaService.init(PORT);
+        } catch (err) {
+            console.error('📺 DLNA: Error al iniciar:', err.message);
+        }
     });
 
     server.on('error', async (err) => {

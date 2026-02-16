@@ -207,11 +207,12 @@ module.exports = function createRequestsRoutes(deps) {
                     }
                 }
 
-                // Eliminar peticiones completadas hace más de 7 días
+                // Eliminar peticiones completadas hace más de 7 días (basado en fecha de petición)
                 if (request.status === 'downloaded' || request.status === 'server') {
-                    const updatedAt = new Date(request.updatedAt);
-                    if (updatedAt < sevenDaysAgo) {
-                        console.log(`🗑️ Auto-eliminando petición antigua: "${request.title}" (completada hace más de 7 días)`);
+                    const dateStr = request.requestedAt || request.requested_at || request.updatedAt || request.updated_at;
+                    const requestDate = dateStr ? new Date(dateStr) : null;
+                    if (requestDate && !isNaN(requestDate.getTime()) && requestDate < sevenDaysAgo) {
+                        console.log(`🗑️ Auto-eliminando petición antigua: "${request.title}" (pedida hace más de 7 días)`);
                         modified = true;
 
                         if (storageConfig.mode === 'local') {

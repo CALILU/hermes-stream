@@ -4,8 +4,16 @@ import { Search } from 'lucide-react';
 
 export default function PosterSearchModal({
   posterSearchModal, posterSearchQuery, posterSearchResults, posterSearchLoading,
-  onQueryChange, onSearch, onSelect, onClose
+  onQueryChange, onSearch, onSelect, onClose, mode = 'movie'
 }) {
+  const isSeries = mode === 'series';
+  const accentColor = isSeries ? 'emerald' : 'indigo';
+  const title = isSeries ? 'Cambiar caratula (Serie)' : 'Cambiar caratula';
+  const placeholder = isSeries ? 'Buscar serie en TMDB...' : 'Buscar pelicula en TMDB...';
+  const itemTitle = isSeries
+    ? (posterSearchModal?.title || posterSearchModal?.folder_name)
+    : posterSearchModal?.title;
+
   return (
     <AnimatePresence>
       {posterSearchModal && (
@@ -26,7 +34,7 @@ export default function PosterSearchModal({
             <div className="p-6 bg-slate-800 border-b border-slate-700 flex-shrink-0">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-white">
-                  Cambiar caratula: <span className="text-indigo-500">{posterSearchModal.title}</span>
+                  {title}: <span className={`text-${accentColor}-500`}>{itemTitle}</span>
                 </h3>
                 <button
                   onClick={onClose}
@@ -43,8 +51,8 @@ export default function PosterSearchModal({
                     value={posterSearchQuery}
                     onChange={(e) => onQueryChange(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && onSearch(posterSearchQuery)}
-                    placeholder="Buscar pelicula en TMDB..."
-                    className="w-full pl-10 pr-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-200"
+                    placeholder={placeholder}
+                    className={`w-full pl-10 pr-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-${accentColor}-500 text-slate-200`}
                     autoFocus
                   />
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
@@ -52,7 +60,7 @@ export default function PosterSearchModal({
                 <button
                   onClick={() => onSearch(posterSearchQuery)}
                   disabled={posterSearchLoading}
-                  className="px-6 py-3 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                  className={`px-6 py-3 bg-${accentColor}-500 text-white rounded-xl font-medium hover:bg-${accentColor}-600 transition-colors disabled:opacity-50`}
                 >
                   {posterSearchLoading ? 'Buscando...' : 'Buscar'}
                 </button>
@@ -92,7 +100,7 @@ export default function PosterSearchModal({
                             Sin imagen
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-indigo-500/0 group-hover:bg-indigo-500/30 transition-colors flex items-center justify-center">
+                        <div className={`absolute inset-0 bg-${accentColor}-500/0 group-hover:bg-${accentColor}-500/30 transition-colors flex items-center justify-center`}>
                           <span className="text-white opacity-0 group-hover:opacity-100 font-bold text-lg">
                             Seleccionar
                           </span>

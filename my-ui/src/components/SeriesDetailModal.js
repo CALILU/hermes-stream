@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, User, RefreshCw } from 'lucide-react';
+import { X, Play, User, RefreshCw, Edit3 } from 'lucide-react';
 
 export default function SeriesDetailModal({
   selectedSeries, selectedSeason, seasonEpisodes, loadingEpisodes,
-  onSelectSeason, onPlayEpisode, onMarkWatched, onClose
+  onSelectSeason, onPlayEpisode, onMarkWatched, onRenameEpisodes, onClose
 }) {
   return (
     <AnimatePresence>
@@ -140,9 +140,21 @@ export default function SeriesDetailModal({
 
               {/* Lista de episodios */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Episodios {selectedSeason && `- Temporada ${selectedSeason}`}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+                    Episodios {selectedSeason && `- Temporada ${selectedSeason}`}
+                  </h3>
+                  {onRenameEpisodes && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onRenameEpisodes(); }}
+                      className="px-3 py-1 bg-slate-700 hover:bg-emerald-600 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+                      title="Renombrar archivos de episodios"
+                    >
+                      <Edit3 size={12} />
+                      Renombrar
+                    </button>
+                  )}
+                </div>
                 {loadingEpisodes ? (
                   <div className="flex items-center justify-center py-8">
                     <RefreshCw size={24} className="animate-spin text-emerald-500" />

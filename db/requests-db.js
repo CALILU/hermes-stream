@@ -369,7 +369,7 @@ function removeOldCompleted(daysOld = 7) {
     const stmt = db.prepare(`
         DELETE FROM requests
         WHERE status IN ('downloaded', 'server')
-        AND updated_at < ?
+        AND requested_at < ?
     `);
 
     const info = stmt.run(cutoffISO);

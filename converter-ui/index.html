@@ -1126,6 +1126,10 @@
             <input type="checkbox" id="chk-rename" checked>
             Renombrar (TMDB)
           </label>
+          <label class="checkbox-label" id="chk-transfer-label" style="display: none;">
+            <input type="checkbox" id="chk-transfer" checked>
+            <span id="chk-transfer-text">Subir al servidor</span>
+          </label>
         </div>
 
         <!-- Grupo: Modo de conversión -->
@@ -1217,7 +1221,9 @@
           </select>
           <select class="filter-select" id="filter-type">
             <option value="">Todos los tipos</option>
-            <option value="avi-mkv">Solo AVI/MKV</option>
+            <option value="avi">Solo AVI</option>
+            <option value="mkv">Solo MKV</option>
+            <option value="avi-mkv">AVI + MKV</option>
             <option value="audio-fix">🔊 Solo audio bajo</option>
             <option value="reencode">Solo recodificar</option>
           </select>
@@ -1344,6 +1350,9 @@
       btnStop: document.getElementById('btn-stop'),
       chkDelete: document.getElementById('chk-delete'),
       chkRename: document.getElementById('chk-rename'),
+      chkTransfer: document.getElementById('chk-transfer'),
+      chkTransferLabel: document.getElementById('chk-transfer-label'),
+      chkTransferText: document.getElementById('chk-transfer-text'),
       selGpu: document.getElementById('sel-gpu'),
       selQuality: document.getElementById('sel-quality'),
       selMode: document.getElementById('sel-mode'),
@@ -1415,6 +1424,12 @@
         if (filters.type) {
           const ext = file.name.toLowerCase().split('.').pop();
           switch (filters.type) {
+            case 'avi':
+              if (ext !== 'avi') return false;
+              break;
+            case 'mkv':
+              if (ext !== 'mkv') return false;
+              break;
             case 'avi-mkv':
               if (ext !== 'avi' && ext !== 'mkv') return false;
               break;
@@ -1534,10 +1549,15 @@
           badge.querySelector('.icon').textContent = '📂';
           badge.querySelector('.mode-text').textContent = 'LOCAL';
           badge.title = `Guardando en: ${storageConfig.localPath}`;
+          // Modo local: ocultar toggle de transferencia (siempre se queda en el directorio origen)
+          elements.chkTransferLabel.style.display = 'none';
         } else {
           badge.querySelector('.icon').textContent = '☁️';
           badge.querySelector('.mode-text').textContent = 'FTP';
           badge.title = `Subiendo a: ${storageConfig.ftpHost}`;
+          // Modo FTP: mostrar toggle de transferencia
+          elements.chkTransferLabel.style.display = 'flex';
+          elements.chkTransferText.textContent = 'Subir al servidor';
         }
       } catch (err) {
         console.error('Error cargando config de almacenamiento:', err);
@@ -1845,8 +1865,21 @@
 
     // Iniciar conversión
     async function startConversion() {
+      // Combinar exclusiones manuales + archivos que no pasan el filtro activo
+      const effectiveExcluded = new Set(excludedFiles);
+      const hasActiveFilter = filters.name || filters.size || filters.type;
+      if (hasActiveFilter) {
+        const visibleFiles = filterFiles(state.pending);
+        const visibleNames = new Set(visibleFiles.map(f => f.name));
+        state.pending.forEach(f => {
+          if (!visibleNames.has(f.name)) {
+            effectiveExcluded.add(f.name);
+          }
+        });
+      }
+
       // Verificar que hay archivos no excluidos
-      const filesToConvert = state.pending.filter(f => !excludedFiles.has(f.name));
+      const filesToConvert = state.pending.filter(f => !effectiveExcluded.has(f.name));
       if (filesToConvert.length === 0) {
         alert('No hay archivos seleccionados para convertir. Desmarca algunos archivos de la lista.');
         return;
@@ -1859,14 +1892,15 @@
         body: JSON.stringify({
           deleteOriginals: elements.chkDelete.checked,
           renameWithTMDB: elements.chkRename.checked,
+          transferToServer: elements.chkTransfer.checked,
           gpu: elements.selGpu.value,
           quality: elements.selQuality.value,
           mode: elements.selMode.value
         })
       });
 
-      // Enviar lista de archivos excluidos
-      const excludedArray = Array.from(excludedFiles);
+      // Enviar lista de archivos excluidos (manuales + filtrados)
+      const excludedArray = Array.from(effectiveExcluded);
       console.log('Enviando archivos excluidos:', excludedArray.length, excludedArray);
 
       const excludeRes = await fetch('/api/exclude', {

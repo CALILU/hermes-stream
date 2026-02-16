@@ -213,7 +213,9 @@ module.exports = function createStreamingRoutes(deps) {
                 }
             }
 
-            res.setHeader('Content-Type', 'video/mp4');
+            const headExt = filename.split('.').pop().toLowerCase();
+            const mimeType = headExt === 'mkv' ? 'video/x-matroska' : 'video/mp4';
+            res.setHeader('Content-Type', mimeType);
             res.setHeader('Content-Length', fileSize);
             res.setHeader('Accept-Ranges', 'bytes');
             res.status(200).end();
@@ -227,9 +229,10 @@ module.exports = function createStreamingRoutes(deps) {
     router.get('/stream/:filename', async (req, res) => {
         const filename = decodeURIComponent(req.params.filename);
         const ext = filename.split('.').pop().toLowerCase();
-        const needsTranscode = ['mkv', 'avi'].includes(ext);
+        const needsTranscode = ['avi'].includes(ext);
         const audioTrack = parseInt(req.query.audio) || 0;
 
+        const mimeType = ext === 'mkv' ? 'video/x-matroska' : 'video/mp4';
         console.log(`🎬 Streaming: ${filename} [${storageConfig.mode.toUpperCase()}] (transcode: ${needsTranscode}, audio: ${audioTrack})`);
 
         // ========== MODO LOCAL ==========
@@ -333,7 +336,7 @@ module.exports = function createStreamingRoutes(deps) {
                 res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
                 res.setHeader('Accept-Ranges', 'bytes');
                 res.setHeader('Content-Length', chunkSize);
-                res.setHeader('Content-Type', 'video/mp4');
+                res.setHeader('Content-Type', mimeType);
 
                 const readStream = fsSync.createReadStream(localPath, { start, end });
                 readStream.pipe(res);
@@ -343,7 +346,7 @@ module.exports = function createStreamingRoutes(deps) {
                 console.log(`📥 Request local sin Range - enviando archivo completo`);
 
                 res.status(200);
-                res.setHeader('Content-Type', 'video/mp4');
+                res.setHeader('Content-Type', mimeType);
                 res.setHeader('Content-Length', fileSize);
                 res.setHeader('Accept-Ranges', 'bytes');
 
@@ -483,7 +486,7 @@ module.exports = function createStreamingRoutes(deps) {
                     res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
                     res.setHeader('Accept-Ranges', 'bytes');
                     res.setHeader('Content-Length', chunkSize);
-                    res.setHeader('Content-Type', 'video/mp4');
+                    res.setHeader('Content-Type', mimeType);
                     res.setHeader('Cache-Control', 'no-cache');
                     res.setHeader('Connection', 'keep-alive');
 
@@ -559,7 +562,7 @@ module.exports = function createStreamingRoutes(deps) {
                     console.log(`📥 Request sin Range - enviando headers completos`);
 
                     res.status(200);
-                    res.setHeader('Content-Type', 'video/mp4');
+                    res.setHeader('Content-Type', mimeType);
                     res.setHeader('Content-Length', fileSize);
                     res.setHeader('Accept-Ranges', 'bytes');
                     res.setHeader('Cache-Control', 'public, max-age=3600');
