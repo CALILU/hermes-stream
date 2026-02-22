@@ -162,6 +162,17 @@ function initRoutes(context) {
     // El TV pide a esta URL limpia, y nosotros hacemos
     // proxy interno al endpoint /stream/ real via localhost
     // =============================================
+
+    // CORS para que TVs y apps puedan acceder al media proxy
+    mediaRouter.use('/media', (req, res, next) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Accept, Content-Type');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges');
+        if (req.method === 'OPTIONS') return res.status(204).end();
+        next();
+    });
+
     mediaRouter.get('/media/:tokenFile', (req, res) => {
         const http = require('http');
         const tokenFile = req.params.tokenFile;
@@ -238,6 +249,146 @@ function initRoutes(context) {
         });
 
         proxyReq.end();
+    });
+
+    // =============================================
+    // TV Stream - Streaming optimizado para TVs
+    // Remuxea a fMP4 via FFmpeg (sin re-encoding)
+    // El formato fMP4 funciona mejor en browsers de TV
+    // =============================================
+    mediaRouter.get('/tv-stream/:tokenFile', (req, res) => {
+        const fsSync = require('fs');
+        const pathModule = require('path');
+        const ffmpeg = require('fluent-ffmpeg');
+        const tokenFile = req.params.tokenFile;
+        const token = tokenFile.replace(/\.\w+$/, '');
+        const clientIP = (req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown').replace(/^::ffff:/, '');
+
+        console.log(`📺 TV-STREAM: Peticion de ${clientIP} para token ${token}`);
+
+        const media = dlna.resolveMediaToken(token);
+        if (!media) {
+            console.error(`📺 TV-STREAM: Token ${token} no encontrado`);
+            return res.status(404).send('Not found');
+        }
+
+        const filename = media.filename || '';
+        // Resolver la ruta local del archivo
+        const localPath = pathModule.join(context.storageConfig.localPath, filename);
+
+        if (!fsSync.existsSync(localPath)) {
+            console.error(`📺 TV-STREAM: Archivo no encontrado: ${localPath}`);
+            return res.status(404).send('File not found');
+        }
+
+        const stat = fsSync.statSync(localPath);
+        console.log(`📺 TV-STREAM: ${filename} (${(stat.size / 1024 / 1024).toFixed(1)} MB) -> fMP4 remux`);
+
+        res.setHeader('Content-Type', 'video/mp4');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        const ffmpegProcess = ffmpeg(localPath)
+            .outputOptions([
+                '-c:v', 'copy',
+                '-c:a', 'aac',
+                '-b:a', '192k',
+                '-movflags', 'frag_keyframe+empty_moov+faststart',
+                '-f', 'mp4'
+            ])
+            .on('start', (cmd) => console.log(`📺 TV-STREAM: FFmpeg iniciado`))
+            .on('error', (err) => {
+                if (!err.message.includes('SIGKILL') && !err.message.includes('Output stream closed')) {
+                    console.error(`📺 TV-STREAM: FFmpeg error:`, err.message);
+                }
+            })
+            .on('end', () => console.log(`📺 TV-STREAM: Completado`));
+
+        ffmpegProcess.pipe(res, { end: true });
+
+        res.on('close', () => {
+            ffmpegProcess.kill('SIGKILL');
+        });
+    });
+
+    // GET /dlna/cast-player?url=...&title=... - Pagina HTML con reproductor para TV
+    mediaRouter.get('/cast-player', (req, res) => {
+        const { url, title } = req.query;
+        if (!url) return res.status(400).send('url requerida');
+        const videoTitle = title || 'IsiPrime';
+        // Escapar para insercion segura en HTML
+        const safeUrl = url.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeTitle = videoTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        res.send(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${safeTitle}</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden}
+video{width:100vw;height:100vh;object-fit:contain}
+#status{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+color:#fff;font:24px sans-serif;text-align:center;z-index:10}
+</style></head>
+<body>
+<div id="status">Cargando...</div>
+<video id="v" controls preload="auto"></video>
+<script>
+(function(){
+    var v=document.getElementById('v');
+    var st=document.getElementById('status');
+    var url="${safeUrl}";
+
+    function log(msg){st.textContent=msg;console.log('[CastPlayer]',msg);}
+
+    // Intentar reproduccion con XMLHttpRequest para verificar que la URL funciona
+    function tryPlay(){
+        log('Conectando al stream...');
+        v.src=url;
+        v.load();
+    }
+
+    v.addEventListener('loadeddata',function(){
+        log('Video cargado, reproduciendo...');
+        st.style.display='none';
+        v.play().catch(function(e){
+            log('Toca la pantalla para reproducir');
+        });
+    });
+
+    v.addEventListener('canplay',function(){
+        st.style.display='none';
+        v.play().catch(function(){});
+    });
+
+    v.addEventListener('playing',function(){
+        st.style.display='none';
+    });
+
+    v.addEventListener('error',function(e){
+        var code=v.error?v.error.code:'?';
+        var msg=v.error?v.error.message:'desconocido';
+        log('Error '+code+': '+msg);
+        // Reintentar en 3 segundos
+        setTimeout(tryPlay,3000);
+    });
+
+    v.addEventListener('stalled',function(){log('Buffering...');});
+    v.addEventListener('waiting',function(){
+        st.style.display='block';
+        log('Buffering...');
+    });
+
+    // Interaccion del usuario para desbloquear autoplay
+    document.body.addEventListener('click',function(){
+        v.play().catch(function(){});
+    });
+
+    // Iniciar
+    tryPlay();
+})();
+</script>
+</body></html>`);
     });
 
     return { apiRouter: router, mediaRouter };
