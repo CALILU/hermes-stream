@@ -100,12 +100,14 @@ export function useCast() {
     }, []);
 
     // Añadir dispositivo manual por IP
-    const addManualDevice = useCallback(async (ip) => {
+    const addManualDevice = useCallback(async (ip, name) => {
         try {
+            const body = { ip };
+            if (name) body.name = name;
             const res = await fetch('/api/dlna/add-device', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ip })
+                body: JSON.stringify(body)
             });
             const data = await res.json();
             if (data.success) {

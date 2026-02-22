@@ -10,12 +10,10 @@ if not "%~1"=="hidden" (
     exit /b
 )
 
-cd /d "%~dp0"
-
-:: Verificar si Node.js esta instalado
-where node >nul 2>nul
+:: Verificar si WSL esta disponible
+where wsl >nul 2>nul
 if %errorlevel% neq 0 (
-    echo ERROR: Node.js no esta instalado
+    echo ERROR: WSL no esta instalado
     pause
     exit /b 1
 )
@@ -26,13 +24,32 @@ set /p STATUS=<"%TEMP%\hermes_check.txt"
 del "%TEMP%\hermes_check.txt" 2>nul
 
 if "%STATUS%"=="200" (
-    echo Servidor ya esta corriendo, abriendo navegador...
-) else (
-    echo Iniciando servidor HermesStream...
-    start /min "" node server.js
-    :: Esperar a que el servidor arranque
-    timeout /t 4 /nobreak >nul
+    :: Servidor ya corriendo, solo abrir navegador
+    start "" http://localhost:8080
+    exit /b
 )
 
+:: Montar disco FTP via rclone (si no esta montado)
+wsl -e bash -c "mountpoint -q /home/isidr/ftp-mount 2>/dev/null || rclone mount router-ftp:/volume-1/ /home/isidr/ftp-mount --read-only --vfs-cache-mode minimal --dir-cache-time 5m --daemon 2>/dev/null; sleep 2"
+
+:: Iniciar servidor en WSL (en background, sin bloquear)
+wsl -e bash -c "cd /mnt/f/plex && node server.js &"
+
+:: Esperar a que el servidor arranque (max 20 segundos)
+set ATTEMPTS=0
+:wait_loop
+if %ATTEMPTS% geq 20 (
+    echo ERROR: El servidor no arranco a tiempo
+    exit /b 1
+)
+timeout /t 1 /nobreak >nul
+curl -s -o nul -w "%%{http_code}" http://localhost:8080/api/auth/status >"%TEMP%\hermes_check.txt" 2>nul
+set /p STATUS=<"%TEMP%\hermes_check.txt"
+del "%TEMP%\hermes_check.txt" 2>nul
+if "%STATUS%"=="200" goto :server_ready
+set /a ATTEMPTS+=1
+goto :wait_loop
+
+:server_ready
 :: Abrir navegador
 start "" http://localhost:8080

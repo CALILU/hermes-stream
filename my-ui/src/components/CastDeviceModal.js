@@ -24,6 +24,7 @@ export default function CastDeviceModal({
     videoTitle
 }) {
     const [manualIp, setManualIp] = useState('');
+    const [manualName, setManualName] = useState('');
     const [addingDevice, setAddingDevice] = useState(false);
     const [addError, setAddError] = useState('');
 
@@ -46,11 +47,12 @@ export default function CastDeviceModal({
         if (!manualIp.trim()) return;
         setAddingDevice(true);
         setAddError('');
-        const result = await onAddManualDevice(manualIp.trim());
+        const result = await onAddManualDevice(manualIp.trim(), manualName.trim() || null);
         if (!result.success) {
             setAddError(result.error || 'No se pudo conectar');
         } else {
             setManualIp('');
+            setManualName('');
         }
         setAddingDevice(false);
     };
@@ -265,6 +267,15 @@ export default function CastDeviceModal({
                                 {addingDevice ? 'Probando...' : 'Añadir'}
                             </button>
                         </div>
+                        <input
+                            type="text"
+                            value={manualName}
+                            onChange={(e) => setManualName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddManualDevice()}
+                            placeholder="Nombre (opcional, ej: TV Salon)"
+                            disabled={addingDevice}
+                            className="w-full mt-2 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                        />
                         {addError && (
                             <p className="text-red-400 text-xs mt-2">{addError}</p>
                         )}
