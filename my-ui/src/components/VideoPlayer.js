@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, PictureInPicture2, ArrowLeftFromLine, X } from 'lucide-react';
 import CastButton from './CastButton';
 import { normalizeText } from '../utils/text';
-import { getSessionToken } from '../utils/api';
+import { getAccessToken } from '../utils/api';
 
 function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '0:00';
@@ -32,8 +32,10 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPiP, setIsPiP] = useState(false);
+  const [pipBarHidden, setPipBarHidden] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isSeeking, setIsSeeking] = useState(false);
+  const pendingCloseRef = useRef(false);
 
   // Thumbnail preview state
   const [hoverTime, setHoverTime] = useState(null);
@@ -52,10 +54,10 @@ export default function VideoPlayer({
   // Video source URL
   const videoSrc = (() => {
     if (!selectedVideo) return '';
-    const token = getSessionToken();
+    const token = getAccessToken();
     const params = new URLSearchParams();
     if (selectedVideo.audioTrack !== undefined) params.set('audio', selectedVideo.audioTrack);
-    if (token) params.set('session', token);
+    if (token) params.set('token', token);
     const queryString = params.toString();
     return `${selectedVideo.url}${queryString ? '?' + queryString : ''}`;
   })();
@@ -178,15 +180,22 @@ export default function VideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const onEnterPiP = () => setIsPiP(true);
-    const onLeavePiP = () => setIsPiP(false);
+    const onEnterPiP = () => { setIsPiP(true); setPipBarHidden(false); };
+    const onLeavePiP = () => {
+      setIsPiP(false);
+      setPipBarHidden(false);
+      if (pendingCloseRef.current) {
+        pendingCloseRef.current = false;
+        onClose();
+      }
+    };
     video.addEventListener('enterpictureinpicture', onEnterPiP);
     video.addEventListener('leavepictureinpicture', onLeavePiP);
     return () => {
       video.removeEventListener('enterpictureinpicture', onEnterPiP);
       video.removeEventListener('leavepictureinpicture', onLeavePiP);
     };
-  }, [videoRef]);
+  }, [videoRef, onClose]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -385,7 +394,7 @@ export default function VideoPlayer({
           }
         >
           {/* PiP compact bar */}
-          {isPiP && (
+          {isPiP && !pipBarHidden && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-full max-w-lg px-4 pointer-events-auto">
               <div className="bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4">
                 <PictureInPicture2 size={18} className="text-amber-400 flex-shrink-0" />
@@ -403,8 +412,8 @@ export default function VideoPlayer({
                   <ArrowLeftFromLine size={18} />
                 </button>
                 <button
-                  onClick={() => { if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {}); onClose(); }}
-                  title="Cerrar"
+                  onClick={() => { pendingCloseRef.current = true; setPipBarHidden(true); }}
+                  title="Ocultar barra (PiP sigue activo)"
                   className="text-slate-400 hover:text-red-400 transition-colors p-1.5 hover:bg-white/10 rounded-lg"
                 >
                   <X size={18} />

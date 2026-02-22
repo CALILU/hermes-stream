@@ -12,70 +12,43 @@
 const express = require('express');
 const fsSync = require('fs');
 const path = require('path');
-const ftp = require('basic-ftp');
 const router = express.Router();
 
 module.exports = function createVideosRoutes(deps) {
     const {
-        storageConfig, FTP_CONFIG,
+        storageConfig,
         readCache, getMovieMetadata,
         normalizeCacheToAPI,
         VIDEO_EXTENSIONS_REGEX
     } = deps;
 
-    // 1. Listar archivos para la interfaz (soporta LOCAL y FTP)
+    // 1. Listar archivos para la interfaz (modo LOCAL)
     router.get('/videos', async (req, res) => {
         try {
             let videoFiles = [];
 
-            // ========== MODO LOCAL ==========
-            if (storageConfig.mode === 'local') {
-                console.log(`📂 Listando archivos locales en: ${storageConfig.localPath}`);
+            console.log(`📂 Listando archivos locales en: ${storageConfig.localPath}`);
 
-                if (!fsSync.existsSync(storageConfig.localPath)) {
-                    return res.status(500).json({ error: `Ruta local no existe: ${storageConfig.localPath}` });
-                }
-
-                const files = fsSync.readdirSync(storageConfig.localPath);
-                videoFiles = files
-                    .filter(name => VIDEO_EXTENSIONS_REGEX.test(name))
-                    .map(name => {
-                        try {
-                            const fullPath = path.join(storageConfig.localPath, name);
-                            const stats = fsSync.statSync(fullPath);
-                            return { name, size: stats.size, mtime: stats.mtime };
-                        } catch (err) {
-                            console.warn(`⚠️  No se puede acceder a: ${name} (${err.code})`);
-                            return null;
-                        }
-                    })
-                    .filter(f => f !== null);
-
-                console.log(`✅ Encontrados ${videoFiles.length} videos locales`);
-
-            // ========== MODO FTP (RED) ==========
-            } else {
-                const client = new ftp.Client();
-                client.ftp.timeout = 120000;
-                client.ftp.verbose = false;
-
-                try {
-                    console.log('🔌 Conectando a FTP...');
-                    await client.access({
-                        ...FTP_CONFIG,
-                        secure: false,
-                        passive: true
-                    });
-                    console.log('✅ Conectado a FTP');
-
-                    console.log('📂 Listando archivos en /volume-1...');
-                    const list = await client.list("/volume-1");
-                    console.log(`✅ Obtenidos ${list.length} archivos`);
-                    videoFiles = list.filter(file => VIDEO_EXTENSIONS_REGEX.test(file.name));
-                } finally {
-                    client.close();
-                }
+            if (!fsSync.existsSync(storageConfig.localPath)) {
+                return res.status(500).json({ error: `Ruta local no existe: ${storageConfig.localPath}` });
             }
+
+            const files = fsSync.readdirSync(storageConfig.localPath);
+            videoFiles = files
+                .filter(name => VIDEO_EXTENSIONS_REGEX.test(name))
+                .map(name => {
+                    try {
+                        const fullPath = path.join(storageConfig.localPath, name);
+                        const stats = fsSync.statSync(fullPath);
+                        return { name, size: stats.size, mtime: stats.mtime };
+                    } catch (err) {
+                        console.warn(`⚠️  No se puede acceder a: ${name} (${err.code})`);
+                        return null;
+                    }
+                })
+                .filter(f => f !== null);
+
+            console.log(`✅ Encontrados ${videoFiles.length} videos locales`);
 
             // Cargar caché del backend para aplicar carátulas guardadas
             const cache = await readCache();
@@ -106,7 +79,7 @@ module.exports = function createVideosRoutes(deps) {
                 };
             });
 
-            console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: ${storageConfig.mode.toUpperCase()}]`);
+            console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: LOCAL]`);
 
             const moviesWithoutMetadata = videosWithMetadata.filter(v => !v.tmdbId);
             if (moviesWithoutMetadata.length > 0) {

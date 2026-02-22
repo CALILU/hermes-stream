@@ -18,12 +18,11 @@ const express = require('express');
 const fsSync = require('fs');
 const fs = require('fs').promises;
 const path = require('path');
-const ftp = require('basic-ftp');
 const router = express.Router();
 
 module.exports = function createSeriesRoutes(deps) {
     const {
-        storageConfig, FTP_CONFIG, SERIES_FOLDER,
+        storageConfig, SERIES_FOLDER,
         readSeriesCache, writeSeriesCache, readSeriesEpisodes, writeSeriesEpisodes,
         parseSeriesFilename, searchTVShowTMDB, getSeriesDetailsByTmdbId, getSeasonEpisodesTMDB,
         scanSeriesFolder, TV_GENRES,
@@ -38,25 +37,13 @@ module.exports = function createSeriesRoutes(deps) {
 
             let seriesFolders = [];
 
-            if (storageConfig.mode === 'local' && fsSync.existsSync(storageConfig.localPath)) {
+            if (fsSync.existsSync(storageConfig.localPath)) {
                 const seriesPath = path.join(storageConfig.localPath, SERIES_FOLDER);
                 try {
                     const entries = await fs.readdir(seriesPath, { withFileTypes: true });
                     seriesFolders = entries.filter(e => e.isDirectory()).map(e => e.name);
                 } catch (e) {
                     console.log(`📺 Carpeta de series no encontrada: ${seriesPath}`);
-                }
-            } else {
-                const client = new ftp.Client();
-                try {
-                    await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-                    const seriesPath = `/volume-1/${SERIES_FOLDER}`;
-                    const list = await client.list(seriesPath);
-                    seriesFolders = list.filter(item => item.isDirectory).map(item => item.name);
-                } catch (e) {
-                    console.log(`📺 Carpeta de series no encontrada en FTP`);
-                } finally {
-                    client.close();
                 }
             }
 
@@ -414,7 +401,7 @@ module.exports = function createSeriesRoutes(deps) {
             // files ahora incluye { filename, subfolder } para soportar subcarpetas
             let fileEntries = [];
 
-            if (storageConfig.mode === 'local' && fsSync.existsSync(storageConfig.localPath)) {
+            if (fsSync.existsSync(storageConfig.localPath)) {
                 const seriesPath = path.join(storageConfig.localPath, SERIES_FOLDER, folderName);
                 try {
                     const entries = await fs.readdir(seriesPath, { withFileTypes: true });
@@ -446,39 +433,6 @@ module.exports = function createSeriesRoutes(deps) {
                     }
                 } catch (e) {
                     return res.status(404).json({ error: `Carpeta no encontrada: ${folderName}` });
-                }
-            } else {
-                const client = new ftp.Client();
-                try {
-                    await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-                    const baseFtp = `/volume-1/${SERIES_FOLDER}/${folderName}`;
-                    const list = await client.list(baseFtp);
-
-                    // Archivos en la raíz
-                    for (const item of list) {
-                        if (!item.isDirectory && extensions.some(ext => item.name.toLowerCase().endsWith(ext))) {
-                            fileEntries.push({ filename: item.name, subfolder: null });
-                        }
-                    }
-
-                    // Subcarpetas
-                    const subdirs = list.filter(item => item.isDirectory);
-                    for (const sub of subdirs) {
-                        try {
-                            const subList = await client.list(`${baseFtp}/${sub.name}`);
-                            for (const item of subList) {
-                                if (!item.isDirectory && extensions.some(ext => item.name.toLowerCase().endsWith(ext))) {
-                                    fileEntries.push({ filename: item.name, subfolder: sub.name });
-                                }
-                            }
-                        } catch (e) {
-                            // subcarpeta no legible
-                        }
-                    }
-                } catch (e) {
-                    return res.status(404).json({ error: `Carpeta no encontrada en FTP: ${folderName}` });
-                } finally {
-                    client.close();
                 }
             }
 
@@ -563,7 +517,7 @@ module.exports = function createSeriesRoutes(deps) {
                 }
 
                 try {
-                    if (storageConfig.mode === 'local' && fsSync.existsSync(storageConfig.localPath)) {
+                    if (fsSync.existsSync(storageConfig.localPath)) {
                         const seriesPath = subfolder
                             ? path.join(storageConfig.localPath, SERIES_FOLDER, folderName, subfolder)
                             : path.join(storageConfig.localPath, SERIES_FOLDER, folderName);
@@ -580,17 +534,6 @@ module.exports = function createSeriesRoutes(deps) {
                         }
 
                         fsSync.renameSync(oldPath, newPath);
-                    } else {
-                        const client = new ftp.Client();
-                        try {
-                            await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-                            const basePath = subfolder
-                                ? `/volume-1/${SERIES_FOLDER}/${folderName}/${subfolder}`
-                                : `/volume-1/${SERIES_FOLDER}/${folderName}`;
-                            await client.rename(`${basePath}/${filename}`, `${basePath}/${newFilename}`);
-                        } finally {
-                            client.close();
-                        }
                     }
 
                     results.push({ filename, newFilename, subfolder, success: true });
@@ -758,111 +701,55 @@ module.exports = function createSeriesRoutes(deps) {
 
         console.log(`📺 Streaming episodio: ${decodedFolder}/${decodedFilename}`);
 
-        if (storageConfig.mode === 'local' && fsSync.existsSync(storageConfig.localPath)) {
-            let filePath = path.join(storageConfig.localPath, SERIES_FOLDER, decodedFolder, decodedFilename);
+        let filePath = path.join(storageConfig.localPath, SERIES_FOLDER, decodedFolder, decodedFilename);
 
-            // Si no existe en la raíz, buscar en subcarpetas
-            if (!fsSync.existsSync(filePath)) {
-                const seriesDir = path.join(storageConfig.localPath, SERIES_FOLDER, decodedFolder);
-                try {
-                    const entries = await fs.readdir(seriesDir, { withFileTypes: true });
-                    for (const entry of entries) {
-                        if (entry.isDirectory()) {
-                            const subPath = path.join(seriesDir, entry.name, decodedFilename);
-                            if (fsSync.existsSync(subPath)) {
-                                filePath = subPath;
-                                break;
-                            }
+        // Si no existe en la raíz, buscar en subcarpetas
+        if (!fsSync.existsSync(filePath)) {
+            const seriesDir = path.join(storageConfig.localPath, SERIES_FOLDER, decodedFolder);
+            try {
+                const entries = await fs.readdir(seriesDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.isDirectory()) {
+                        const subPath = path.join(seriesDir, entry.name, decodedFilename);
+                        if (fsSync.existsSync(subPath)) {
+                            filePath = subPath;
+                            break;
                         }
                     }
-                } catch (e) { /* no subcarpetas */ }
-            }
-
-            try {
-                const stat = await fs.stat(filePath);
-                const fileSize = stat.size;
-                const range = req.headers.range;
-
-                if (range) {
-                    const parts = range.replace(/bytes=/, '').split('-');
-                    const start = parseInt(parts[0], 10);
-                    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-                    const chunkSize = end - start + 1;
-
-                    res.writeHead(206, {
-                        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-                        'Accept-Ranges': 'bytes',
-                        'Content-Length': chunkSize,
-                        'Content-Type': 'video/mp4'
-                    });
-
-                    const fileStream = fsSync.createReadStream(filePath, { start, end });
-                    fileStream.pipe(res);
-                } else {
-                    res.writeHead(200, {
-                        'Content-Length': fileSize,
-                        'Content-Type': 'video/mp4'
-                    });
-                    fsSync.createReadStream(filePath).pipe(res);
                 }
-            } catch (error) {
-                console.error('Error streaming local:', error);
-                res.status(404).json({ error: 'Archivo no encontrado' });
+            } catch (e) { /* no subcarpetas */ }
+        }
+
+        try {
+            const stat = await fs.stat(filePath);
+            const fileSize = stat.size;
+            const range = req.headers.range;
+
+            if (range) {
+                const parts = range.replace(/bytes=/, '').split('-');
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+                const chunkSize = end - start + 1;
+
+                res.writeHead(206, {
+                    'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Length': chunkSize,
+                    'Content-Type': 'video/mp4'
+                });
+
+                const fileStream = fsSync.createReadStream(filePath, { start, end });
+                fileStream.pipe(res);
+            } else {
+                res.writeHead(200, {
+                    'Content-Length': fileSize,
+                    'Content-Type': 'video/mp4'
+                });
+                fsSync.createReadStream(filePath).pipe(res);
             }
-        } else {
-            // FTP streaming
-            const client = new ftp.Client();
-            try {
-                await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-                let remotePath = `/volume-1/${SERIES_FOLDER}/${decodedFolder}/${decodedFilename}`;
-                let fileSize;
-                try {
-                    fileSize = await client.size(remotePath);
-                } catch (e) {
-                    // No encontrado en raíz, buscar en subcarpetas
-                    const list = await client.list(`/volume-1/${SERIES_FOLDER}/${decodedFolder}`);
-                    const subdirs = list.filter(item => item.isDirectory);
-                    let found = false;
-                    for (const sub of subdirs) {
-                        try {
-                            const subPath = `/volume-1/${SERIES_FOLDER}/${decodedFolder}/${sub.name}/${decodedFilename}`;
-                            fileSize = await client.size(subPath);
-                            remotePath = subPath;
-                            found = true;
-                            break;
-                        } catch (e2) { /* no está aquí */ }
-                    }
-                    if (!found) throw new Error('Archivo no encontrado en ninguna subcarpeta');
-                }
-                const range = req.headers.range;
-
-                if (range) {
-                    const parts = range.replace(/bytes=/, '').split('-');
-                    const start = parseInt(parts[0], 10);
-                    const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 10 * 1024 * 1024, fileSize - 1);
-                    const chunkSize = end - start + 1;
-
-                    res.writeHead(206, {
-                        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-                        'Accept-Ranges': 'bytes',
-                        'Content-Length': chunkSize,
-                        'Content-Type': 'video/mp4'
-                    });
-
-                    await client.downloadTo(res, remotePath, start);
-                } else {
-                    res.writeHead(200, {
-                        'Content-Length': fileSize,
-                        'Content-Type': 'video/mp4'
-                    });
-                    await client.downloadTo(res, remotePath);
-                }
-            } catch (error) {
-                console.error('Error FTP streaming:', error);
-                res.status(500).json({ error: 'Error al transmitir episodio' });
-            } finally {
-                client.close();
-            }
+        } catch (error) {
+            console.error('Error streaming local:', error);
+            res.status(404).json({ error: 'Archivo no encontrado' });
         }
     });
 
