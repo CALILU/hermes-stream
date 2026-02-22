@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE } from '../constants';
-import { authFetch, setSessionToken } from '../utils/api';
+import { authFetch, setAccessToken, getAccessToken, setRefreshToken, getRefreshToken } from '../utils/api';
 
 export function useAuth() {
   const [authState, setAuthState] = useState({
@@ -14,9 +14,43 @@ export function useAuth() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Verificar estado de autenticacion al cargar
+  // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
+      // If we have a refresh token, try to get a new access token
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        try {
+          const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setAccessToken(data.accessToken);
+            setRefreshToken(data.refreshToken);
+            setAuthState({
+              checking: false,
+              isLocal: false,
+              authenticated: true,
+              user: data.user || { username: 'user', role: 'viewer' },
+              requiresLogin: false
+            });
+            return;
+          } else {
+            // Refresh token expired
+            setRefreshToken(null);
+            setAccessToken(null);
+          }
+        } catch (error) {
+          console.error('Error refreshing token:', error);
+        }
+      }
+
+      // No refresh token or refresh failed — check auth status
+      // (handles LAN auto-auth)
       try {
         const response = await authFetch(`${API_BASE}/api/auth/status`);
         const data = await response.json();
@@ -26,10 +60,10 @@ export function useAuth() {
           isLocal: data.isLocal,
           authenticated: data.authenticated,
           user: data.user,
-          requiresLogin: data.requiresLogin || false
+          requiresLogin: !data.authenticated
         });
       } catch (error) {
-        console.error('Error verificando autenticacion:', error);
+        console.error('Error checking auth:', error);
         setAuthState({
           checking: false,
           isLocal: true,
@@ -58,7 +92,8 @@ export function useAuth() {
       const data = await response.json();
 
       if (data.success) {
-        setSessionToken(data.sessionToken);
+        setAccessToken(data.accessToken);
+        setRefreshToken(data.refreshToken);
         setAuthState({
           checking: false,
           isLocal: false,
@@ -79,12 +114,18 @@ export function useAuth() {
   };
 
   const handleLogout = async () => {
+    const refreshToken = getRefreshToken();
     try {
-      await authFetch(`${API_BASE}/api/auth/logout`, { method: 'POST' });
+      await authFetch(`${API_BASE}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken })
+      });
     } catch (error) {
       console.error('Error en logout:', error);
     }
-    setSessionToken(null);
+    setAccessToken(null);
+    setRefreshToken(null);
     setAuthState(prev => ({
       ...prev,
       authenticated: false,

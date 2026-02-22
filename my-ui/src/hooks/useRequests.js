@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE } from '../constants';
-import { authFetch } from '../utils/api';
+import { authFetch, getAccessToken } from '../utils/api';
 
 export function useRequests({ authState, videos }) {
   const [requestsModal, setRequestsModal] = useState(false);
@@ -45,7 +45,11 @@ export function useRequests({ authState, videos }) {
   useEffect(() => {
     if (!requestsAdminModal) return;
 
-    const eventSource = new EventSource(`${API_BASE}/api/requests/events`);
+    const token = getAccessToken();
+    const sseUrl = token
+      ? `${API_BASE}/api/requests/events?token=${token}`
+      : `${API_BASE}/api/requests/events`;
+    const eventSource = new EventSource(sseUrl);
 
     eventSource.onmessage = (event) => {
       try {

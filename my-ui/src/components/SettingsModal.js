@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, HardDrive, FolderOpen, Wifi, RefreshCw, Trash2, Layers } from 'lucide-react';
+import { Settings, X, HardDrive, FolderOpen, Wifi, RefreshCw, Trash2, Layers, Database } from 'lucide-react';
 
 export default function SettingsModal({
   settingsModal, storageMode, storagePath, changingMode, clearingCache, cacheProgress,
@@ -8,6 +8,81 @@ export default function SettingsModal({
   onStorageModeChange, onBrowseLocalFolder, onApplyLocalPath, onStoragePathChange,
   onClearCache, onCleanupOrphans, onRegenerateSagas, onClose
 }) {
+  const [diskUsage, setDiskUsage] = useState(null);
+  const [diskLoading, setDiskLoading] = useState(false);
+  const [diskError, setDiskError] = useState(null);
+  const [nasIP, setNasIP] = useState('');
+  const [savingNasIP, setSavingNasIP] = useState(false);
+
+  const fetchDiskUsage = async (refresh = false) => {
+    setDiskLoading(true);
+    setDiskError(null);
+    try {
+      const res = await fetch(`/api/storage/disk-usage${refresh ? '?refresh=true' : ''}`);
+      const data = await res.json();
+      if (data.success) {
+        setDiskUsage(data);
+        setDiskError(null);
+      } else {
+        setDiskError(data.error || 'No se pudo obtener información');
+      }
+    } catch (err) {
+      setDiskError('Error de conexión');
+    } finally {
+      setDiskLoading(false);
+    }
+  };
+
+  const saveNasIP = async () => {
+    if (!nasIP.trim() || savingNasIP) return;
+    setSavingNasIP(true);
+    try {
+      const res = await fetch('/api/storage/nas-ip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nasIP: nasIP.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchDiskUsage(true);
+      }
+    } catch (e) {}
+    setSavingNasIP(false);
+  };
+
+  useEffect(() => {
+    if (settingsModal) {
+      fetchDiskUsage();
+      // Cargar IP guardada
+      fetch('/api/storage/config').then(r => r.json()).then(data => {
+        if (data.nasLocalIP) setNasIP(data.nasLocalIP);
+      }).catch(() => {});
+    } else {
+      setDiskUsage(null);
+      setDiskError(null);
+    }
+  }, [settingsModal, storageMode]);
+
+  const formatBytes = (bytes) => {
+    if (bytes == null || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  };
+
+  const getBarColor = (pct) => {
+    if (pct > 85) return 'from-red-500 to-red-600';
+    if (pct > 70) return 'from-yellow-500 to-orange-500';
+    return 'from-emerald-500 to-green-500';
+  };
+
+  const getTextColor = (pct) => {
+    if (pct > 85) return 'text-red-400';
+    if (pct > 70) return 'text-yellow-400';
+    return 'text-emerald-400';
+  };
+
   return (
     <AnimatePresence>
       {settingsModal && (
@@ -113,6 +188,117 @@ export default function SettingsModal({
                       <HardDrive size={14} />
                       <span className="font-medium">Ruta activa:</span> {storagePath}
                     </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Seccion Espacio en Disco */}
+              <div className="border border-slate-600 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-white flex items-center gap-2">
+                    <Database size={18} className="text-teal-400" />
+                    {storageMode === 'ftp' ? 'Almacenamiento NAS' : 'Almacenamiento Local'}
+                  </h3>
+                  <button
+                    onClick={() => fetchDiskUsage(true)}
+                    disabled={diskLoading}
+                    className="p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700"
+                    title="Actualizar"
+                  >
+                    <RefreshCw size={16} className={diskLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+
+                {/* Estado de carga */}
+                {diskLoading && !diskUsage && (
+                  <div className="flex items-center gap-2 text-sm text-slate-400 py-3">
+                    <RefreshCw size={14} className="animate-spin" />
+                    Consultando espacio en disco...
+                  </div>
+                )}
+
+                {/* Error sin datos */}
+                {diskError && !diskUsage && (
+                  <div className="text-sm text-slate-400 py-2 bg-slate-800 rounded-lg px-3">
+                    <p className="text-slate-500">{diskError}</p>
+                  </div>
+                )}
+
+                {/* Datos completos con barra (total, usado, libre, porcentaje) */}
+                {diskUsage && diskUsage.percentage != null && (
+                  <div className="space-y-2">
+                    <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`bg-gradient-to-r ${getBarColor(diskUsage.percentage)} h-3 rounded-full transition-all duration-500`}
+                        style={{ width: `${diskUsage.percentage}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">
+                        {formatBytes(diskUsage.used)} de {formatBytes(diskUsage.total)}
+                      </span>
+                      <span className={`font-semibold ${getTextColor(diskUsage.percentage)}`}>
+                        {diskUsage.percentage}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {formatBytes(diskUsage.free)} libres
+                      {diskUsage.fileCount ? ` — ${diskUsage.fileCount} archivos` : ''}
+                    </p>
+                  </div>
+                )}
+
+                {/* Solo espacio usado (desde listado FTP, sin total) */}
+                {diskUsage && diskUsage.fromListing && diskUsage.percentage == null && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-teal-500/20 rounded-lg p-3 text-center flex-1">
+                        <p className="text-lg font-bold text-teal-400">{formatBytes(diskUsage.used)}</p>
+                        <p className="text-xs text-slate-400">Espacio usado</p>
+                      </div>
+                      <div className="bg-slate-700/50 rounded-lg p-3 text-center flex-1">
+                        <p className="text-lg font-bold text-slate-300">{diskUsage.fileCount}</p>
+                        <p className="text-xs text-slate-400">Archivos</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Calculado desde listado FTP. Introduce la IP del NAS para ver capacidad total.
+                    </p>
+                  </div>
+                )}
+
+                {/* Datos parciales (solo espacio libre, desde FTP AVBL) */}
+                {diskUsage && diskUsage.partial && diskUsage.free && (
+                  <div className="py-1">
+                    <p className="text-sm text-slate-300">
+                      Espacio libre: <span className="font-semibold text-emerald-400">{formatBytes(diskUsage.free)}</span>
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      El servidor FTP solo reporta espacio disponible
+                    </p>
+                  </div>
+                )}
+
+                {/* Campo IP del NAS (solo en modo FTP) */}
+                {storageMode === 'ftp' && (
+                  <div className="mt-3 pt-3 border-t border-slate-700">
+                    <label className="text-xs text-slate-500 mb-1 block">IP local del NAS (para info completa):</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={nasIP}
+                        onChange={(e) => setNasIP(e.target.value)}
+                        placeholder="Ej: 192.168.1.100"
+                        className="flex-1 px-3 py-2 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <button
+                        onClick={saveNasIP}
+                        disabled={savingNasIP || !nasIP.trim()}
+                        className="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                      >
+                        {savingNasIP ? '...' : 'Guardar'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -14,13 +14,12 @@
 const express = require('express');
 const fsSync = require('fs');
 const path = require('path');
-const ftp = require('basic-ftp');
 
 module.exports = function createMiscRoutes(deps) {
     const {
-        storageConfig, FTP_CONFIG,
+        storageConfig,
         readCache, writeCache, getMovieMetadata, cleanupCache,
-        withFTPClient, VIDEO_EXTENSIONS_REGEX,
+        VIDEO_EXTENSIONS_REGEX,
         PORT
     } = deps;
 
@@ -34,18 +33,11 @@ module.exports = function createMiscRoutes(deps) {
             // Obtener lista de archivos actuales
             let videoFiles = [];
 
-            if (storageConfig.mode === 'local') {
-                if (fsSync.existsSync(storageConfig.localPath)) {
-                    const files = fsSync.readdirSync(storageConfig.localPath);
-                    videoFiles = files
-                        .filter(name => name.match(/\.(mp4|mkv|avi|mov)$/i))
-                        .map(name => ({ name }));
-                }
-            } else {
-                const list = await withFTPClient(FTP_CONFIG, async (client) => {
-                    return await client.list("/volume-1");
-                }, { timeout: 60000 });
-                videoFiles = list.filter(file => file.name.match(VIDEO_EXTENSIONS_REGEX));
+            if (fsSync.existsSync(storageConfig.localPath)) {
+                const files = fsSync.readdirSync(storageConfig.localPath);
+                videoFiles = files
+                    .filter(name => name.match(/\.(mp4|mkv|avi|mov)$/i))
+                    .map(name => ({ name }));
             }
 
             const result = await cleanupCache(videoFiles);
@@ -157,35 +149,18 @@ module.exports = function createMiscRoutes(deps) {
         try {
             console.log(`📝 Renombrando: "${oldName}" → "${newName}"`);
 
-            if (storageConfig.mode === 'local') {
-                // ========== MODO LOCAL ==========
-                const oldPath = path.join(storageConfig.localPath, oldName);
-                const newPath = path.join(storageConfig.localPath, newName);
+            const oldPath = path.join(storageConfig.localPath, oldName);
+            const newPath = path.join(storageConfig.localPath, newName);
 
-                if (!fsSync.existsSync(oldPath)) {
-                    return res.status(404).json({ error: `Archivo no encontrado: ${oldName}` });
-                }
-                if (fsSync.existsSync(newPath) && oldPath !== newPath) {
-                    return res.status(400).json({ error: `Ya existe un archivo con el nombre: ${newName}` });
-                }
-
-                fsSync.renameSync(oldPath, newPath);
-                console.log('✓ Archivo local renombrado');
-            } else {
-                // ========== MODO FTP ==========
-                const client = new ftp.Client();
-                try {
-                    await client.access({
-                        ...FTP_CONFIG,
-                        secure: false,
-                        passive: true
-                    });
-                    await client.rename(`/volume-1/${oldName}`, `/volume-1/${newName}`);
-                    console.log('✓ Archivo renombrado en el FTP');
-                } finally {
-                    client.close();
-                }
+            if (!fsSync.existsSync(oldPath)) {
+                return res.status(404).json({ error: `Archivo no encontrado: ${oldName}` });
             }
+            if (fsSync.existsSync(newPath) && oldPath !== newPath) {
+                return res.status(400).json({ error: `Ya existe un archivo con el nombre: ${newName}` });
+            }
+
+            fsSync.renameSync(oldPath, newPath);
+            console.log('✓ Archivo local renombrado');
 
             // Limpiar caché de la entrada antigua
             const cache = await readCache();

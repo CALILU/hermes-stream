@@ -14,14 +14,12 @@
 
 const express = require('express');
 const fsSync = require('fs');
-const ftp = require('basic-ftp');
 const router = express.Router();
 
 module.exports = function createRequestsRoutes(deps) {
     const {
         REQUESTS_READONLY, requestsSSEClients, storageConfig, requestsDB,
-        FTP_CONFIG,
-        readRequests, writeRequests, notifyRequestUpdate,
+        notifyRequestUpdate,
         readCache,
         normalizeText, getMainTitle, calculateSimilarity,
         VIDEO_EXTENSIONS_REGEX
@@ -59,72 +57,29 @@ module.exports = function createRequestsRoutes(deps) {
     // Obtener todas las peticiones (con auto-detección leyendo del disco)
     router.get('/', async (req, res) => {
         try {
-            const data = await readRequests();
+            const data = { requests: requestsDB.getAll() };
             const cache = await readCache();
-            let modified = false;
 
             // Leer archivos del disco directamente
             let diskFiles = [];
 
-            if (storageConfig.mode === 'local') {
-                if (fsSync.existsSync(storageConfig.localPath)) {
-                    const files = fsSync.readdirSync(storageConfig.localPath);
-                    diskFiles = files
-                        .filter(name => VIDEO_EXTENSIONS_REGEX.test(name))
-                        .map(name => {
-                            const nameWithoutExt = name.replace(VIDEO_EXTENSIONS_REGEX, '');
-                            const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
-                            const year = yearMatch ? yearMatch[1] : '';
-                            const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-                            return {
-                                filename: name,
-                                title: title,
-                                year: year,
-                                titleNorm: normalizeText(title)
-                            };
-                        });
-                    console.log(`📂 Verificando ${diskFiles.length} archivos en disco para auto-detección`);
-                }
-            } else {
-                // Modo FTP - consultar servidor FTP directamente
-                const client = new ftp.Client();
-                client.ftp.verbose = false;
-                try {
-                    await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-                    const ftpFiles = await client.list("/volume-1");
-                    diskFiles = ftpFiles
-                        .filter(f => VIDEO_EXTENSIONS_REGEX.test(f.name))
-                        .map(f => {
-                            const nameWithoutExt = f.name.replace(VIDEO_EXTENSIONS_REGEX, '');
-                            const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
-                            const year = yearMatch ? yearMatch[1] : '';
-                            const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-                            return {
-                                filename: f.name,
-                                title: title,
-                                year: year,
-                                titleNorm: normalizeText(title)
-                            };
-                        });
-                    console.log(`📂 Verificando ${diskFiles.length} archivos en FTP para auto-detección`);
-                } catch (ftpErr) {
-                    console.error('❌ Error consultando FTP:', ftpErr.message);
-                    // Fallback al cache si falla FTP
-                    diskFiles = Object.keys(cache).map(filename => {
-                        const nameWithoutExt = filename.replace(VIDEO_EXTENSIONS_REGEX, '');
+            if (fsSync.existsSync(storageConfig.localPath)) {
+                const files = fsSync.readdirSync(storageConfig.localPath);
+                diskFiles = files
+                    .filter(name => VIDEO_EXTENSIONS_REGEX.test(name))
+                    .map(name => {
+                        const nameWithoutExt = name.replace(VIDEO_EXTENSIONS_REGEX, '');
                         const yearMatch = nameWithoutExt.match(/\((\d{4})\)/);
                         const year = yearMatch ? yearMatch[1] : '';
                         const title = nameWithoutExt.replace(/\s*\(\d{4}\)\s*$/, '').trim();
                         return {
-                            filename: filename,
+                            filename: name,
                             title: title,
                             year: year,
                             titleNorm: normalizeText(title)
                         };
                     });
-                } finally {
-                    client.close();
-                }
+                console.log(`📂 Verificando ${diskFiles.length} archivos en disco para auto-detección`);
             }
 
             // Obtener todos los tmdb_ids de películas en la biblioteca
@@ -194,12 +149,8 @@ module.exports = function createRequestsRoutes(deps) {
                         if (request.status !== 'server') {
                             request.status = 'server';
                             request.updatedAt = now.toISOString();
-                            modified = true;
 
-                            if (storageConfig.mode === 'local') {
-                                requestsDB.update(request.id, { status: 'server' });
-                            }
-
+                            requestsDB.update(request.id, { status: 'server' });
                             notifyRequestUpdate(request);
                         }
                     } else {
@@ -213,11 +164,8 @@ module.exports = function createRequestsRoutes(deps) {
                     const requestDate = dateStr ? new Date(dateStr) : null;
                     if (requestDate && !isNaN(requestDate.getTime()) && requestDate < sevenDaysAgo) {
                         console.log(`🗑️ Auto-eliminando petición antigua: "${request.title}" (pedida hace más de 7 días)`);
-                        modified = true;
 
-                        if (storageConfig.mode === 'local') {
-                            requestsDB.remove(request.id);
-                        }
+                        requestsDB.remove(request.id);
 
                         return false;
                     }
@@ -225,11 +173,6 @@ module.exports = function createRequestsRoutes(deps) {
 
                 return true;
             });
-
-            // Guardar cambios si hubo modificaciones (solo para FTP)
-            if (modified && storageConfig.mode !== 'local') {
-                await writeRequests(data);
-            }
 
             res.json({ requests: data.requests });
         } catch (error) {
@@ -248,60 +191,13 @@ module.exports = function createRequestsRoutes(deps) {
                 return res.status(400).json({ error: 'Se requiere un array de películas' });
             }
 
-            // ========== MODO LOCAL: usar SQLite ==========
-            if (storageConfig.mode === 'local') {
-                const result = requestsDB.createMany(movies, requestedBy || 'Usuario');
-                console.log(`📥 ${result.created} nueva(s) petición(es) añadida(s)${result.duplicates > 0 ? `, ${result.duplicates} duplicadas` : ''}`);
-                res.json({
-                    success: true,
-                    created: result.created,
-                    duplicates: result.duplicates,
-                    total: result.total
-                });
-                return;
-            }
-
-            // ========== MODO FTP: usar JSON ==========
-            const data = await readRequests();
-            let created = 0;
-            let duplicates = 0;
-
-            for (const movie of movies) {
-                const tmdbId = movie.tmdbId || movie.tmdb_id || movie.id;
-                const exists = data.requests.find(r => r.tmdbId === tmdbId);
-
-                if (exists) {
-                    duplicates++;
-                    continue;
-                }
-
-                const newRequest = {
-                    id: data.nextId++,
-                    tmdbId: tmdbId,
-                    title: movie.title,
-                    originalTitle: movie.originalTitle || movie.original_title,
-                    year: movie.year || (movie.release_date ? movie.release_date.split('-')[0] : null),
-                    poster: movie.poster || (movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : null),
-                    overview: movie.overview,
-                    rating: movie.rating || movie.vote_average,
-                    status: 'pending',
-                    requestedBy: requestedBy || 'Usuario',
-                    requestedAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-
-                data.requests.push(newRequest);
-                created++;
-            }
-
-            await writeRequests(data);
-
-            console.log(`📥 ${created} nueva(s) petición(es) añadida(s)${duplicates > 0 ? `, ${duplicates} duplicadas` : ''}`);
+            const result = requestsDB.createMany(movies, requestedBy || 'Usuario');
+            console.log(`📥 ${result.created} nueva(s) petición(es) añadida(s)${result.duplicates > 0 ? `, ${result.duplicates} duplicadas` : ''}`);
             res.json({
                 success: true,
-                created,
-                duplicates,
-                total: data.requests.length
+                created: result.created,
+                duplicates: result.duplicates,
+                total: result.total
             });
 
         } catch (error) {
@@ -324,48 +220,16 @@ module.exports = function createRequestsRoutes(deps) {
                 return res.status(400).json({ error: 'Estado inválido' });
             }
 
-            // ========== MODO LOCAL: usar SQLite ==========
-            if (storageConfig.mode === 'local') {
-                const request = requestsDB.update(parseInt(id), { status, adminNotes });
-
-                if (!request) {
-                    return res.status(404).json({ error: 'Petición no encontrada' });
-                }
-
-                notifyRequestUpdate(request);
-
-                console.log(`📝 Petición #${id} actualizada: ${status || 'sin cambio de estado'}`);
-                res.json({ success: true, request });
-                return;
-            }
-
-            // ========== MODO FTP: usar JSON ==========
-            const data = await readRequests();
-            const request = data.requests.find(r => r.id === parseInt(id));
+            const request = requestsDB.update(parseInt(id), { status, adminNotes });
 
             if (!request) {
                 return res.status(404).json({ error: 'Petición no encontrada' });
             }
 
-            if (status) {
-                request.status = status;
-            }
-
-            if (adminNotes !== undefined) {
-                request.adminNotes = adminNotes;
-            }
-
-            request.updatedAt = new Date().toISOString();
-
-            await writeRequests(data);
-
             notifyRequestUpdate(request);
 
             console.log(`📝 Petición #${id} actualizada: ${status || 'sin cambio de estado'}`);
-            res.json({
-                success: true,
-                request
-            });
+            res.json({ success: true, request });
 
         } catch (error) {
             console.error('Error actualizando petición:', error);
@@ -382,32 +246,14 @@ module.exports = function createRequestsRoutes(deps) {
         try {
             const { id } = req.params;
 
-            // ========== MODO LOCAL: usar SQLite ==========
-            if (storageConfig.mode === 'local') {
-                const request = requestsDB.getById(parseInt(id));
-                if (!request) {
-                    return res.status(404).json({ error: 'Petición no encontrada' });
-                }
-
-                requestsDB.remove(parseInt(id));
-                console.log(`🗑️ Petición #${id} eliminada: ${request.title}`);
-                res.json({ success: true, deleted: request });
-                return;
-            }
-
-            // ========== MODO FTP: usar JSON ==========
-            const data = await readRequests();
-
-            const index = data.requests.findIndex(r => r.id === parseInt(id));
-            if (index === -1) {
+            const request = requestsDB.getById(parseInt(id));
+            if (!request) {
                 return res.status(404).json({ error: 'Petición no encontrada' });
             }
 
-            const deleted = data.requests.splice(index, 1)[0];
-            await writeRequests(data);
-
-            console.log(`🗑️ Petición #${id} eliminada: ${deleted.title}`);
-            res.json({ success: true, deleted });
+            requestsDB.remove(parseInt(id));
+            console.log(`🗑️ Petición #${id} eliminada: ${request.title}`);
+            res.json({ success: true, deleted: request });
 
         } catch (error) {
             console.error('Error eliminando petición:', error);
@@ -418,24 +264,7 @@ module.exports = function createRequestsRoutes(deps) {
     // Estadísticas de peticiones
     router.get('/stats', async (req, res) => {
         try {
-            // ========== MODO LOCAL: usar SQLite ==========
-            if (storageConfig.mode === 'local') {
-                const stats = requestsDB.getStats();
-                res.json(stats);
-                return;
-            }
-
-            // ========== MODO FTP: calcular desde JSON ==========
-            const data = await readRequests();
-            const stats = {
-                total: data.requests.length,
-                pending: data.requests.filter(r => r.status === 'pending').length,
-                downloading: data.requests.filter(r => r.status === 'downloading').length,
-                downloaded: data.requests.filter(r => r.status === 'downloaded').length,
-                mp4: data.requests.filter(r => r.status === 'mp4').length,
-                server: data.requests.filter(r => r.status === 'server').length,
-                rejected: data.requests.filter(r => r.status === 'rejected').length
-            };
+            const stats = requestsDB.getStats();
             res.json(stats);
         } catch (error) {
             res.status(500).json({ error: 'Error al obtener estadísticas' });

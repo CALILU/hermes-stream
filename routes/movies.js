@@ -10,11 +10,10 @@
 const express = require('express');
 const fsSync = require('fs');
 const path = require('path');
-const ftp = require('basic-ftp');
 
 module.exports = function createMoviesRoutes(deps) {
     const {
-        storageConfig, FTP_CONFIG,
+        storageConfig,
         readCache, writeCache,
         updateCollectionWithMovie, removeMovieFromCollections,
         tmdbFetch, processTMDBExtendedData, normalizeCacheToAPI,
@@ -77,7 +76,7 @@ module.exports = function createMoviesRoutes(deps) {
             const year = extendedMetadata.release_date?.substring(0, 4) || metadata.year;
             const extension = path.extname(filename).toLowerCase();
 
-            // Función para quitar acentos (evita problemas de codificación en FTP)
+            // Función para quitar acentos (evita problemas de codificación)
             const removeAccents = (str) => {
                 return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             };
@@ -98,47 +97,19 @@ module.exports = function createMoviesRoutes(deps) {
                 console.log(`📝 Renombrando: "${filename}" → "${newFilename}"`);
 
                 try {
-                    if (storageConfig.mode === 'local') {
-                        // ========== MODO LOCAL ==========
-                        const oldPath = path.join(storageConfig.localPath, filename);
-                        const newPath = path.join(storageConfig.localPath, newFilename);
+                    const oldPath = path.join(storageConfig.localPath, filename);
+                    const newPath = path.join(storageConfig.localPath, newFilename);
 
-                        // Verificar que el archivo original existe
-                        if (fsSync.existsSync(oldPath)) {
-                            // Verificar que el nuevo nombre no existe ya
-                            if (fsSync.existsSync(newPath) && oldPath !== newPath) {
-                                console.log(`⚠️ Ya existe un archivo con el nombre: ${newFilename}`);
-                            } else {
-                                fsSync.renameSync(oldPath, newPath);
-                                finalFilename = newFilename;
-                                renamed = true;
-                                console.log(`✅ Archivo local renombrado: ${newFilename}`);
-                            }
-                        }
-                    } else {
-                        // ========== MODO FTP ==========
-                        const client = new ftp.Client();
-                        try {
-                            await client.access({
-                                ...FTP_CONFIG,
-                                secure: false,
-                                passive: true
-                            });
-
-                            // Verificar que no existe ya un archivo con ese nombre
-                            const fileList = await client.list('/volume-1');
-                            const exists = fileList.some(f => f.name === newFilename);
-
-                            if (exists && newFilename !== filename) {
-                                console.log(`⚠️ Ya existe un archivo con el nombre: ${newFilename}`);
-                            } else {
-                                await client.rename(`/volume-1/${filename}`, `/volume-1/${newFilename}`);
-                                finalFilename = newFilename;
-                                renamed = true;
-                                console.log(`✅ Archivo FTP renombrado: ${newFilename}`);
-                            }
-                        } finally {
-                            client.close();
+                    // Verificar que el archivo original existe
+                    if (fsSync.existsSync(oldPath)) {
+                        // Verificar que el nuevo nombre no existe ya
+                        if (fsSync.existsSync(newPath) && oldPath !== newPath) {
+                            console.log(`⚠️ Ya existe un archivo con el nombre: ${newFilename}`);
+                        } else {
+                            fsSync.renameSync(oldPath, newPath);
+                            finalFilename = newFilename;
+                            renamed = true;
+                            console.log(`✅ Archivo local renombrado: ${newFilename}`);
                         }
                     }
                 } catch (renameError) {
@@ -195,7 +166,7 @@ module.exports = function createMoviesRoutes(deps) {
         }
     });
 
-    // POST /api/files/delete - Eliminar archivo del servidor (LOCAL o FTP)
+    // POST /api/files/delete - Eliminar archivo del servidor (LOCAL)
     filesRouter.post('/delete', async (req, res) => {
         try {
             const { filename } = req.body;
@@ -204,48 +175,17 @@ module.exports = function createMoviesRoutes(deps) {
                 return res.status(400).json({ error: 'Se requiere el nombre del archivo' });
             }
 
-            console.log(`🗑️ Solicitud de eliminación: ${filename} [${storageConfig.mode.toUpperCase()}]`);
+            console.log(`🗑️ Solicitud de eliminación: ${filename} [LOCAL]`);
 
-            // ========== MODO LOCAL ==========
-            if (storageConfig.mode === 'local') {
-                const localPath = path.join(storageConfig.localPath, filename);
+            const localPath = path.join(storageConfig.localPath, filename);
 
-                if (!fsSync.existsSync(localPath)) {
-                    return res.status(404).json({ error: 'El archivo no existe en el servidor' });
-                }
-
-                // Eliminar archivo
-                fsSync.unlinkSync(localPath);
-                console.log(`📂 Archivo local eliminado: ${localPath}`);
-
-            // ========== MODO FTP ==========
-            } else {
-                const client = new ftp.Client();
-                client.ftp.verbose = false;
-
-                try {
-                    await client.access({
-                        host: FTP_CONFIG.host,
-                        user: FTP_CONFIG.user,
-                        password: FTP_CONFIG.password,
-                        port: FTP_CONFIG.port,
-                        secure: false
-                    });
-
-                    client.ftp.socket.setTimeout(30000);
-
-                    const filePath = `/volume-1/${filename}`;
-                    console.log(`📂 Ruta FTP: ${filePath}`);
-                    await client.remove(filePath);
-                } catch (ftpError) {
-                    if (ftpError.message.includes('550') || ftpError.message.includes('No such file')) {
-                        return res.status(404).json({ error: 'El archivo no existe en el servidor' });
-                    }
-                    throw ftpError;
-                } finally {
-                    client.close();
-                }
+            if (!fsSync.existsSync(localPath)) {
+                return res.status(404).json({ error: 'El archivo no existe en el servidor' });
             }
+
+            // Eliminar archivo
+            fsSync.unlinkSync(localPath);
+            console.log(`📂 Archivo local eliminado: ${localPath}`);
 
             // Eliminar del caché local
             const cache = await readCache();

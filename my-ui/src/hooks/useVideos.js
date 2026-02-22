@@ -36,11 +36,45 @@ export function useVideos({ authState, setAuthState }) {
   });
   const [showFavorites, setShowFavorites] = useState(false);
 
+  // Fetch server favorites and merge (runs after mount)
+  useEffect(() => {
+    if (authState.checking || authState.requiresLogin) return;
+
+    authFetch(`${API_BASE}/api/favorites`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.favorites && data.favorites.length > 0) {
+          setFavorites(prev => {
+            const merged = new Set([...prev, ...data.favorites]);
+            try { localStorage.setItem('isiprime_favorites', JSON.stringify([...merged])); } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {}); // Silently fail if server unavailable
+  }, [authState.checking, authState.requiresLogin]);
+
   const toggleFavorite = (filename) => {
     setFavorites(prev => {
       const next = new Set(prev);
-      if (next.has(filename)) next.delete(filename);
-      else next.add(filename);
+      const adding = !next.has(filename);
+      if (adding) {
+        next.add(filename);
+        // Sync to server
+        authFetch(`${API_BASE}/api/favorites`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoPath: filename })
+        }).catch(() => {});
+      } else {
+        next.delete(filename);
+        // Sync to server
+        authFetch(`${API_BASE}/api/favorites`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ videoPath: filename })
+        }).catch(() => {});
+      }
       try { localStorage.setItem('isiprime_favorites', JSON.stringify([...next])); } catch {}
       return next;
     });

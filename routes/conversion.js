@@ -1,28 +1,29 @@
 /**
- * routes/conversion.js - Rutas de conversión de video (AVI/MKV → MP4)
+ * routes/conversion.js - Rutas de conversion de video (AVI/MKV -> MP4)
  *
- * POST /              - Iniciar conversión
- * GET  /:jobId/progress - Progreso de conversión (SSE)
+ * POST /              - Iniciar conversion
+ * GET  /:jobId/progress - Progreso de conversion (SSE)
  *
  * Montado en: /api/convert
+ *
+ * Local-only mode: converts in-place on disk (no FTP download/upload).
  */
 
 const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
-const ftp = require('basic-ftp');
 const ffmpeg = require('fluent-ffmpeg');
 
 module.exports = function createConversionRoutes(deps) {
     const {
-        conversionJobs, TEMP_DIR, FTP_CONFIG,
+        conversionJobs, TEMP_DIR, storageConfig,
         readCache, writeCache,
         readCollections, writeCollections
     } = deps;
 
     const router = express.Router();
 
-    // POST /api/convert - Iniciar conversión
+    // POST /api/convert - Iniciar conversion
     router.post('/', async (req, res) => {
         const { filename } = req.body;
 
@@ -43,16 +44,16 @@ module.exports = function createConversionRoutes(deps) {
             progress: 0,
             filename,
             mp4Filename,
-            message: 'Iniciando conversión...'
+            message: 'Iniciando conversion...'
         });
 
         res.json({ jobId, mp4Filename });
 
-        // Ejecutar conversión en background
+        // Ejecutar conversion en background
         processConversion(jobId, filename, mp4Filename);
     });
 
-    // GET /api/convert/:jobId/progress - Progreso de conversión (SSE)
+    // GET /api/convert/:jobId/progress - Progreso de conversion (SSE)
     router.get('/:jobId/progress', (req, res) => {
         const { jobId } = req.params;
 
@@ -90,41 +91,21 @@ module.exports = function createConversionRoutes(deps) {
 
     async function processConversion(jobId, filename, mp4Filename) {
         const job = conversionJobs.get(jobId);
-        const localInput = path.join(TEMP_DIR, filename);
+        const localInput = path.join(storageConfig.localPath, filename);
         const localOutput = path.join(TEMP_DIR, mp4Filename);
-        const client = new ftp.Client();
 
         try {
-            // Paso 1: Descargar archivo original
-            job.status = 'downloading';
-            job.message = 'Descargando archivo del servidor...';
-            job.progress = 5;
+            // Verify input file exists
+            try {
+                await fs.access(localInput);
+            } catch {
+                throw new Error(`Archivo no encontrado: ${localInput}`);
+            }
 
-            await client.access({ ...FTP_CONFIG, secure: false, passive: true });
-
-            // Obtener tamaño para calcular progreso de descarga
-            const fileList = await client.list("/volume-1");
-            const fileInfo = fileList.find(f => f.name === filename);
-            const totalSize = fileInfo ? fileInfo.size : 0;
-
-            // Descargar con progreso
-            client.trackProgress(info => {
-                if (totalSize > 0) {
-                    const dlProgress = Math.round((info.bytes / totalSize) * 30); // 0-30%
-                    job.progress = 5 + dlProgress;
-                    job.message = `Descargando: ${(info.bytes / 1024 / 1024).toFixed(0)} MB / ${(totalSize / 1024 / 1024).toFixed(0)} MB`;
-                }
-            });
-
-            await client.downloadTo(localInput, `/volume-1/${filename}`);
-            client.trackProgress(); // Desactivar tracking
-
-            console.log(`📥 Descargado: ${filename}`);
-
-            // Paso 2: Convertir con FFmpeg
+            // Phase 1: Convert with FFmpeg (0-90%)
             job.status = 'converting';
             job.message = 'Convirtiendo a MP4...';
-            job.progress = 35;
+            job.progress = 0;
 
             await new Promise((resolve, reject) => {
                 ffmpeg(localInput)
@@ -137,50 +118,51 @@ module.exports = function createConversionRoutes(deps) {
                         '-movflags +faststart'
                     ])
                     .on('progress', (progress) => {
-                        const convertProgress = Math.round((progress.percent || 0) * 0.4); // 35-75%
-                        job.progress = 35 + convertProgress;
-                        job.message = `Convirtiendo: ${Math.round(progress.percent || 0)}%`;
+                        const percent = progress.percent || 0;
+                        const convertProgress = Math.round(percent * 0.9); // 0-90%
+                        job.progress = convertProgress;
+                        job.message = `Convirtiendo: ${Math.round(percent)}%`;
                     })
                     .on('end', () => {
-                        console.log(`✅ Convertido: ${mp4Filename}`);
+                        console.log(`Convertido: ${mp4Filename}`);
                         resolve();
                     })
                     .on('error', (err) => {
-                        console.error(`❌ Error FFmpeg: ${err.message}`);
+                        console.error(`Error FFmpeg: ${err.message}`);
                         reject(err);
                     })
                     .save(localOutput);
             });
 
-            // Paso 3: Subir MP4 al servidor
-            job.status = 'uploading';
-            job.message = 'Subiendo MP4 al servidor...';
-            job.progress = 75;
+            // Phase 2: Finalize - move output and delete original (90-95%)
+            job.status = 'finalizing';
+            job.message = 'Moviendo archivo convertido...';
+            job.progress = 90;
 
-            const outputStats = await fs.stat(localOutput);
-            const outputSize = outputStats.size;
+            const finalPath = path.join(storageConfig.localPath, mp4Filename);
 
-            client.trackProgress(info => {
-                const ulProgress = Math.round((info.bytes / outputSize) * 15); // 75-90%
-                job.progress = 75 + ulProgress;
-                job.message = `Subiendo: ${(info.bytes / 1024 / 1024).toFixed(0)} MB / ${(outputSize / 1024 / 1024).toFixed(0)} MB`;
-            });
+            // Move converted file to storage directory
+            try {
+                await fs.rename(localOutput, finalPath);
+            } catch (renameErr) {
+                // rename fails across filesystems; fallback to copy+delete
+                if (renameErr.code === 'EXDEV') {
+                    await fs.copyFile(localOutput, finalPath);
+                    await fs.unlink(localOutput).catch(() => {});
+                } else {
+                    throw renameErr;
+                }
+            }
 
-            await client.uploadFrom(localOutput, `/volume-1/${mp4Filename}`);
-            client.trackProgress();
-
-            console.log(`📤 Subido: ${mp4Filename}`);
-
-            // Paso 4: Borrar archivo original del servidor
-            job.status = 'deleting';
-            job.message = 'Eliminando archivo original...';
             job.progress = 92;
+            job.message = 'Eliminando archivo original...';
 
-            await client.remove(`/volume-1/${filename}`);
-            console.log(`🗑️ Eliminado original: ${filename}`);
+            // Delete original file
+            await fs.unlink(localInput);
+            console.log(`Eliminado original: ${filename}`);
 
-            // Paso 5: Actualizar caché
-            job.message = 'Actualizando caché...';
+            // Phase 3: Update cache and collections (95-100%)
+            job.message = 'Actualizando cache...';
             job.progress = 95;
 
             const cache = await readCache();
@@ -190,7 +172,7 @@ module.exports = function createConversionRoutes(deps) {
                 await writeCache(cache);
             }
 
-            // Actualizar colecciones
+            // Update collections
             const collections = await readCollections();
             let collectionsUpdated = false;
             for (const collectionId in collections) {
@@ -205,28 +187,21 @@ module.exports = function createConversionRoutes(deps) {
                 await writeCollections(collections);
             }
 
-            // Limpiar archivos temporales
-            await fs.unlink(localInput).catch(() => {});
-            await fs.unlink(localOutput).catch(() => {});
-
             job.status = 'completed';
-            job.message = 'Conversión completada';
+            job.message = 'Conversion completada';
             job.progress = 100;
 
-            console.log(`✅ Conversión completada: ${filename} → ${mp4Filename}`);
+            console.log(`Conversion completada: ${filename} -> ${mp4Filename}`);
 
         } catch (error) {
-            console.error(`❌ Error en conversión: ${error.message}`);
+            console.error(`Error en conversion: ${error.message}`);
             job.status = 'error';
             job.message = `Error: ${error.message}`;
 
-            // Limpiar archivos temporales en caso de error
-            await fs.unlink(localInput).catch(() => {});
+            // Clean up temp output on error
             await fs.unlink(localOutput).catch(() => {});
         } finally {
-            client.close();
-
-            // Eliminar job después de 5 minutos
+            // Remove job after 5 minutes
             setTimeout(() => {
                 conversionJobs.delete(jobId);
             }, 5 * 60 * 1000);

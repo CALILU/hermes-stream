@@ -13,6 +13,7 @@
 const express = require('express');
 const fsSync = require('fs');
 const { exec } = require('child_process');
+const { normalizeText, calculateSimilarity } = require('../lib/utils');
 const router = express.Router();
 
 module.exports = function createDownloadsRoutes(deps) {
@@ -30,6 +31,20 @@ module.exports = function createDownloadsRoutes(deps) {
     const TOR_BROWSER_PATH = isWindows ? TOR_BROWSER_PATH_WIN : TOR_BROWSER_PATH_WSL;
     const TODOTORRENTS_URL = 'https://todotorrents.org';
     let lastTorLaunch = 0;
+
+    // Último requestId buscado desde la UI (para vincular con la extensión Chrome)
+    let pendingRequestId = null;
+    let pendingRequestTimestamp = 0;
+    const PENDING_REQUEST_TTL = 5 * 60 * 1000; // 5 minutos de validez
+
+    // POST /api/download-queue/pending-request - Guardar requestId pendiente
+    router.post('/download-queue/pending-request', (req, res) => {
+        const { requestId } = req.body;
+        pendingRequestId = requestId;
+        pendingRequestTimestamp = Date.now();
+        console.log(`📋 Request pendiente guardado: ID ${requestId}`);
+        res.json({ success: true });
+    });
 
     function isTorBrowserRunning() {
         return new Promise((resolve) => {
@@ -65,58 +80,125 @@ module.exports = function createDownloadsRoutes(deps) {
                 item.url === url && ['pending', 'downloading'].includes(item.status)
             );
 
-            if (isDuplicate) {
-                return res.status(409).json({ error: 'Esta URL ya está en la cola' });
+            // Función de matching de peticiones
+            async function matchRequestByTitle(title, requestId) {
+                try {
+                    const requestsData = await readRequests();
+                    const totalRequests = requestsData.requests?.length || 0;
+                    console.log(`📋 Buscando match en ${totalRequests} peticiones...`);
+                    let requestToUpdate = null;
+
+                    // Usar requestId explícito, o pendingRequestId como fallback
+                    const effectiveRequestId = requestId || (
+                        pendingRequestId && (Date.now() - pendingRequestTimestamp) < PENDING_REQUEST_TTL
+                            ? pendingRequestId : null
+                    );
+
+                    if (effectiveRequestId) {
+                        requestToUpdate = requestsData.requests.find(r => r.id === effectiveRequestId);
+                        if (requestToUpdate) {
+                            console.log(`📋 Match por requestId${!requestId ? ' (pendiente)' : ''}: ${effectiveRequestId} → "${requestToUpdate.title}"`);
+                            pendingRequestId = null; // Consumir el pendiente
+                        }
+                    }
+
+                    if (!requestToUpdate && title) {
+                        const normTitle = normalizeText(title);
+                        console.log(`📋 Título normalizado: "${normTitle}"`);
+
+                        let bestMatch = null;
+                        let bestScore = 0;
+                        let candidatesChecked = 0;
+
+                        for (const r of requestsData.requests) {
+                            if (r.status === 'server' || r.status === 'downloading') continue;
+                            candidatesChecked++;
+                            const reqNorm = normalizeText(r.title);
+                            const reqOrigNorm = r.originalTitle ? normalizeText(r.originalTitle) : null;
+                            if (!reqNorm && !reqOrigNorm) continue;
+
+                            // Coincidencia exacta normalizada (título español o título original)
+                            if (reqNorm === normTitle || (reqOrigNorm && reqOrigNorm === normTitle)) {
+                                bestMatch = r; bestScore = 1; break;
+                            }
+
+                            // includes en ambas direcciones (título español)
+                            if (reqNorm && (reqNorm.includes(normTitle) || normTitle.includes(reqNorm))) {
+                                const score = 0.9;
+                                if (score > bestScore) { bestMatch = r; bestScore = score; }
+                                continue;
+                            }
+
+                            // includes en ambas direcciones (título original/inglés)
+                            if (reqOrigNorm && (reqOrigNorm.includes(normTitle) || normTitle.includes(reqOrigNorm))) {
+                                const score = 0.9;
+                                if (score > bestScore) { bestMatch = r; bestScore = score; }
+                                continue;
+                            }
+
+                            // Similitud por palabras coincidentes (mejor score entre título español y original)
+                            let sim = calculateSimilarity(title, r.title);
+                            if (r.originalTitle) {
+                                const simOrig = calculateSimilarity(title, r.originalTitle);
+                                if (simOrig > sim) sim = simOrig;
+                            }
+                            if (sim > bestScore && sim >= 0.5) {
+                                bestMatch = r;
+                                bestScore = sim;
+                            }
+                        }
+
+                        console.log(`📋 Candidatos evaluados: ${candidatesChecked}`);
+                        if (bestMatch) {
+                            requestToUpdate = bestMatch;
+                            console.log(`📋 Match encontrado (score: ${bestScore.toFixed(2)}): "${title}" → "${bestMatch.title}"`);
+                        } else {
+                            console.log(`📋 ⚠️ No se encontró match para: "${title}"`);
+                        }
+                    } else if (!title) {
+                        console.log(`📋 ⚠️ No se recibió título - no se puede hacer matching`);
+                    }
+
+                    if (requestToUpdate && !['server', 'downloading', 'rejected'].includes(requestToUpdate.status)) {
+                        requestToUpdate.status = 'downloading';
+                        await writeRequests(requestsData);
+                        console.log(`📋 Petición actualizada a "downloading": ${requestToUpdate.title}`);
+                        notifyRequestUpdate(requestToUpdate);
+                        return requestToUpdate;
+                    }
+                } catch (reqError) {
+                    console.error('Error actualizando petición:', reqError.message);
+                }
+                return null;
             }
+
+            // Intentar matching SIEMPRE (incluso con URL duplicada)
+            console.log(`📥 Título recibido de extensión: "${title || '(sin título)'}"`);
+            const updatedRequest = await matchRequestByTitle(title, requestId);
+
+            // Si es duplicado, eliminar la entrada antigua para re-crearla
+            if (isDuplicate) {
+                const idx = queue.findIndex(item => item.url === url);
+                if (idx !== -1) queue.splice(idx, 1);
+                console.log(`📥 URL duplicada eliminada de cola para re-añadir: ${url}`);
+            }
+
+            // Usar título de la petición que hizo match si el título de OK.ru es incorrecto
+            const queueTitle = updatedRequest ? updatedRequest.title
+                : (title || (url.length > 50 ? url.substring(0, 50) + '...' : url));
 
             const queueItem = {
                 url: url,
                 format: 'mp4',
                 status: 'pending',
                 added_at: new Date().toISOString(),
-                title: title || (url.length > 50 ? url.substring(0, 50) + '...' : url)
+                title: queueTitle,
+                requestId: updatedRequest ? updatedRequest.id : null
             };
 
             queue.push(queueItem);
             await writeDownloadQueue(queue);
-
-            console.log(`📥 URL añadida a cola de descargas: ${url}`);
-
-            // Actualizar estado de la petición a "downloading"
-            let updatedRequest = null;
-            try {
-                const requestsData = await readRequests();
-                let requestToUpdate = null;
-
-                if (requestId) {
-                    requestToUpdate = requestsData.requests.find(r => r.id === requestId);
-                }
-
-                if (!requestToUpdate && title) {
-                    const normalizedTitle = title.toLowerCase()
-                        .replace(/[._-]/g, ' ')
-                        .replace(/\s+/g, ' ')
-                        .trim();
-
-                    requestToUpdate = requestsData.requests.find(r => {
-                        const reqTitle = (r.title || '').toLowerCase()
-                            .replace(/[._-]/g, ' ')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-                        return reqTitle.includes(normalizedTitle) || normalizedTitle.includes(reqTitle);
-                    });
-                }
-
-                if (requestToUpdate && requestToUpdate.status !== 'server' && requestToUpdate.status !== 'downloading') {
-                    requestToUpdate.status = 'downloading';
-                    await writeRequests(requestsData);
-                    updatedRequest = requestToUpdate;
-                    console.log(`📋 Petición actualizada a "downloading": ${requestToUpdate.title}`);
-                    notifyRequestUpdate(requestToUpdate);
-                }
-            } catch (reqError) {
-                console.error('Error actualizando petición:', reqError.message);
-            }
+            console.log(`📥 URL añadida a cola de descargas: ${url} (título: "${queueTitle}")`);
 
             // Verificar si la app ya está ejecutándose
             const isRunning = await isDownloaderAppRunning();

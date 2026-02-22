@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, LogOut, Heart, Shuffle } from 'lucide-react';
+import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, LogOut, Heart, Shuffle, Sparkles, ChevronDown } from 'lucide-react';
 import { API_BASE, CACHE_KEY, ALPHABET, genreEmojis } from './constants';
-import { authFetch, getSessionToken } from './utils/api';
+import { authFetch, getAccessToken } from './utils/api';
 import { loadCache, saveCache } from './utils/cache';
 
 import { useAuth } from './hooks/useAuth';
@@ -119,6 +119,10 @@ export default function HermesApp() {
 
   // Recomendaciones IA personalizadas
   const aiRecommendations = useRecommendations(videos, favorites, getAllVideoProgress(), genres);
+
+  // Pestaña activa para secciones colapsables (null = todo cerrado, 'continuar' o 'recomendadas')
+  const [activeQuickTab, setActiveQuickTab] = useState(null);
+  const toggleQuickTab = useCallback((tab) => setActiveQuickTab(prev => prev === tab ? null : tab), []);
 
   // Estados para menú contextual
   const [contextMenu, setContextMenu] = useState(null);
@@ -646,9 +650,9 @@ export default function HermesApp() {
       });
 
       // Escuchar progreso via SSE (añadir token en query string porque EventSource no soporta headers)
-      const token = getSessionToken();
+      const token = getAccessToken();
       const sseUrl = token
-        ? `${API_BASE}/api/convert/${jobId}/progress?session=${token}`
+        ? `${API_BASE}/api/convert/${jobId}/progress?token=${token}`
         : `${API_BASE}/api/convert/${jobId}/progress`;
       const eventSource = new EventSource(sseUrl);
 
@@ -1261,7 +1265,7 @@ export default function HermesApp() {
             🎬 Pedir Película
           </button>
           {/* Botón Admin Peticiones (solo admin/local) */}
-          {(authState.isLocal || authState.user?.isAdmin) && (
+          {(authState.isLocal || authState.user?.role === 'admin') && (
             <button
               onClick={openRequestsAdmin}
               className="p-3 bg-slate-800/80 rounded-xl border border-slate-600 hover:shadow-md transition-all"
@@ -1560,7 +1564,7 @@ export default function HermesApp() {
               <select
                 value={selectedGenre || ''}
                 onChange={(e) => setSelectedGenre(e.target.value ? parseInt(e.target.value) : null)}
-                className="w-full px-3 py-2 text-xs bg-slate-800/80 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 text-xs text-white bg-slate-800/80 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">🎬 Todos los géneros</option>
                 {genres.map(g => (
@@ -1638,7 +1642,7 @@ export default function HermesApp() {
           </button>
 
           {/* Botón Admin - solo para usuarios locales o admin */}
-          {(authState.isLocal || authState.user?.isAdmin) && (
+          {(authState.isLocal || authState.user?.role === 'admin') && (
             <button
               onClick={openRequestsAdmin}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
@@ -1693,61 +1697,145 @@ export default function HermesApp() {
         {viewMode === 'movies' ? (
           /* ========== VISTA DE PELÍCULAS ========== */
           <>
-            {/* ===== CONTINUAR VIENDO ===== */}
-            {continueWatching.length > 0 && !selectedGenre && !selectedCollection && !selectedLetter && !searchQuery && (
-              <section className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <Play size={20} className="text-amber-400" />
-                  Continuar viendo
-                </h3>
-                <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                  {continueWatching.map(video => (
-                    <div
-                      key={video.filename}
-                      onClick={() => handlePlayClick(video)}
-                      className="flex-shrink-0 w-36 md:w-40 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
+            {/* ===== PESTAÑAS: CONTINUAR VIENDO / RECOMENDADAS ===== */}
+            {!selectedGenre && !selectedCollection && !selectedLetter && !searchQuery && (continueWatching.length > 0 || (aiRecommendations && aiRecommendations.length > 0)) && (
+              <section className="mb-6">
+                {/* Pestañas */}
+                <div className="flex gap-2 mb-3">
+                  {continueWatching.length > 0 && (
+                    <button
+                      onClick={() => toggleQuickTab('continuar')}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                        activeQuickTab === 'continuar'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-lg shadow-amber-500/10'
+                          : 'bg-slate-800/60 text-slate-400 border border-slate-700/50 hover:bg-slate-700/60 hover:text-slate-300'
+                      }`}
                     >
-                      <div className="aspect-[3/4] rounded-2xl bg-slate-800 border border-slate-700 shadow-lg relative overflow-hidden">
-                        {video.poster ? (
-                          <img
-                            src={video.poster}
-                            alt={video.title || video.filename}
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
-                            <span className="text-3xl">🎬</span>
-                          </div>
-                        )}
-                        {/* Overlay con play */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <Play size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="white" />
-                        </div>
-                        {/* Barra de progreso */}
-                        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
-                          <div
-                            className="h-full bg-amber-400 rounded-r-full"
-                            style={{ width: `${video._progress}%` }}
-                          />
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-300 mt-2 truncate text-center" title={video.title || video.filename}>
-                        {video.title || video.filename?.replace(/\.[^.]+$/, '')}
-                      </p>
-                      <p className="text-[10px] text-slate-500 text-center">
-                        {video._progress}% · {Math.floor(video._currentTime / 60)}:{String(Math.floor(video._currentTime % 60)).padStart(2, '0')}
-                        /{Math.floor(video._duration / 60)}:{String(Math.floor(video._duration % 60)).padStart(2, '0')}
-                      </p>
-                    </div>
-                  ))}
+                      <Play size={14} fill={activeQuickTab === 'continuar' ? 'currentColor' : 'none'} />
+                      Continuar viendo
+                      <span className="text-[11px] opacity-70">({continueWatching.length})</span>
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${activeQuickTab === 'continuar' ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
+                  {aiRecommendations && aiRecommendations.length > 0 && (
+                    <button
+                      onClick={() => toggleQuickTab('recomendadas')}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                        activeQuickTab === 'recomendadas'
+                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-lg shadow-purple-500/10'
+                          : 'bg-slate-800/60 text-slate-400 border border-slate-700/50 hover:bg-slate-700/60 hover:text-slate-300'
+                      }`}
+                    >
+                      <Sparkles size={14} />
+                      Recomendadas
+                      <span className="text-[11px] opacity-70">({aiRecommendations.length})</span>
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${activeQuickTab === 'recomendadas' ? 'rotate-180' : ''}`} />
+                    </button>
+                  )}
                 </div>
-              </section>
-            )}
 
-            {/* ===== RECOMENDADAS PARA TI ===== */}
-            {!selectedGenre && !selectedCollection && !selectedLetter && !searchQuery && (
-              <RecommendationsSection recommendations={aiRecommendations} onPlay={handlePlayClick} />
+                {/* Contenido de la pestaña activa */}
+                <AnimatePresence mode="wait">
+                  {activeQuickTab === 'continuar' && continueWatching.length > 0 && (
+                    <motion.div
+                      key="continuar"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                        {continueWatching.map(video => (
+                          <div
+                            key={video.filename}
+                            onClick={() => handlePlayClick(video)}
+                            className="flex-shrink-0 w-36 md:w-40 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
+                          >
+                            <div className="aspect-[3/4] rounded-2xl bg-slate-800 border border-slate-700 shadow-lg relative overflow-hidden">
+                              {video.poster ? (
+                                <img
+                                  src={video.poster}
+                                  alt={video.title || video.filename}
+                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
+                                  <span className="text-3xl">🎬</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                <Play size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="white" />
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/60">
+                                <div className="h-full bg-amber-400 rounded-r-full" style={{ width: `${video._progress}%` }} />
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-300 mt-2 truncate text-center" title={video.title || video.filename}>
+                              {video.title || video.filename?.replace(/\.[^.]+$/, '')}
+                            </p>
+                            <p className="text-[10px] text-slate-500 text-center">
+                              {video._progress}% · {Math.floor(video._currentTime / 60)}:{String(Math.floor(video._currentTime % 60)).padStart(2, '0')}
+                              /{Math.floor(video._duration / 60)}:{String(Math.floor(video._duration % 60)).padStart(2, '0')}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeQuickTab === 'recomendadas' && aiRecommendations && aiRecommendations.length > 0 && (
+                    <motion.div
+                      key="recomendadas"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                        {aiRecommendations.map(video => (
+                          <div
+                            key={video.filename}
+                            onClick={() => handlePlayClick(video)}
+                            className="flex-shrink-0 w-36 md:w-40 cursor-pointer group transition-transform duration-200 hover:-translate-y-1"
+                          >
+                            <div className="aspect-[3/4] rounded-2xl bg-slate-800 border border-slate-700 shadow-lg relative overflow-hidden">
+                              {video.poster ? (
+                                <img
+                                  src={video.poster}
+                                  alt={video.title || video.filename}
+                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-indigo-900 flex items-center justify-center">
+                                  <span className="text-3xl">🎬</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                                <Play size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="white" />
+                              </div>
+                              {video.rating && (
+                                <div className="absolute top-2 right-2 bg-black/70 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                                  {video.rating.toFixed(1)}
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-300 mt-2 truncate text-center" title={video.title || video.filename}>
+                              {video.title || video.filename?.replace(/\.[^.]+$/, '')}
+                            </p>
+                            <p className="text-[10px] text-purple-400 text-center truncate" title={video._reason}>
+                              {video._reason}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
             )}
 
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
@@ -2199,7 +2287,11 @@ export default function HermesApp() {
             ...ep,
             series: selectedSeries,
             season: selectedSeason,
-            url: `/stream-series/${encodeURIComponent(selectedSeries.folder_name)}/${encodeURIComponent(ep.filename)}`
+            url: (() => {
+              const t = getAccessToken();
+              const base = `/stream-series/${encodeURIComponent(selectedSeries.folder_name)}/${encodeURIComponent(ep.filename)}`;
+              return t ? `${base}?token=${t}` : base;
+            })()
           });
         }}
         onMarkWatched={markEpisodeWatched}
