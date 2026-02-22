@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IsiPrime (HermesStream) is a streaming video application. Node.js/Express backend serves a React frontend. Movies and TV series are stored on a Synology NAS via FTP or on local disk, with automatic fallback between modes.
+IsiPrime (HermesStream) is a self-hosted streaming video application designed to run as a standalone server on a LincStation N2 (Debian 12) for 5-10 remote users. Node.js/Express backend serves a React frontend. Movies and TV series are stored on local disk. All metadata and user data is persisted in SQLite.
 
 ## Commands
 
 ```bash
-# Start server (port 8080)
+# Start server (port 3002, configurable via PORT env)
 npm start
 
 # Development with auto-reload
@@ -21,6 +21,9 @@ npm run build
 # Build frontend only (from my-ui/)
 cd my-ui && npm run build
 
+# Migrate legacy JSON data to SQLite
+node scripts/migrate-json-to-sqlite.js
+
 # Batch converter CLI
 node batch-converter.js --directory /path --gpu auto --quality 23
 
@@ -31,75 +34,107 @@ node converter-server.js
 ## Architecture
 
 ### Backend (server.js)
-Express server on port 8080. Serves the React build as static files and all API routes. Listens on `0.0.0.0` for LAN access.
+Express 5 server. Serves the React build as static files and all API routes. Listens on `0.0.0.0` for LAN and remote access.
 
-**Dual storage mode** configured in `storage-settings.json`:
-- **FTP mode**: Connects to NAS via basic-ftp (host/credentials in `.env`)
-- **Local mode**: Reads directly from disk path (e.g., `E:\`)
-- Auto-detects: if `localPath` is accessible, uses local; otherwise falls back to FTP
+**Storage**: Always local mode. Path configured in `storage-settings.json` (default: `LOCAL_VIDEOS_PATH` env var).
 
-**Authentication**: Local network IPs (192.168.x.x, 10.x.x.x, 127.x) are auto-authenticated. External IPs require session token login. Default credentials in `users.json`.
+**Authentication (JWT)**: Handled by `lib/auth.js`. LAN IPs are auto-authenticated as admin (configurable via `ALLOW_LAN_AUTH`). External users authenticate with JWT access tokens (15min) + refresh tokens (30d). Passwords hashed with bcrypt. Legacy SHA256 hashes auto-migrate on first login.
+
+**Key env vars**:
+- `JWT_SECRET` — Secret for signing JWTs (auto-generated if not set)
+- `JWT_ACCESS_EXPIRY` — Access token lifetime (default: `15m`)
+- `JWT_REFRESH_EXPIRY` — Refresh token lifetime (default: `30d`)
+- `BCRYPT_ROUNDS` — bcrypt cost factor (default: `12`)
+- `ALLOW_LAN_AUTH` — LAN auto-auth (default: `true`)
+- `DLNA_ENABLED` — Enable DLNA/Cast service (default: `false`)
+- `REQUESTS_READONLY` — Read-only mode for requests (default: `false`)
+- `TMDB_API_KEY` / `TMDB_API_KEY_BACKUP` — TMDB API keys
+- `LOCAL_VIDEOS_PATH` — Default local video directory
 
 ### Routes (`routes/`)
 | File | Mount Point | Purpose |
 |------|------------|---------|
+| `auth.js` | `/api/auth` | Login, refresh, logout, register, invitations, user/session management |
+| `user-data.js` | `/api` | Per-user progress, favorites, continue-watching |
 | `videos.js` | `/api/videos`, `/api/genres` | Movie listing, TMDB enrichment |
 | `streaming.js` | `/stream/:filename` | Video streaming with FFmpeg transcoding |
-| `series.js` | `/api/series`, `/stream-series/` | TV series listing, episode streaming, watch progress |
+| `series.js` | `/api/series`, `/stream-series/` | TV series listing, episode streaming |
 | `requests.js` | `/api/requests` | User movie requests (CRUD + SSE real-time updates) |
 | `tmdb.js` | `/api/tmdb` | TMDB search, cast lookup, actor filmography |
 | `collections.js` | `/api/collections` | Custom and auto-generated movie collections |
-| `downloads.js` | `/api/download-queue`, `/api/search-torrents` | Download queue, Tor Browser torrent search |
+| `downloads.js` | `/api/download-queue`, `/api/search-torrents` | Download queue management |
 | `conversion.js` | `/api/convert` | Single video conversion with SSE progress |
-| `storage.js` | `/api/storage` | Storage mode switching (FTP/local) |
+| `storage.js` | `/api/storage` | Storage configuration |
 | `movies.js` | `/api/movies`, `/api/files` | Poster update, file deletion, renaming |
-| `misc.js` | `/api/` | Utility endpoints |
+| `dlna.js` | `/api/dlna`, `/dlna` | DLNA/Cast to TV (optional via `DLNA_ENABLED`) |
+| `misc.js` | `/api/` | Utility endpoints (cache cleanup, health) |
 
-Routes receive shared context via `initRoutes(context)` pattern. Context includes `storageConfig`, `FTP_CONFIG`, `TMDB_CONFIG`, `requestsDB`, `REQUESTS_READONLY`, and SSE client arrays.
+Routes receive shared context via factory function pattern: `module.exports = function(deps) { ... }`.
 
 ### Libraries (`lib/`)
-- **ftp-helper.js** — FTP client factory with auto-cleanup wrapper
+- **auth.js** — JWT generation/verification, bcrypt hashing, SHA256 legacy migration, `authMiddleware`, `requireRole`, `loginRateLimit`
 - **tmdb.js** — Rate-limited TMDB client (35 req/10s queue, multi-strategy search with English fallback, backup API key on 429/timeout)
-- **cache.js** — Movie metadata cache (`cache.json`) with TTL expiration
-- **series.js** — Series folder scanning, filename parsing (`S01E01` pattern), series cache
+- **cache.js** — Movie metadata cache (SQLite via `mediaDB`) with TTL expiration
+- **series.js** — Series folder scanning, filename parsing (`S01E01` pattern), series cache (SQLite)
 - **normalizers.js** — Convert cache format to API response format
 - **utils.js** — Title normalization, similarity scoring, video extension regex, constants
-- **collections.js** — Collection CRUD, auto-generation by genre/year/decade
-- **requests-helpers.js** — Request operations, auto-detect from filenames
-- **download-helpers.js** — Download queue persistence and state tracking
+- **collections.js** — Collection CRUD (SQLite), auto-generation by genre/year/decade
+- **requests-helpers.js** — Request operations (SQLite), auto-detect from filenames
+- **download-helpers.js** — Download queue persistence (SQLite) and state tracking
+- **dlna.js** — DLNA/UPnP service and media renderer client
+
+### Database (`db/`)
+All data persisted in SQLite via `better-sqlite3` (WAL mode):
+
+- **`db/media-db.js`** → `isiprime.db` — 5 tables: `movies_cache`, `series_cache`, `series_episodes`, `collections`, `download_queue`. 30+ exported functions.
+- **`db/users-db.js`** → `isiprime.db` — 5 tables: `users`, `sessions`, `user_progress`, `user_favorites`, `invitations`. 29 exported functions. Seeds admin user on first init.
+- **`db/requests-db.js`** → `requests.db` — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`.
+
+**Migration**: Run `node scripts/migrate-json-to-sqlite.js` to import legacy JSON files (`cache.json`, `cache-series.json`, `series-episodes.json`, `collections.json`, `download-queue.json`) into SQLite.
 
 ### Frontend (`my-ui/`)
 React 19 app with Tailwind CSS and Framer Motion. Built with react-scripts, output served from `my-ui/build/`.
 
-**Hooks** (in `my-ui/src/hooks/`): `useVideos` (catalog + favorites + search), `useSeries` (series + episodes + progress), `useRequests` (requests + SSE), `useAuth` (login/session), `useVideoProgress` (playback position), `useVolumeBoost` (audio gain).
+**Auth flow** (`my-ui/src/utils/api.js`): Access token stored in memory, refresh token in `localStorage`. `authFetch()` auto-refreshes on 401. For `<video>` and `EventSource` (which can't set headers), token is passed via `?token=` query param.
 
-**App.js** is the central hub — manages all state via hooks and orchestrates 12+ modal components.
+**Hooks** (in `my-ui/src/hooks/`):
+- `useAuth` — JWT login/refresh/logout, LAN auto-auth fallback
+- `useVideos` — Catalog + favorites (server-synced) + search
+- `useSeries` — Series + episodes
+- `useRequests` — Requests + SSE real-time updates
+- `useVideoProgress` — Playback position (server-synced + localStorage cache)
+- `useVolumeBoost` — Audio gain control
+- `useRecommendations` — AI-based personalized recommendations
+- `useCast` — DLNA/Cast to TV
+
+**App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + requests admin, viewer does not).
 
 ### Batch Converter
 Two entry points:
 - `batch-converter.js` — CLI tool for mass AVI/MKV→MP4 conversion with GPU acceleration
-- `converter-server.js` + `converter-ui/index.html` — Web UI for the same, with directory scanning, progress tracking, and optional FTP upload after conversion
-
-### Database
-- **SQLite** (`requests.db` via better-sqlite3, WAL mode) — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`
-- **JSON files** — `cache.json` (movie metadata), `cache-series.json`, `series-episodes.json`, `collections.json`, `download-queue.json`, `users.json`
+- `converter-server.js` + `converter-ui/index.html` — Web UI for the same
 
 ### Requests System
-Requests can be stored in SQLite (local mode) or JSON on FTP. Auto-detection marks movies as "server" when found on disk/FTP. Requests with status `downloaded`/`server` are auto-deleted after 7 days based on `requestedAt` (not `updatedAt`, to prevent auto-detection from resetting the timer). `REQUESTS_READONLY` env var makes the install package view-only.
+Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "server" when found on disk. Requests with status `downloaded`/`server` are auto-deleted after 7 days based on `requestedAt`. `REQUESTS_READONLY` env var makes the instance view-only.
 
 ## Key Patterns
 
-- **SSE (Server-Sent Events)**: Used for real-time request updates and conversion progress. Client arrays maintained in server context.
+- **JWT Auth**: Access token (15min, in memory) + refresh token (30d, localStorage). Token rotation on refresh. Rate limiting on login (5 attempts/15min per IP).
+- **SSE (Server-Sent Events)**: Used for real-time request updates and conversion progress. Token passed via query string (`?token=`).
+- **Per-user data**: Video progress and favorites synced to server (SQLite), with localStorage as fallback cache. Server has authoritative data.
+- **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
 - **Series detection**: Regex `S\d{1,2}E\d{1,2}` in filename routes files to `Series/series_name/` subdirectory.
-- **Streaming**: MP4 served directly with range requests. MKV served with `video/x-matroska` mime type. AVI transcoded on-the-fly via FFmpeg.
+- **Streaming**: MP4 served directly with range requests. MKV served with `video/x-matroska` mime type. AVI transcoded on-the-fly via FFmpeg. Protected by JWT (token in query string for `<video>` elements).
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
+- **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
 
 ## Install Package
 
-`IsiPrime-Install/` contains a standalone read-only package for other users. Has its own `.env` (pointing to `calilu.mooo.com` FTP), `INSTALAR.bat` (auto-installs Node.js + deps), and `IsiPrime.bat` (launcher). Must be manually updated when the main codebase changes.
+`IsiPrime-Install/` contains a standalone read-only package for other users. Has its own `.env`, `INSTALAR.bat` (auto-installs Node.js + deps), and `IsiPrime.bat` (launcher). Must be manually updated when the main codebase changes.
 
 ## Troubleshooting
 
 - **Black screen**: `my-ui/build/` missing or corrupted. Restore from `backups/build-backup-*` or run `npm run build`.
-- **FTP timeout in WSL**: DNS issue. Run server from Windows PowerShell instead, or `wsl --shutdown` and retry.
-- **Videos won't play after WiFi drop**: FTP connection lost. Restart the server.
+- **SQLite "invalid ELF header"**: Native module compiled for wrong architecture. Run `npm rebuild better-sqlite3` on the target machine.
+- **Auth not working**: Ensure `JWT_SECRET` is set consistently (if server restarts with auto-generated secret, existing tokens become invalid).
+- **DLNA not starting**: Set `DLNA_ENABLED=true` in `.env` and restart the server.

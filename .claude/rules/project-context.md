@@ -1,30 +1,69 @@
 # Contexto del Proyecto IsiPrime (PLEX)
 
-Aplicación de streaming de películas con backend Node.js y frontend React.
+Servidor autónomo de streaming de películas y series para 5-10 usuarios remotos. Backend Node.js y frontend React.
 
 ## Información general
 
 - **Directorio**: F:\plex
 - **Nombre**: IsiPrime / HermesStream
-- **Backend**: Node.js + Express (server.js) - Puerto 8080
-- **Frontend**: React (my-ui/) - Compilado en my-ui/build/
-- **Almacenamiento**: FTP (NAS Synology)
+- **Backend**: Node.js + Express 5 (server.js) - Puerto 3002 (env PORT)
+- **Frontend**: React 19 (my-ui/) - Compilado en my-ui/build/
+- **Almacenamiento**: Local (disco directo, sin FTP)
+- **Base de datos**: SQLite via better-sqlite3 (WAL mode)
+  - `isiprime.db` — media cache, series, colecciones, descargas, usuarios
+  - `requests.db` — peticiones de películas
+- **Autenticación**: JWT (access token 15min + refresh token 30d) + bcrypt
 - **APIs externas**: TMDB (metadatos de películas)
 - **Usuario GitHub**: CALILU
+- **Target**: LincStation N2 (Debian 12)
 
 ## Estructura del proyecto
 
 ```
 F:\plex\
-├── server.js              # Backend principal
-├── my-ui/                 # Frontend React
-│   ├── src/               # Código fuente
+├── server.js              # Backend principal (Express 5)
+├── db/                    # Módulos SQLite
+│   ├── media-db.js        # Películas, series, colecciones, descargas
+│   ├── users-db.js        # Usuarios, sesiones, progreso, favoritos
+│   └── requests-db.js     # Peticiones de películas
+├── lib/                   # Lógica de negocio
+│   ├── auth.js            # JWT, bcrypt, middleware de autenticación
+│   ├── cache.js           # Cache de metadatos (SQLite)
+│   ├── series.js          # Gestión de series (SQLite)
+│   ├── collections.js     # Colecciones (SQLite)
+│   ├── download-helpers.js # Cola de descargas (SQLite)
+│   ├── tmdb.js            # Cliente TMDB rate-limited
+│   ├── normalizers.js     # Normalización cache → API
+│   ├── utils.js           # Utilidades compartidas
+│   ├── requests-helpers.js # Helpers de peticiones
+│   └── dlna.js            # Servicio DLNA/UPnP (opcional)
+├── routes/                # Rutas Express
+│   ├── auth.js            # Login, refresh, registro, invitaciones
+│   ├── user-data.js       # Progreso, favoritos per-user
+│   ├── videos.js          # Catálogo de películas
+│   ├── streaming.js       # Streaming con FFmpeg
+│   ├── series.js          # Series y episodios
+│   ├── requests.js        # Peticiones CRUD + SSE
+│   ├── collections.js     # Colecciones de películas
+│   ├── downloads.js       # Cola de descargas
+│   ├── conversion.js      # Conversión de video + SSE
+│   ├── storage.js         # Configuración de almacenamiento
+│   ├── movies.js          # Gestión de archivos de películas
+│   ├── dlna.js            # DLNA/Cast a TV
+│   ├── tmdb.js            # Búsqueda TMDB
+│   └── misc.js            # Endpoints utilitarios
+├── scripts/
+│   └── migrate-json-to-sqlite.js  # Migración JSON → SQLite
+├── my-ui/                 # Frontend React 19
+│   ├── src/
+│   │   ├── App.js         # Hub central, role-based UI
+│   │   ├── hooks/         # useAuth, useVideos, useSeries, etc.
+│   │   ├── utils/api.js   # authFetch con JWT auto-refresh
+│   │   └── components/    # Modales y reproductor
 │   └── build/             # Build compilado (CRÍTICO)
 ├── backups/               # Backups del build
-├── chrome-extension/      # Extensión para OK.ru
 ├── .env                   # Variables de entorno
-├── HermesStream.vbs       # Launcher de la aplicación
-└── restore-build.bat      # Script para restaurar build
+└── package.json           # Dependencias (jsonwebtoken, bcrypt, better-sqlite3...)
 ```
 
 ## Troubleshooting
@@ -33,70 +72,61 @@ F:\plex\
 
 **Causa**: El directorio `my-ui/build/` no existe o está corrupto.
 
-**Solución automática**:
+**Solución**:
 ```bash
 # Opción 1: Restaurar desde backup
-# En Windows: doble clic en restore-build.bat
-# O desde terminal:
 cp -r backups/build-backup-20260128/* my-ui/build/
 
 # Opción 2: Recompilar
 cd my-ui && npm run build
 ```
 
-**Backup disponible**: `F:\plex\backups\build-backup-20260128`
+### SQLite "invalid ELF header"
 
-### Errores de conexión (FTP/TMDB timeout)
+**Causa**: Módulo nativo compilado para otra arquitectura (ej: Windows vs Linux).
 
-**Causa**: Problema de DNS en WSL.
+**Solución**: `npm rebuild better-sqlite3` en la máquina target.
 
-**Solución**: Ejecutar el servidor desde Windows PowerShell en lugar de WSL:
-```powershell
-cd F:\plex
-node server.js
-```
+### Auth no funciona tras reinicio
 
-O reiniciar WSL:
-```powershell
-wsl --shutdown
-```
+**Causa**: JWT_SECRET se auto-genera si no está en `.env`, invalidando tokens existentes.
 
-### Tor Browser no se maximiza
-
-El código usa `AppActivate` + `SendKeys('% x')` para traer al frente y maximizar después de 4 segundos.
+**Solución**: Fijar `JWT_SECRET=<valor-fijo>` en `.env`.
 
 ## Iniciar la aplicación
 
-**Método 1 - Acceso directo**: Doble clic en `HermesStream.vbs`
-
-**Método 2 - Manual desde PowerShell**:
-```powershell
-cd F:\plex
-node server.js
-# Abrir http://localhost:8080
-```
-
-**Método 3 - Desde WSL** (si hay conexión):
 ```bash
-cd /mnt/f/plex && node server.js
+# Desde el directorio del proyecto
+node server.js
+
+# O con nodemon para desarrollo
+npm run dev
 ```
 
 ## APIs y Endpoints importantes
 
+### Auth
+- `POST /api/auth/login` - Login (devuelve accessToken + refreshToken)
+- `POST /api/auth/refresh` - Renovar access token
+- `POST /api/auth/logout` - Cerrar sesión
+- `POST /api/auth/register` - Registro con código de invitación
+- `GET /api/auth/status` - Estado de autenticación (LAN auto-auth)
+
+### Datos per-user
+- `PUT /api/progress` - Guardar progreso de video
+- `GET /api/continue-watching` - Videos para continuar viendo
+- `POST/DELETE/GET /api/favorites` - Favoritos del usuario
+
+### Media
 - `GET /api/videos` - Lista de películas
+- `GET /api/series` - Lista de series
+- `GET /stream/:filename` - Streaming de película (token via query string)
+- `GET /stream-series/:folder/:file` - Streaming de episodio
 - `GET /api/requests` - Peticiones de usuarios
-- `POST /api/search-torrents` - Buscar en TodoTorrents (abre Tor)
-- `POST /api/download-queue` - Añadir URL a cola de descargas
-- `GET /stream/:filename` - Streaming de película
-
-## Integraciones
-
-- **Chrome Extension**: Añade videos de OK.ru a la cola de descargas
-- **Python Downloader**: `F:\Utiles de python para videos\descarga_youtube\YouTubeDownloader.exe`
-- **Tor Browser**: `C:\Users\isidr\Desktop\Tor Browser\` para buscar en TodoTorrents
+- `GET /api/collections` - Colecciones de películas
 
 ## Desarrollador
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 28/01/2026
+- Última actualización: 22/02/2026
