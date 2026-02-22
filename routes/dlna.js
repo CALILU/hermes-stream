@@ -127,6 +127,30 @@ function initRoutes(context) {
         }
     });
 
+    // POST /api/dlna/add-device - Añadir dispositivo manual por IP
+    router.post('/add-device', async (req, res) => {
+        const { ip } = req.body;
+        if (!ip || !/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)) {
+            return res.status(400).json({ success: false, error: 'IP invalida. Formato esperado: 192.168.1.100' });
+        }
+        try {
+            const device = await dlna.addManualDevice(ip);
+            res.json({ success: true, data: device });
+        } catch (err) {
+            res.status(404).json({ success: false, error: err.message });
+        }
+    });
+
+    // DELETE /api/dlna/remove-device - Eliminar dispositivo manual
+    router.delete('/remove-device', (req, res) => {
+        const { ip } = req.body;
+        if (!ip) {
+            return res.status(400).json({ success: false, error: 'IP requerida' });
+        }
+        const removed = dlna.removeManualDevice(ip);
+        res.json({ success: true, removed });
+    });
+
     // GET /api/dlna/status - Estado de reproduccion
     router.get('/status', (req, res) => {
         res.json({ success: true, data: dlna.getStatus() });

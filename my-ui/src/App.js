@@ -88,7 +88,8 @@ export default function HermesApp() {
   const {
     devices: castDevices, scanning: castScanning, activeDevice: castActiveDevice,
     castStatus, casting, scanDevices: castScanDevices,
-    castToDevice, pauseCast, resumeCast, stopCast, seekCast, setVolume: setCastVolume
+    castToDevice, pauseCast, resumeCast, stopCast, seekCast, setVolume: setCastVolume,
+    addManualDevice, removeManualDevice
   } = useCast();
   const [showCastModal, setShowCastModal] = useState(false);
 
@@ -2170,6 +2171,8 @@ export default function HermesApp() {
         onStop={stopCast}
         onSeek={seekCast}
         onVolume={setCastVolume}
+        onAddManualDevice={addManualDevice}
+        onRemoveManualDevice={removeManualDevice}
         videoTitle={selectedVideo?.title}
       />
 

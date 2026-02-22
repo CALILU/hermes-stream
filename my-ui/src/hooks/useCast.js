@@ -99,6 +99,42 @@ export function useCast() {
         } catch (e) { /* silencioso */ }
     }, []);
 
+    // Añadir dispositivo manual por IP
+    const addManualDevice = useCallback(async (ip) => {
+        try {
+            const res = await fetch('/api/dlna/add-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            const data = await res.json();
+            if (data.success) {
+                await fetchDevices();
+            }
+            return data;
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    }, [fetchDevices]);
+
+    // Eliminar dispositivo manual
+    const removeManualDevice = useCallback(async (ip) => {
+        try {
+            const res = await fetch('/api/dlna/remove-device', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            const data = await res.json();
+            if (data.success) {
+                await fetchDevices();
+            }
+            return data;
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    }, [fetchDevices]);
+
     // Polling de estado
     const startStatusPolling = useCallback(() => {
         stopStatusPolling();
@@ -144,6 +180,8 @@ export function useCast() {
         resumeCast,
         stopCast,
         seekCast,
-        setVolume
+        setVolume,
+        addManualDevice,
+        removeManualDevice
     };
 }

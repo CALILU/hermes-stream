@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Tv, RefreshCw, Loader2, Play, Pause, Square, Volume2, Airplay } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Tv, RefreshCw, Loader2, Play, Pause, Square, Volume2, Airplay, Plus, Trash2 } from 'lucide-react';
 
 /**
  * Modal para seleccionar dispositivo DLNA y controlar reproduccion
@@ -19,8 +19,14 @@ export default function CastDeviceModal({
     onStop,
     onSeek,
     onVolume,
+    onAddManualDevice,
+    onRemoveManualDevice,
     videoTitle
 }) {
+    const [manualIp, setManualIp] = useState('');
+    const [addingDevice, setAddingDevice] = useState(false);
+    const [addError, setAddError] = useState('');
+
     if (!show) return null;
 
     const formatTime = (s) => {
@@ -35,6 +41,24 @@ export default function CastDeviceModal({
     const progress = castStatus.duration > 0
         ? (castStatus.currentTime / castStatus.duration) * 100
         : 0;
+
+    const handleAddManualDevice = async () => {
+        if (!manualIp.trim()) return;
+        setAddingDevice(true);
+        setAddError('');
+        const result = await onAddManualDevice(manualIp.trim());
+        if (!result.success) {
+            setAddError(result.error || 'No se pudo conectar');
+        } else {
+            setManualIp('');
+        }
+        setAddingDevice(false);
+    };
+
+    const handleRemoveManualDevice = async (e, ip) => {
+        e.stopPropagation();
+        await onRemoveManualDevice(ip);
+    };
 
     return (
         <div
@@ -154,23 +178,23 @@ export default function CastDeviceModal({
                     </div>
 
                     {devices.length === 0 && !scanning && (
-                        <div className="text-center py-6">
+                        <div className="text-center py-4">
                             <Tv size={40} className="mx-auto text-slate-600 mb-2" />
                             <p className="text-slate-400 text-sm">No se encontraron TVs en la red</p>
                             <p className="text-slate-500 text-xs mt-1">
-                                Asegurate de que la TV esta encendida y en la misma red WiFi
+                                Introduce la IP de tu TV manualmente
                             </p>
                         </div>
                     )}
 
                     {scanning && devices.length === 0 && (
-                        <div className="text-center py-6">
+                        <div className="text-center py-4">
                             <Loader2 size={32} className="mx-auto text-blue-400 animate-spin mb-2" />
                             <p className="text-slate-400 text-sm">Buscando dispositivos DLNA...</p>
                         </div>
                     )}
 
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                         {devices.map((device, idx) => {
                             const isActive = activeDevice && activeDevice.url === device.url;
                             return (
@@ -185,20 +209,65 @@ export default function CastDeviceModal({
                                     }`}
                                 >
                                     <Tv size={20} className={isActive ? 'text-blue-400' : 'text-slate-400'} />
-                                    <div className="flex-1 text-left">
+                                    <div className="flex-1 text-left min-w-0">
                                         <p className={`text-sm font-medium ${isActive ? 'text-blue-300' : 'text-white'}`}>
                                             {device.name}
+                                            {device.manual && (
+                                                <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-amber-600/30 text-amber-400 rounded">Manual</span>
+                                            )}
                                         </p>
                                         <p className="text-xs text-slate-500">{device.address}</p>
                                     </div>
+                                    {device.manual && !isActive && (
+                                        <button
+                                            onClick={(e) => handleRemoveManualDevice(e, device.address)}
+                                            className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                                            title="Eliminar dispositivo manual"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
                                     {isActive ? (
                                         <span className="text-xs text-blue-400">Conectado</span>
-                                    ) : (
+                                    ) : !device.manual ? (
                                         <Play size={16} className="text-slate-500" />
-                                    )}
+                                    ) : null}
                                 </button>
                             );
                         })}
+                    </div>
+
+                    {/* Añadir dispositivo manual */}
+                    <div className="mt-4 pt-3 border-t border-slate-700">
+                        <p className="text-slate-500 text-xs mb-2">
+                            Si tu TV no aparece, introduce su IP manualmente
+                        </p>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={manualIp}
+                                onChange={(e) => { setManualIp(e.target.value); setAddError(''); }}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddManualDevice()}
+                                placeholder="192.168.1.100"
+                                disabled={addingDevice}
+                                className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                            />
+                            <button
+                                onClick={handleAddManualDevice}
+                                disabled={addingDevice || !manualIp.trim()}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-600 disabled:opacity-50 rounded-lg text-white text-sm transition-colors"
+                            >
+                                {addingDevice ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                ) : (
+                                    <Plus size={14} />
+                                )}
+                                {addingDevice ? 'Probando...' : 'Añadir'}
+                            </button>
+                        </div>
+                        {addError && (
+                            <p className="text-red-400 text-xs mt-2">{addError}</p>
+                        )}
                     </div>
                 </div>
             </div>
