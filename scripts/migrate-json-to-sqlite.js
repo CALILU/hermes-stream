@@ -9,9 +9,9 @@
  * Archivos migrados:
  *   - cache.json           -> movies_cache
  *   - cache-series.json    -> series_cache
- *   - series-episodes.json -> series_episodes
- *   - collections.json     -> collections + collection_items
- *   - ~/.youtube_downloader_queue.json -> download_queue (opcional)
+ *   - series-episodes.json -> series_episodes  (one row per series, seasons as JSON blob)
+ *   - collections.json     -> collections      (movies stored as JSON in `movies` column)
+ *   - download-queue.json  -> download_queue   (opcional)
  *
  * Uso: node scripts/migrate-json-to-sqlite.js
  *
@@ -51,34 +51,24 @@ function readJSON(filePath) {
 }
 
 /**
- * Convierte un timestamp Unix (milisegundos) a ISO string.
+ * Convierte un valor a timestamp Unix en milisegundos (INTEGER).
+ * Si ya es un numero grande (ms), lo devuelve tal cual.
+ * Si es un numero pequeno (segundos), lo multiplica.
+ * Si es un string ISO, lo convierte.
+ * Devuelve Date.now() como fallback.
  */
-function timestampToISO(ts) {
-    if (!ts) return null;
-    try {
-        // Si es un numero grande (ms), convertir
-        if (typeof ts === 'number' && ts > 1e12) {
-            return new Date(ts).toISOString();
-        }
-        // Si ya es un string ISO, devolverlo tal cual
-        if (typeof ts === 'string') return ts;
-        // Si es un numero pequeno (segundos), convertir
-        if (typeof ts === 'number') {
-            return new Date(ts * 1000).toISOString();
-        }
-        return null;
-    } catch {
-        return null;
+function toTimestamp(val) {
+    if (val === null || val === undefined) return Date.now();
+    // Si ya es un numero grande (ms), devolver tal cual
+    if (typeof val === 'number' && val > 1e12) return val;
+    // Si es un numero pequeno (segundos), convertir a ms
+    if (typeof val === 'number' && val > 0) return val * 1000;
+    // Si es un string ISO, parsear
+    if (typeof val === 'string') {
+        const parsed = new Date(val).getTime();
+        return isNaN(parsed) ? Date.now() : parsed;
     }
-}
-
-/**
- * Extrae el ano de una fecha string (e.g. "2024-01-15" -> 2024).
- */
-function extractYear(dateStr) {
-    if (!dateStr) return null;
-    const match = String(dateStr).match(/(\d{4})/);
-    return match ? parseInt(match[1], 10) : null;
+    return Date.now();
 }
 
 /**
@@ -120,15 +110,20 @@ function migrateMoviesCache(db) {
 
     if (entries.length === 0) return { migrated: 0, errors: 0 };
 
+    // Schema: filename, tmdb_id, title, original_title, overview, poster_path,
+    //         backdrop_path, release_date, vote_average, genre_ids, runtime,
+    //         videos, recommendations, cast_json, collection_json, cached_at (INTEGER), tmdb_raw
     const insert = db.prepare(`
         INSERT OR REPLACE INTO movies_cache
-        (filename, tmdb_id, title, original_title, year, overview,
-         poster_path, backdrop_path, vote_average, genres, runtime,
-         director, cast_json, tmdb_raw, cached_at)
+        (filename, tmdb_id, title, original_title, overview,
+         poster_path, backdrop_path, release_date, vote_average,
+         genre_ids, runtime, videos, recommendations, cast_json,
+         collection_json, cached_at, tmdb_raw)
         VALUES
-        (@filename, @tmdb_id, @title, @original_title, @year, @overview,
-         @poster_path, @backdrop_path, @vote_average, @genres, @runtime,
-         @director, @cast_json, @tmdb_raw, @cached_at)
+        (@filename, @tmdb_id, @title, @original_title, @overview,
+         @poster_path, @backdrop_path, @release_date, @vote_average,
+         @genre_ids, @runtime, @videos, @recommendations, @cast_json,
+         @collection_json, @cached_at, @tmdb_raw)
     `);
 
     let migrated = 0;
@@ -137,35 +132,24 @@ function migrateMoviesCache(db) {
     const transaction = db.transaction(() => {
         for (const [filename, data] of entries) {
             try {
-                // Extraer director del cast si existe
-                let director = null;
-                if (data.cast && Array.isArray(data.cast)) {
-                    const dir = data.cast.find(c =>
-                        c.known_for_department === 'Directing' ||
-                        c.job === 'Director'
-                    );
-                    if (dir) director = dir.name;
-                }
-
-                // Generos: pueden ser genre_ids (numeros) o genres (strings)
-                const genres = data.genres || data.genre_ids || [];
-
                 insert.run({
                     filename,
                     tmdb_id: data.tmdb_id || data.id || null,
                     title: data.title || null,
                     original_title: data.original_title || null,
-                    year: extractYear(data.release_date),
                     overview: data.overview || null,
                     poster_path: data.poster_path || data.poster || null,
                     backdrop_path: data.backdrop_path || data.backdrop || null,
+                    release_date: data.release_date || null,
                     vote_average: data.vote_average || null,
-                    genres: toJSON(genres),
+                    genre_ids: toJSON(data.genre_ids || []),
                     runtime: data.runtime || null,
-                    director,
+                    videos: toJSON(data.videos || []),
+                    recommendations: toJSON(data.recommendations || []),
                     cast_json: toJSON(data.cast || []),
-                    tmdb_raw: toJSON(data),
-                    cached_at: timestampToISO(data.cached_at) || new Date().toISOString()
+                    collection_json: toJSON(data.collection || null),
+                    cached_at: toTimestamp(data.cached_at),
+                    tmdb_raw: toJSON(data)
                 });
 
                 migrated++;
@@ -197,15 +181,26 @@ function migrateSeriesCache(db) {
 
     if (entries.length === 0) return { migrated: 0, errors: 0 };
 
+    // Schema: folder_name, tmdb_id, title, original_title, overview, poster_path,
+    //         backdrop_path, first_air_date, last_air_date, vote_average,
+    //         genre_ids, genres, status, number_of_seasons, number_of_episodes,
+    //         episode_runtime, networks, created_by, cast_json, videos,
+    //         recommendations, seasons_info, last_watched, cached_at (INTEGER)
     const insert = db.prepare(`
         INSERT OR REPLACE INTO series_cache
         (folder_name, tmdb_id, title, original_title, overview,
-         poster_path, backdrop_path, vote_average, genres,
-         first_air_date, total_seasons, tmdb_raw, cached_at)
+         poster_path, backdrop_path, first_air_date, last_air_date,
+         vote_average, genre_ids, genres, status, number_of_seasons,
+         number_of_episodes, episode_runtime, networks, created_by,
+         cast_json, videos, recommendations, seasons_info,
+         last_watched, cached_at)
         VALUES
         (@folder_name, @tmdb_id, @title, @original_title, @overview,
-         @poster_path, @backdrop_path, @vote_average, @genres,
-         @first_air_date, @total_seasons, @tmdb_raw, @cached_at)
+         @poster_path, @backdrop_path, @first_air_date, @last_air_date,
+         @vote_average, @genre_ids, @genres, @status, @number_of_seasons,
+         @number_of_episodes, @episode_runtime, @networks, @created_by,
+         @cast_json, @videos, @recommendations, @seasons_info,
+         @last_watched, @cached_at)
     `);
 
     let migrated = 0;
@@ -214,8 +209,6 @@ function migrateSeriesCache(db) {
     const transaction = db.transaction(() => {
         for (const [folderName, data] of entries) {
             try {
-                const genres = data.genres || data.genre_ids || [];
-
                 insert.run({
                     folder_name: folderName,
                     tmdb_id: data.tmdb_id || data.id || null,
@@ -224,12 +217,23 @@ function migrateSeriesCache(db) {
                     overview: data.overview || null,
                     poster_path: data.poster || data.poster_path || null,
                     backdrop_path: data.backdrop || data.backdrop_path || null,
-                    vote_average: data.vote_average || null,
-                    genres: toJSON(genres),
                     first_air_date: data.first_air_date || null,
-                    total_seasons: data.number_of_seasons || null,
-                    tmdb_raw: toJSON(data),
-                    cached_at: timestampToISO(data.cached_at) || new Date().toISOString()
+                    last_air_date: data.last_air_date || null,
+                    vote_average: data.vote_average || null,
+                    genre_ids: toJSON(data.genre_ids || []),
+                    genres: toJSON(data.genres || []),
+                    status: data.status || null,
+                    number_of_seasons: data.number_of_seasons || null,
+                    number_of_episodes: data.number_of_episodes || null,
+                    episode_runtime: data.episode_runtime || null,
+                    networks: toJSON(data.networks || []),
+                    created_by: toJSON(data.created_by || []),
+                    cast_json: toJSON(data.cast || []),
+                    videos: toJSON(data.videos || []),
+                    recommendations: toJSON(data.recommendations || []),
+                    seasons_info: toJSON(data.seasons_info || null),
+                    last_watched: toJSON(data.last_watched || null),
+                    cached_at: toTimestamp(data.cached_at)
                 });
 
                 migrated++;
@@ -261,167 +265,92 @@ function migrateSeriesEpisodes(db) {
 
     if (seriesKeys.length === 0) return { migrated: 0, errors: 0 };
 
-    // Necesitamos mapear tmdb_id -> folder_name.
-    // Primero obtener el mapeo de la tabla series_cache (ya migrada).
-    const seriesRows = db.prepare('SELECT folder_name, tmdb_id FROM series_cache').all();
-    const tmdbToFolder = new Map();
-    for (const row of seriesRows) {
-        if (row.tmdb_id) {
-            tmdbToFolder.set(String(row.tmdb_id), row.folder_name);
-        }
-    }
-
+    // Schema: tmdb_id TEXT PRIMARY KEY, series_title TEXT, seasons_data TEXT
+    // Each series is stored as one row with all seasons as a JSON blob in seasons_data
     const insert = db.prepare(`
         INSERT OR REPLACE INTO series_episodes
-        (series_folder, season, episode, filename, title, overview, still_path)
+        (tmdb_id, series_title, seasons_data)
         VALUES
-        (@series_folder, @season, @episode, @filename, @title, @overview, @still_path)
+        (@tmdb_id, @series_title, @seasons_data)
     `);
 
     let migrated = 0;
     let errors = 0;
-    let skipped = 0;
 
     const transaction = db.transaction(() => {
         for (const [tmdbId, seriesData] of Object.entries(data)) {
-            // Intentar obtener folder_name desde el mapeo
-            let seriesFolder = tmdbToFolder.get(tmdbId);
+            try {
+                // seriesData has: { series_title, seasons: { "1": { episodes: [...] }, ... } }
+                const seriesTitle = seriesData.series_title || null;
+                const seasons = seriesData.seasons || {};
 
-            // Si no hay mapeo, usar series_title como fallback
-            if (!seriesFolder && seriesData.series_title) {
-                seriesFolder = seriesData.series_title;
-            }
+                insert.run({
+                    tmdb_id: String(tmdbId),
+                    series_title: seriesTitle,
+                    seasons_data: JSON.stringify(seasons)
+                });
 
-            if (!seriesFolder) {
-                console.log(`  [SKIP] No se encontro folder para tmdb_id=${tmdbId}, series_title="${seriesData.series_title || 'N/A'}"`);
-                skipped++;
-                continue;
-            }
-
-            // Verificar que la serie existe en series_cache; si no, insertarla como placeholder
-            const existing = db.prepare('SELECT folder_name FROM series_cache WHERE folder_name = ?').get(seriesFolder);
-            if (!existing) {
-                db.prepare(`
-                    INSERT OR IGNORE INTO series_cache
-                    (folder_name, tmdb_id, title, cached_at)
-                    VALUES (?, ?, ?, datetime('now'))
-                `).run(seriesFolder, parseInt(tmdbId, 10) || null, seriesData.series_title || seriesFolder);
-            }
-
-            const seasons = seriesData.seasons || {};
-            for (const [seasonNum, seasonData] of Object.entries(seasons)) {
-                const episodes = seasonData.episodes || [];
-                for (const ep of episodes) {
-                    try {
-                        insert.run({
-                            series_folder: seriesFolder,
-                            season: parseInt(seasonNum, 10),
-                            episode: ep.episode_number || 0,
-                            filename: ep.filename || '',
-                            title: ep.name || ep.title || null,
-                            overview: ep.overview || null,
-                            still_path: ep.still || ep.still_path || null
-                        });
-                        migrated++;
-                    } catch (error) {
-                        // UNIQUE constraint puede fallar si hay duplicados
-                        if (!error.message.includes('UNIQUE')) {
-                            console.error(`  [ERROR] S${seasonNum}E${ep.episode_number} de "${seriesFolder}": ${error.message}`);
-                        }
-                        errors++;
-                    }
-                }
+                migrated++;
+            } catch (error) {
+                console.error(`  [ERROR] Fallo al migrar episodios de tmdb_id=${tmdbId}: ${error.message}`);
+                errors++;
             }
         }
     });
 
     transaction();
-    console.log(`  Episodios migrados: ${migrated} | Errores: ${errors} | Series sin folder: ${skipped}`);
-    return { migrated, errors, skipped };
+    console.log(`  Series migradas: ${migrated} | Errores: ${errors}`);
+    return { migrated, errors };
 }
 
 // ===================================================================
-// Migracion: collections.json -> collections + collection_items
+// Migracion: collections.json -> collections
 // ===================================================================
 
 function migrateCollections(db) {
-    separator('MIGRANDO: collections.json -> collections + collection_items');
+    separator('MIGRANDO: collections.json -> collections');
 
     const filePath = path.join(BASE_DIR, 'collections.json');
     const data = readJSON(filePath);
-    if (!data) return { migrated: 0, items: 0, errors: 0 };
+    if (!data) return { migrated: 0, errors: 0 };
 
     const entries = Object.entries(data);
     console.log(`  Encontradas ${entries.length} colecciones`);
 
-    if (entries.length === 0) return { migrated: 0, items: 0, errors: 0 };
+    if (entries.length === 0) return { migrated: 0, errors: 0 };
 
+    // Schema: collection_id TEXT PRIMARY KEY, name TEXT, overview TEXT,
+    //         poster TEXT, backdrop TEXT, movies TEXT (JSON), genre_ids TEXT (JSON),
+    //         cached_at INTEGER
+    // NOTE: NO collection_items table. Movies are stored as JSON array in `movies` column.
     const insertCollection = db.prepare(`
         INSERT OR REPLACE INTO collections
-        (id, name, description, type, poster_path, backdrop_path,
-         genre_ids, auto_criteria, tmdb_raw, created_at, updated_at)
+        (collection_id, name, overview, poster, backdrop, movies, genre_ids, cached_at)
         VALUES
-        (@id, @name, @description, @type, @poster_path, @backdrop_path,
-         @genre_ids, @auto_criteria, @tmdb_raw, @created_at, @updated_at)
+        (@collection_id, @name, @overview, @poster, @backdrop, @movies, @genre_ids, @cached_at)
     `);
 
-    const insertItem = db.prepare(`
-        INSERT OR REPLACE INTO collection_items
-        (collection_id, filename, tmdb_id, title, poster_path,
-         release_date, position, added_at)
-        VALUES
-        (@collection_id, @filename, @tmdb_id, @title, @poster_path,
-         @release_date, @position, datetime('now'))
-    `);
-
-    let migratedCollections = 0;
-    let migratedItems = 0;
+    let migrated = 0;
     let errors = 0;
 
     const transaction = db.transaction(() => {
         for (const [collectionId, col] of entries) {
             try {
-                const now = new Date().toISOString();
-                const cachedAt = timestampToISO(col.cached_at) || now;
+                // movies is an array of { filename, tmdb_id, title, poster, release_date, genre_ids }
+                const movies = col.movies || col.parts || [];
 
                 insertCollection.run({
-                    id: parseInt(collectionId, 10) || null,
+                    collection_id: String(collectionId),
                     name: col.name || `Coleccion ${collectionId}`,
-                    description: col.overview || col.description || null,
-                    type: col.type || 'auto',
-                    poster_path: col.poster || col.poster_path || null,
-                    backdrop_path: col.backdrop || col.backdrop_path || null,
+                    overview: col.overview || null,
+                    poster: col.poster || col.poster_path || null,
+                    backdrop: col.backdrop || col.backdrop_path || null,
+                    movies: toJSON(movies),
                     genre_ids: toJSON(col.genre_ids || []),
-                    auto_criteria: toJSON(col.auto_criteria || null),
-                    tmdb_raw: toJSON(col),
-                    created_at: cachedAt,
-                    updated_at: cachedAt
+                    cached_at: toTimestamp(col.cached_at)
                 });
 
-                migratedCollections++;
-
-                // Migrar los items (peliculas) de la coleccion
-                const movies = col.movies || col.parts || [];
-                for (let i = 0; i < movies.length; i++) {
-                    const movie = movies[i];
-                    try {
-                        insertItem.run({
-                            collection_id: parseInt(collectionId, 10),
-                            filename: movie.filename || movie.title || `item_${i}`,
-                            tmdb_id: movie.tmdb_id || movie.id || null,
-                            title: movie.title || null,
-                            poster_path: movie.poster || movie.poster_path || null,
-                            release_date: movie.release_date || null,
-                            position: i
-                        });
-                        migratedItems++;
-                    } catch (itemError) {
-                        if (!itemError.message.includes('UNIQUE')) {
-                            console.error(`  [ERROR] Item "${movie.title}" en coleccion ${collectionId}: ${itemError.message}`);
-                        }
-                        errors++;
-                    }
-                }
+                migrated++;
             } catch (error) {
                 console.error(`  [ERROR] Coleccion ${collectionId} "${col.name}": ${error.message}`);
                 errors++;
@@ -430,19 +359,29 @@ function migrateCollections(db) {
     });
 
     transaction();
-    console.log(`  Colecciones migradas: ${migratedCollections} | Items: ${migratedItems} | Errores: ${errors}`);
-    return { migrated: migratedCollections, items: migratedItems, errors };
+    console.log(`  Colecciones migradas: ${migrated} | Errores: ${errors}`);
+    return { migrated, errors };
 }
 
 // ===================================================================
-// Migracion: ~/.youtube_downloader_queue.json -> download_queue
+// Migracion: download-queue.json -> download_queue
 // ===================================================================
 
 function migrateDownloadQueue(db) {
-    separator('MIGRANDO: download_queue.json -> download_queue');
+    separator('MIGRANDO: download-queue.json -> download_queue');
 
-    const filePath = path.join(os.homedir(), '.youtube_downloader_queue.json');
-    const data = readJSON(filePath);
+    // Try multiple possible locations
+    const possiblePaths = [
+        path.join(BASE_DIR, 'download-queue.json'),
+        path.join(os.homedir(), '.youtube_downloader_queue.json')
+    ];
+
+    let data = null;
+    for (const filePath of possiblePaths) {
+        data = readJSON(filePath);
+        if (data) break;
+    }
+
     if (!data) return { migrated: 0, errors: 0 };
 
     if (!Array.isArray(data)) {
@@ -454,11 +393,15 @@ function migrateDownloadQueue(db) {
 
     if (data.length === 0) return { migrated: 0, errors: 0 };
 
+    // Schema: id INTEGER PRIMARY KEY AUTOINCREMENT, url TEXT NOT NULL UNIQUE,
+    //         title TEXT, status TEXT NOT NULL DEFAULT 'pending',
+    //         output_path TEXT, request_id INTEGER,
+    //         added_at TEXT NOT NULL, completed_at TEXT
     const insert = db.prepare(`
         INSERT OR IGNORE INTO download_queue
-        (url, title, format, status, output_path, request_id, added_at, updated_at)
+        (url, title, status, output_path, request_id, added_at, completed_at)
         VALUES
-        (@url, @title, @format, @status, @output_path, @request_id, @added_at, @updated_at)
+        (@url, @title, @status, @output_path, @request_id, @added_at, @completed_at)
     `);
 
     let migrated = 0;
@@ -467,19 +410,17 @@ function migrateDownloadQueue(db) {
     const transaction = db.transaction(() => {
         for (const item of data) {
             try {
-                // Mapear status: el JSON usa 'pending'/'completed'/etc.
                 const validStatuses = ['pending', 'downloading', 'completed', 'failed', 'cancelled'];
                 const status = validStatuses.includes(item.status) ? item.status : 'pending';
 
                 insert.run({
                     url: item.url || '',
                     title: item.title || null,
-                    format: item.format || null,
                     status,
                     output_path: item.output_path || item.outputPath || null,
                     request_id: item.requestId || item.request_id || null,
                     added_at: item.added_at || item.addedAt || new Date().toISOString(),
-                    updated_at: item.updated_at || item.updatedAt || new Date().toISOString()
+                    completed_at: item.completed_at || item.completedAt || null
                 });
 
                 migrated++;
@@ -509,7 +450,6 @@ function verifyMigration(db, results) {
         series_cache: db.prepare('SELECT COUNT(*) as count FROM series_cache').get().count,
         series_episodes: db.prepare('SELECT COUNT(*) as count FROM series_episodes').get().count,
         collections: db.prepare('SELECT COUNT(*) as count FROM collections').get().count,
-        collection_items: db.prepare('SELECT COUNT(*) as count FROM collection_items').get().count,
         download_queue: db.prepare('SELECT COUNT(*) as count FROM download_queue').get().count
     };
 
@@ -525,7 +465,7 @@ function verifyMigration(db, results) {
     const seriesOk = counts.series_cache >= results.series.migrated;
     console.log(`  series_cache          | ${String(counts.series_cache).padStart(5)}   | ${String(results.series.migrated).padStart(5)}   | ${seriesOk ? 'OK' : 'DIFERENCIA'}`);
 
-    // series_episodes
+    // series_episodes (one row per series)
     const episodesOk = counts.series_episodes === results.episodes.migrated;
     console.log(`  series_episodes       | ${String(counts.series_episodes).padStart(5)}   | ${String(results.episodes.migrated).padStart(5)}   | ${episodesOk ? 'OK' : 'DIFERENCIA'}`);
 
@@ -533,17 +473,13 @@ function verifyMigration(db, results) {
     const collectionsOk = counts.collections === results.collections.migrated;
     console.log(`  collections           | ${String(counts.collections).padStart(5)}   | ${String(results.collections.migrated).padStart(5)}   | ${collectionsOk ? 'OK' : 'DIFERENCIA'}`);
 
-    // collection_items
-    const itemsOk = counts.collection_items === results.collections.items;
-    console.log(`  collection_items      | ${String(counts.collection_items).padStart(5)}   | ${String(results.collections.items).padStart(5)}   | ${itemsOk ? 'OK' : 'DIFERENCIA'}`);
-
     // download_queue
     const downloadsOk = counts.download_queue === results.downloads.migrated;
     console.log(`  download_queue        | ${String(counts.download_queue).padStart(5)}   | ${String(results.downloads.migrated).padStart(5)}   | ${downloadsOk ? 'OK' : 'DIFERENCIA'}`);
 
     console.log('');
 
-    const allOk = moviesOk && seriesOk && episodesOk && collectionsOk && itemsOk && downloadsOk;
+    const allOk = moviesOk && seriesOk && episodesOk && collectionsOk && downloadsOk;
     if (allOk) {
         console.log('  RESULTADO: Todas las tablas verificadas correctamente.');
     } else {
@@ -586,10 +522,10 @@ function main() {
         results.movies = migrateMoviesCache(db);
         results.series = migrateSeriesCache(db);
 
-        // Episodios dependen de series_cache (necesita folder_name para mapear)
+        // Episodios: cada serie es una fila con seasons_data como JSON blob
         results.episodes = migrateSeriesEpisodes(db);
 
-        // Colecciones (independientes)
+        // Colecciones: movies almacenadas como JSON en columna `movies`
         results.collections = migrateCollections(db);
 
         // Cola de descargas (independiente, archivo opcional)
@@ -611,7 +547,6 @@ function main() {
         (results.series?.migrated || 0) +
         (results.episodes?.migrated || 0) +
         (results.collections?.migrated || 0) +
-        (results.collections?.items || 0) +
         (results.downloads?.migrated || 0);
 
     const totalErrors =
