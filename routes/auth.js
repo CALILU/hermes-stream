@@ -68,7 +68,7 @@ module.exports = function createAuthRoutes(deps) {
             // Look up user
             const user = usersDB.getUserByUsername(username);
 
-            if (!user || !user.is_active) {
+            if (!user || !user.active) {
                 if (req.recordLoginAttempt) req.recordLoginAttempt();
                 return res.status(401).json({
                     error: 'Credenciales invalidas',
@@ -87,7 +87,7 @@ module.exports = function createAuthRoutes(deps) {
                     // Auto-migrate to bcrypt
                     const bcryptHash = await hashPassword(password);
                     try {
-                        usersDB.updateUserPassword(user.id, bcryptHash);
+                        usersDB.updateUser(user.id, { password_hash: bcryptHash });
                         console.log(`[Auth] Password migrada a bcrypt para usuario: ${username}`);
                     } catch (migrationErr) {
                         console.error(`[Auth] Error migrando password para ${username}:`, migrationErr.message);
@@ -122,7 +122,7 @@ module.exports = function createAuthRoutes(deps) {
             });
 
             // Update last login
-            usersDB.updateLastLogin(user.id);
+            usersDB.updateUser(user.id, { last_login: new Date().toISOString() });
 
             res.json({
                 success: true,
@@ -177,7 +177,7 @@ module.exports = function createAuthRoutes(deps) {
 
             // Get user info for token generation
             const user = usersDB.getUserById(session.user_id);
-            if (!user || !user.is_active) {
+            if (!user || !user.active) {
                 usersDB.revokeSession(session.id);
                 return res.status(401).json({
                     error: 'Usuario no encontrado o desactivado',
@@ -297,12 +297,12 @@ module.exports = function createAuthRoutes(deps) {
             const newUser = usersDB.createUser({
                 username,
                 passwordHash,
-                role: invitation.role || 'user',
+                role: invitation.role || 'viewer',
                 displayName: username
             });
 
             // Mark invitation as used
-            usersDB.useInvitation(invitation.id, newUser.id);
+            usersDB.useInvitation(invitation.code, newUser.id);
 
             res.status(201).json({
                 success: true,
@@ -495,7 +495,7 @@ module.exports = function createAuthRoutes(deps) {
             const days = parseInt(expiresInDays) || 7;
             const expiresDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
-            const invitation = usersDB.createInvitation(req.user.id, expiresDate, role || 'user');
+            const invitation = usersDB.createInvitation(req.user.id, expiresDate.toISOString(), role || 'viewer');
 
             // Build invitation link
             const protocol = req.protocol;
@@ -507,7 +507,7 @@ module.exports = function createAuthRoutes(deps) {
                 data: {
                     code: invitation.code,
                     link,
-                    expiresAt: invitation.expires_at
+                    expiresAt: invitation.expiresAt
                 }
             });
         } catch (err) {

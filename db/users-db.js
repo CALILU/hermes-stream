@@ -104,12 +104,21 @@ function init() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             code TEXT UNIQUE NOT NULL,
             created_by INTEGER NOT NULL REFERENCES users(id),
+            role TEXT DEFAULT 'viewer',
             expires_at DATETIME NOT NULL,
             used_by INTEGER REFERENCES users(id),
             used_at DATETIME
         );
         CREATE INDEX IF NOT EXISTS idx_invitations_code ON invitations(code);
     `);
+
+    // Migrar: añadir columna role a invitaciones si no existe
+    try {
+        db.prepare("SELECT role FROM invitations LIMIT 1").get();
+    } catch (e) {
+        db.exec("ALTER TABLE invitations ADD COLUMN role TEXT DEFAULT 'viewer'");
+        console.log('🔐 Columna role añadida a invitations');
+    }
 
     console.log('🔐 Tablas de usuarios SQLite creadas/verificadas');
 
@@ -285,7 +294,7 @@ function createSession({ userId, refreshToken, deviceInfo, ipAddress, expiresAt 
         refresh_token: refreshToken,
         device_info: deviceInfo || null,
         ip_address: ipAddress || null,
-        expires_at: expiresAt
+        expires_at: expiresAt instanceof Date ? expiresAt.toISOString() : expiresAt
     });
 
     return db.prepare('SELECT * FROM sessions WHERE id = ?').get(info.lastInsertRowid);
@@ -304,6 +313,16 @@ function getSessionByToken(refreshToken) {
         AND revoked = 0
         AND expires_at > datetime('now')
     `).get(refreshToken) || null;
+}
+
+/**
+ * Obtiene una sesion por ID
+ * @param {number} id
+ * @returns {Object|null} Sesion o null
+ */
+function getSessionById(id) {
+    init();
+    return db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) || null;
 }
 
 /**
@@ -528,23 +547,26 @@ function isFavorite(userId, videoPath) {
  * Crea una invitacion con codigo aleatorio
  * @param {number} createdBy - ID del usuario que crea la invitacion
  * @param {string} expiresAt - Fecha de expiracion ISO string
- * @returns {Object} { code, expiresAt }
+ * @param {string} [role='viewer'] - Rol asignado al registrarse
+ * @returns {Object} { code, expiresAt, role }
  */
-function createInvitation(createdBy, expiresAt) {
+function createInvitation(createdBy, expiresAt, role) {
     init();
 
     const code = crypto.randomBytes(16).toString('hex');
+    const invitationRole = role || 'viewer';
 
     db.prepare(`
-        INSERT INTO invitations (code, created_by, expires_at)
-        VALUES (@code, @created_by, @expires_at)
+        INSERT INTO invitations (code, created_by, expires_at, role)
+        VALUES (@code, @created_by, @expires_at, @role)
     `).run({
         code,
         created_by: createdBy,
-        expires_at: expiresAt
+        expires_at: expiresAt,
+        role: invitationRole
     });
 
-    return { code, expiresAt };
+    return { code, expiresAt, role: invitationRole };
 }
 
 /**
@@ -641,6 +663,7 @@ module.exports = {
     // Sessions
     createSession,
     getSessionByToken,
+    getSessionById,
     revokeSession,
     revokeAllUserSessions,
     getUserSessions,
