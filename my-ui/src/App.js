@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, LogOut, Heart, Shuffle, Sparkles, ChevronDown } from 'lucide-react';
+import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, Users, LogOut, Heart, Shuffle, Sparkles, ChevronDown, UserPlus } from 'lucide-react';
 import { API_BASE, CACHE_KEY, ALPHABET, genreEmojis } from './constants';
 import { authFetch, getAccessToken } from './utils/api';
 import { loadCache, saveCache } from './utils/cache';
@@ -11,6 +11,7 @@ import { useVideoProgress } from './hooks/useVideoProgress';
 import { useVideos } from './hooks/useVideos';
 import { useSeries } from './hooks/useSeries';
 import { useRequests } from './hooks/useRequests';
+import { useUsers } from './hooks/useUsers';
 import { useCast } from './hooks/useCast';
 import ContextMenu from './components/ContextMenu';
 import DeleteConfirmModal from './components/DeleteConfirmModal';
@@ -28,6 +29,7 @@ import SettingsModal from './components/SettingsModal';
 import CastDeviceModal from './components/CastDeviceModal';
 import RandomPickerModal from './components/RandomPickerModal';
 import RecommendationsSection from './components/RecommendationsSection';
+import UserManagementModal from './components/UserManagementModal';
 import { useRecommendations } from './hooks/useRecommendations';
 
 export default function HermesApp() {
@@ -78,6 +80,63 @@ export default function HermesApp() {
     openRequestsAdmin, openRequestsModal,
     closeRequestsModal, isMovieInCatalog, isMovieRequested
   } = useRequests({ authState, videos });
+
+  const {
+    userManagementModal, users, invitations, loadingUsers, activeTab: usersActiveTab,
+    createUserForm, creatingUser, createUserError,
+    invitationForm, creatingInvitation, lastCreatedInvitation,
+    setActiveTab: setUsersActiveTab, setCreateUserForm, setInvitationForm, setLastCreatedInvitation,
+    createUser, deleteUser, createInvitation, deleteInvitation,
+    openUserManagement, closeUserManagement
+  } = useUsers();
+
+  // Registration page state (for ?code= URL)
+  const [registerMode, setRegisterMode] = useState(null);
+  const [registerForm, setRegisterForm] = useState({ username: '', password: '', confirmPassword: '' });
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+
+  // Detect ?code= param on mount for registration
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      setRegisterMode(code);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setRegisterError('Las contrasenas no coinciden');
+      return;
+    }
+    if (registerForm.password.length < 8) {
+      setRegisterError('La contrasena debe tener al menos 8 caracteres');
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: registerMode, username: registerForm.username, password: registerForm.password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRegisterSuccess(true);
+      } else {
+        setRegisterError(data.error || 'Error en el registro');
+      }
+    } catch (err) {
+      setRegisterError('Error de conexion');
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
 
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loadingVideo, setLoadingVideo] = useState(null);
@@ -532,7 +591,7 @@ export default function HermesApp() {
 
   // Bloquear scroll del body cuando hay modales abiertos
   useEffect(() => {
-    if (requestsModal || settingsModal || requestsAdminModal) {
+    if (requestsModal || settingsModal || requestsAdminModal || userManagementModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -540,7 +599,7 @@ export default function HermesApp() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [requestsModal, settingsModal, requestsAdminModal]);
+  }, [requestsModal, settingsModal, requestsAdminModal, userManagementModal]);
 
   // Audio boost useEffects ahora viven en useVolumeBoost hook
 
@@ -816,6 +875,128 @@ export default function HermesApp() {
         >
           <img src="/logo.jpg" alt="IsiPrime" className="h-24 w-auto mx-auto mb-4 rounded-2xl" />
           <div className="text-slate-400">Cargando...</div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Mostrar pagina de registro si hay codigo de invitacion en la URL
+  if (registerMode) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] font-sans relative overflow-hidden flex items-center justify-center p-4">
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 20, repeat: Infinity }}
+          className="absolute -top-20 -left-20 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-60"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }}
+          transition={{ duration: 25, repeat: Infinity }}
+          className="absolute -bottom-20 -right-20 w-[30rem] h-[30rem] bg-blue-100 rounded-full blur-3xl opacity-60"
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 bg-slate-800/80 backdrop-blur-md rounded-3xl p-8 w-full max-w-md shadow-xl border border-white"
+        >
+          <div className="text-center mb-8">
+            <img src="/logo.jpg" alt="IsiPrime" className="h-20 w-auto mx-auto mb-4 rounded-2xl" style={{ filter: 'drop-shadow(0 4px 12px rgba(99, 102, 241, 0.3))' }} />
+            <h1 className="text-2xl font-bold text-white">Crear Cuenta</h1>
+            <p className="text-slate-500 text-sm mt-1">Completa tu registro para acceder</p>
+          </div>
+
+          {registerSuccess ? (
+            <div className="text-center space-y-4">
+              <div className="p-4 bg-green-900/30 border border-green-700/50 rounded-xl">
+                <p className="text-green-300 font-medium">Cuenta creada correctamente</p>
+                <p className="text-slate-400 text-sm mt-1">Ya puedes iniciar sesion con tus credenciales</p>
+              </div>
+              <button
+                onClick={() => {
+                  setRegisterMode(null);
+                  setRegisterSuccess(false);
+                }}
+                className="w-full py-3 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <Lock size={18} />
+                Ir al Login
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Usuario</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={registerForm.username}
+                    onChange={e => setRegisterForm(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white"
+                    placeholder="Elige un nombre de usuario"
+                    autoFocus
+                    required
+                  />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Contrasena</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={registerForm.password}
+                    onChange={e => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white"
+                    placeholder="Minimo 8 caracteres"
+                    required
+                  />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-200 mb-1">Confirmar Contrasena</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={registerForm.confirmPassword}
+                    onChange={e => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-800 rounded-xl border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-white"
+                    placeholder="Repite la contrasena"
+                    required
+                  />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                </div>
+              </div>
+
+              {registerError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm text-center"
+                >
+                  {registerError}
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                disabled={registerLoading}
+                className="w-full py-3 bg-indigo-500 text-white rounded-xl font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-wait flex items-center justify-center gap-2"
+              >
+                {registerLoading ? (
+                  <>
+                    <span className="animate-spin">&#9203;</span>
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={18} />
+                    Crear Cuenta
+                  </>
+                )}
+              </button>
+            </form>
+          )}
         </motion.div>
       </div>
     );
@@ -1275,6 +1456,16 @@ export default function HermesApp() {
               📋
             </button>
           )}
+          {/* Botón Admin Usuarios (solo admin/local) */}
+          {(authState.isLocal || authState.user?.role === 'admin') && (
+            <button
+              onClick={openUserManagement}
+              className="p-3 bg-slate-800/80 rounded-xl border border-slate-600 hover:shadow-md transition-all"
+              title="Gestionar usuarios"
+            >
+              <Users className="text-slate-400" size={20} />
+            </button>
+          )}
           <button
             onClick={() => setSettingsModal(true)}
             className="p-3 bg-slate-800/80 rounded-xl border border-slate-600 hover:shadow-md transition-all"
@@ -1649,6 +1840,14 @@ export default function HermesApp() {
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
             >
               📋 Ver Peticiones
+            </button>
+          )}
+          {(authState.isLocal || authState.user?.role === 'admin') && (
+            <button
+              onClick={openUserManagement}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
+            >
+              <Users size={16} /> Gestionar Usuarios
             </button>
           )}
         </div>
@@ -2277,6 +2476,30 @@ export default function HermesApp() {
         onDelete={deleteRequest}
         onSearchTorrents={searchTodoTorrents}
         onClose={() => setRequestsAdminModal(false)}
+      />
+
+      <UserManagementModal
+        userManagementModal={userManagementModal}
+        users={users}
+        invitations={invitations}
+        loadingUsers={loadingUsers}
+        activeTab={usersActiveTab}
+        createUserForm={createUserForm}
+        creatingUser={creatingUser}
+        createUserError={createUserError}
+        invitationForm={invitationForm}
+        creatingInvitation={creatingInvitation}
+        lastCreatedInvitation={lastCreatedInvitation}
+        authState={authState}
+        onTabChange={setUsersActiveTab}
+        onCreateUserFormChange={setCreateUserForm}
+        onInvitationFormChange={setInvitationForm}
+        onCreateUser={createUser}
+        onDeleteUser={deleteUser}
+        onCreateInvitation={createInvitation}
+        onDeleteInvitation={deleteInvitation}
+        onDismissInvitation={() => setLastCreatedInvitation(null)}
+        onClose={closeUserManagement}
       />
 
       <SeriesDetailModal
