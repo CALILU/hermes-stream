@@ -32,8 +32,8 @@ if "%STATUS%"=="200" (
 :: Montar disco FTP via rclone (si no esta montado)
 wsl -e bash -c "mountpoint -q /home/isidr/ftp-mount 2>/dev/null || rclone mount router-ftp:/volume-1/ /home/isidr/ftp-mount --read-only --vfs-cache-mode minimal --dir-cache-time 5m --daemon 2>/dev/null; sleep 2"
 
-:: Iniciar servidor en WSL (start /b para no bloquear el bat)
-start "" /b wsl -e bash -c "cd /mnt/f/plex && node server.js > /tmp/hermes.log 2>&1"
+:: Iniciar servidor en WSL (usar nvm node v20 via PATH, start /b para no bloquear)
+start "" /b wsl -e bash -c "export PATH=\"$HOME/.nvm/versions/node/v20.19.6/bin:$PATH\" && cd /mnt/f/plex && node server.js > /tmp/hermes.log 2>&1"
 
 :: Esperar a que el servidor arranque (max 30 segundos)
 set ATTEMPTS=0
