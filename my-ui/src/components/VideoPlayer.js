@@ -251,14 +251,21 @@ export default function VideoPlayer({
     return () => window.removeEventListener('keydown', handleKey);
   }, [selectedVideo, togglePlay, toggleFullscreen, togglePiP, toggleMute, handleVolumeChange, volume, isFullscreen, resetHideTimer, videoRef]);
 
-  // Seek bar interaction
+  // Seek bar interaction - extract clientX from mouse or touch event
+  const getClientX = useCallback((e) => {
+    if (e.touches && e.touches.length > 0) return e.touches[0].clientX;
+    if (e.changedTouches && e.changedTouches.length > 0) return e.changedTouches[0].clientX;
+    return e.clientX;
+  }, []);
+
   const getTimeFromSeekBar = useCallback((e) => {
     const bar = seekBarRef.current;
     if (!bar || !duration) return 0;
     const rect = bar.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const clientX = getClientX(e);
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     return (x / rect.width) * duration;
-  }, [duration]);
+  }, [duration, getClientX]);
 
   const handleSeekStart = useCallback((e) => {
     e.preventDefault();
@@ -286,16 +293,24 @@ export default function VideoPlayer({
     const up = () => handleSeekEnd();
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
-    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('touchend', up);
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+      window.removeEventListener('touchmove', move);
+      window.removeEventListener('touchend', up);
+    };
   }, [isSeeking, handleSeekMove, handleSeekEnd]);
 
   // Seek bar click
   const handleSeekBarClick = useCallback((e) => {
+    if (e.type === 'click' && isSeeking) return; // avoid double-seek on mouse
     const time = getTimeFromSeekBar(e);
     setCurrentTime(time);
     const video = videoRef.current;
     if (video) video.currentTime = time;
-  }, [getTimeFromSeekBar, videoRef]);
+  }, [getTimeFromSeekBar, videoRef, isSeeking]);
 
   // Thumbnail preview - setup hidden video
   useEffect(() => {
@@ -586,6 +601,7 @@ export default function VideoPlayer({
                   showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
                 onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onMouseEnter={() => {
                   setShowControls(true);
                   if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -596,8 +612,9 @@ export default function VideoPlayer({
                 <div className="px-4 pt-8 pb-1">
                   <div
                     ref={seekBarRef}
-                    className="relative h-5 flex items-center cursor-pointer group/seek"
+                    className="relative h-8 flex items-center cursor-pointer group/seek touch-none"
                     onMouseDown={handleSeekStart}
+                    onTouchStart={handleSeekStart}
                     onClick={handleSeekBarClick}
                     onMouseMove={handleSeekHover}
                     onMouseLeave={handleSeekHoverEnd}

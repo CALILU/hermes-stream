@@ -378,7 +378,7 @@ export function useVideos({ authState, setAuthState }) {
     }
 
     if (selectedCollection) {
-      const collection = collections.find(c => c.id === selectedCollection);
+      const collection = collections.find(c => c.name === selectedCollection);
       if (collection && collection.movies) {
         const collectionFilenames = collection.movies.map(m => m.filename);
         result = result.filter(v => collectionFilenames.includes(v.filename));

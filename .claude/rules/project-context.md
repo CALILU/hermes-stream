@@ -36,7 +36,7 @@ F:\plex\
 │   ├── normalizers.js     # Normalización cache → API
 │   ├── utils.js           # Utilidades compartidas
 │   ├── requests-helpers.js # Helpers de peticiones
-│   └── dlna.js            # Servicio DLNA/UPnP (opcional)
+│   └── dlna.js            # DLNA/UPnP + LG webOS SSAP (Cast a TV)
 ├── routes/                # Rutas Express
 │   ├── auth.js            # Login, refresh, registro, invitaciones
 │   ├── user-data.js       # Progreso, favoritos per-user
@@ -59,7 +59,7 @@ F:\plex\
 │   │   ├── App.js         # Hub central, role-based UI
 │   │   ├── hooks/         # useAuth, useVideos, useSeries, useUsers, etc.
 │   │   ├── utils/api.js   # authFetch con JWT auto-refresh
-│   │   └── components/    # Modales y reproductor (UserManagementModal, etc.)
+│   │   └── components/    # VideoPlayer, UserManagementModal, CastButton, RandomPickerModal, etc.
 │   └── build/             # Build compilado (CRÍTICO)
 ├── backups/               # Backups del build
 ├── .env                   # Variables de entorno
@@ -137,4 +137,4 @@ npm run dev
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 23/02/2026
+- Última actualización: 24/02/2026

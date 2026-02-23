@@ -1789,10 +1789,10 @@ export default function HermesApp() {
               <div className="space-y-2">
                 {collections.map(collection => (
                   <button
-                    key={collection.id}
-                    onClick={() => setSelectedCollection(collection.id)}
+                    key={collection.name}
+                    onClick={() => setSelectedCollection(collection.name)}
                     className={`w-full text-left rounded-xl transition-all overflow-hidden ${
-                      selectedCollection === collection.id
+                      selectedCollection === collection.name
                         ? 'ring-2 ring-indigo-500 shadow-md'
                         : 'hover:shadow-md'
                     }`}
@@ -2041,7 +2041,7 @@ export default function HermesApp() {
             <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
               {selectedCollection ? <Layers className="text-indigo-400" /> : <HardDrive className="text-indigo-400" />}
               {selectedCollection
-                ? collections.find(c => c.id === selectedCollection)?.name || 'Colección'
+                ? selectedCollection || 'Colección'
                 : selectedGenre
                   ? genres.find(g => g.id === selectedGenre)?.name
                   : selectedLetter

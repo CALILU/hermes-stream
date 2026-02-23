@@ -81,7 +81,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 - **collections.js** — Collection CRUD (SQLite), auto-generation by genre/year/decade
 - **requests-helpers.js** — Request operations (SQLite), auto-detect from filenames
 - **download-helpers.js** — Download queue persistence (SQLite) and state tracking
-- **dlna.js** — DLNA/UPnP service and media renderer client
+- **dlna.js** — DLNA/UPnP service, media renderer client, LG webOS SSAP control (pause/resume/volume via WebSocket on port 3000). Cast strategies: Browser+fMP4 (primary), Media Viewer native, Web Video Caster, Browser+proxy
 
 ### Database (`db/`)
 All data persisted in SQLite via `better-sqlite3` (WAL mode):
@@ -107,6 +107,14 @@ React 19 app with Tailwind CSS and Framer Motion. Built with react-scripts, outp
 - `useVolumeBoost` — Audio gain control
 - `useRecommendations` — AI-based personalized recommendations
 - `useCast` — DLNA/Cast to TV
+
+**Components** (in `my-ui/src/components/`):
+- `VideoPlayer.js` — Custom video player with seek bar (mouse+touch), thumbnail preview, volume boost, PiP, fullscreen, cast button, keyboard shortcuts, recommended movies
+- `UserManagementModal.js` — Admin modal: user CRUD + invitation management (2 tabs)
+- `CastButton.js` — Cast to TV button with status indicator
+- `CastDeviceModal.js` — DLNA device selector modal
+- `RandomPickerModal.js` — Smart random movie picker
+- `RequestsAdminModal.js` — Requests management modal
 
 **App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + requests admin, viewer does not). Includes inline registration page triggered by `?code=` URL parameter.
 
