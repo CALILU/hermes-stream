@@ -6,7 +6,7 @@ Servidor autónomo de streaming de películas y series para 5-10 usuarios remoto
 
 - **Directorio**: F:\plex
 - **Nombre**: IsiPrime / HermesStream
-- **Backend**: Node.js + Express 5 (server.js) - Puerto 3002 (env PORT)
+- **Backend**: Node.js + Express 5 (server.js) - Puerto 8080 (env PORT)
 - **Frontend**: React 19 (my-ui/) - Compilado en my-ui/build/
 - **Almacenamiento**: Local (disco directo, sin FTP)
 - **Base de datos**: SQLite via better-sqlite3 (WAL mode)
@@ -57,9 +57,9 @@ F:\plex\
 ├── my-ui/                 # Frontend React 19
 │   ├── src/
 │   │   ├── App.js         # Hub central, role-based UI
-│   │   ├── hooks/         # useAuth, useVideos, useSeries, etc.
+│   │   ├── hooks/         # useAuth, useVideos, useSeries, useUsers, etc.
 │   │   ├── utils/api.js   # authFetch con JWT auto-refresh
-│   │   └── components/    # Modales y reproductor
+│   │   └── components/    # Modales y reproductor (UserManagementModal, etc.)
 │   └── build/             # Build compilado (CRÍTICO)
 ├── backups/               # Backups del build
 ├── .env                   # Variables de entorno
@@ -109,8 +109,16 @@ npm run dev
 - `POST /api/auth/login` - Login (devuelve accessToken + refreshToken)
 - `POST /api/auth/refresh` - Renovar access token
 - `POST /api/auth/logout` - Cerrar sesión
-- `POST /api/auth/register` - Registro con código de invitación
+- `POST /api/auth/register` - Registro con código de invitación (público)
 - `GET /api/auth/status` - Estado de autenticación (LAN auto-auth)
+- `GET /api/auth/users` - Listar usuarios (admin)
+- `POST /api/auth/users` - Crear usuario (admin)
+- `DELETE /api/auth/users/:id` - Eliminar usuario (admin)
+- `POST /api/auth/invitations` - Crear invitación (admin)
+- `GET /api/auth/invitations` - Listar invitaciones (admin)
+- `DELETE /api/auth/invitations/:id` - Eliminar invitación (admin)
+- `GET /api/auth/sessions` - Sesiones del usuario
+- `DELETE /api/auth/sessions/:id` - Revocar sesión
 
 ### Datos per-user
 - `PUT /api/progress` - Guardar progreso de video
@@ -129,4 +137,4 @@ npm run dev
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 22/02/2026
+- Última actualización: 23/02/2026

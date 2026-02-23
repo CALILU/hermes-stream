@@ -9,7 +9,7 @@ IsiPrime (HermesStream) is a self-hosted streaming video application designed to
 ## Commands
 
 ```bash
-# Start server (port 3002, configurable via PORT env)
+# Start server (port 8080, configurable via PORT env)
 npm start
 
 # Development with auto-reload
@@ -102,12 +102,13 @@ React 19 app with Tailwind CSS and Framer Motion. Built with react-scripts, outp
 - `useVideos` — Catalog + favorites (server-synced) + search
 - `useSeries` — Series + episodes
 - `useRequests` — Requests + SSE real-time updates
+- `useUsers` — User management + invitations (admin CRUD, create/delete users, generate invitation codes)
 - `useVideoProgress` — Playback position (server-synced + localStorage cache)
 - `useVolumeBoost` — Audio gain control
 - `useRecommendations` — AI-based personalized recommendations
 - `useCast` — DLNA/Cast to TV
 
-**App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + requests admin, viewer does not).
+**App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + requests admin, viewer does not). Includes inline registration page triggered by `?code=` URL parameter.
 
 ### Batch Converter
 Two entry points:
