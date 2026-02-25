@@ -137,6 +137,42 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
 
+### webOS Native TV App (`IsiPrime-WebOS-Native/`)
+Standalone vanilla JS app for LG webOS 6.0 TVs (Chromium ~87). NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API.
+
+**Technical constraints**: No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `?.`, no `??`, no `replaceAll()`. Uses `window.App` namespace pattern.
+
+**Architecture** (13 JS modules loaded via `<script>` tags in dependency order):
+| Module | Purpose |
+|--------|---------|
+| `config.js` | Constants, TMDB image helpers, key codes |
+| `api.js` | HTTP client with JWT auth + auto-refresh on 401 |
+| `login.js` | Login screen for remote (non-LAN) users |
+| `images.js` | Lazy loading with IntersectionObserver (max 4 concurrent) |
+| `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
+| `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
+| `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH) |
+| `home.js` | Genre carousels, continue-watching, series, favorites sections |
+| `detail.js` | Movie/series detail overlay with backdrop, cast, play/favorite buttons |
+| `player.js` | Fullscreen video player with remote controls, resume dialog, progress save |
+| `series.js` | Series detail with season tabs + episode list |
+| `search.js` | On-screen keyboard + local search results |
+| `app.js` | Bootstrap, data loading, nav bar setup (loaded last) |
+
+**Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
+
+**Commands**:
+```bash
+# Package for webOS
+cd IsiPrime-WebOS-Native && ares-package .
+
+# Install on TV
+ares-install --device IsiPrimeTV com.isiprime.app_2.0.0_all.ipk
+
+# Renew Developer Mode (cron every 24h)
+scripts/renew-webos-devmode.sh
+```
+
 ## Install Package
 
 `IsiPrime-Install/` contains a standalone read-only package for other users. Has its own `.env`, `INSTALAR.bat` (auto-installs Node.js + deps), and `IsiPrime.bat` (launcher). Must be manually updated when the main codebase changes.

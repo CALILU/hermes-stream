@@ -53,7 +53,27 @@ F:\plex\
 │   ├── tmdb.js            # Búsqueda TMDB
 │   └── misc.js            # Endpoints utilitarios
 ├── scripts/
-│   └── migrate-json-to-sqlite.js  # Migración JSON → SQLite
+│   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite
+│   └── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
+├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.0.0
+│   ├── appinfo.json       # Manifest webOS (com.isiprime.app)
+│   ├── index.html         # Entry point (13 scripts sin modules)
+│   ├── css/styles.css     # CSS completo (~1500 líneas)
+│   ├── js/                # Vanilla JS, window.App namespace
+│   │   ├── config.js      # Constantes, TMDB helpers, keycodes
+│   │   ├── api.js         # HTTP client con JWT auth + auto-refresh
+│   │   ├── login.js       # Login para usuarios remotos
+│   │   ├── focus.js       # Motor navegación D-pad
+│   │   ├── carousel.js    # Carrusel virtual horizontal
+│   │   ├── images.js      # Lazy loading (IntersectionObserver)
+│   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER...)
+│   │   ├── home.js        # Carruseles por género
+│   │   ├── detail.js      # Detalle película/serie
+│   │   ├── player.js      # Reproductor fullscreen
+│   │   ├── series.js      # Temporadas + episodios
+│   │   ├── search.js      # Teclado en pantalla + búsqueda
+│   │   └── app.js         # Bootstrap (cargado último)
+│   └── assets/            # placeholder.svg
 ├── my-ui/                 # Frontend React 19
 │   ├── src/
 │   │   ├── App.js         # Hub central, role-based UI
@@ -137,4 +157,4 @@ npm run dev
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 24/02/2026
+- Última actualización: 25/02/2026
