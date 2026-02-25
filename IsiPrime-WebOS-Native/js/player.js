@@ -1,7 +1,12 @@
 /**
- * IsiPrime webOS App - Video Player
- * Fullscreen video player with TV remote controls (D-pad).
- * Handles play/pause, seeking, progress saving, and resume dialog.
+ * IsiPrime webOS App - Video Player (iframe approach)
+ *
+ * Architecture:
+ * - An iframe loads /tv-player from the server (same-origin for video playback)
+ * - The iframe has its own controls: progress bar, transport buttons, title, state icon
+ * - This parent module handles: resume dialog, progress saving, key forwarding
+ * - Keys pressed in parent are forwarded to iframe via postMessage
+ * - The iframe sends timeupdate/progress/back/ended messages to parent
  */
 (function() {
     'use strict';
@@ -9,28 +14,21 @@
     window.App = window.App || {};
 
     App.Player = {
-        _video: null,
+        _iframe: null,
         _container: null,
-        _controls: null,
-        _titleBar: null,
-        _progressFill: null,
-        _progressDot: null,
-        _timeCurrent: null,
-        _timeTotal: null,
-        _stateIcon: null,
         _title: '',
         _videoPath: '',
         _videoUrl: '',
-        _controlsTimer: null,
-        _progressTimer: null,
-        _isPlaying: false,
         _startPosition: 0,
         _keyHandler: null,
         _resumeDialog: null,
         _resumeFocusIndex: 0,
         _resumeButtons: [],
         _isInResumeDialog: false,
-        _eventsBound: false,
+        _destroyed: false,
+        _lastProgress: null,
+        _messageHandler: null,
+        _progressSaveTimer: null,
 
         /**
          * Start the player with video data.
@@ -42,24 +40,22 @@
             this._videoPath = data.videoPath || '';
             this._videoUrl = data.url || '';
             this._startPosition = data.startPosition || 0;
-            this._isPlaying = false;
-            this._eventsBound = false;
+            this._destroyed = false;
+            this._lastProgress = null;
 
             // Build player DOM
             this._container.innerHTML = '';
             this._container.style.display = '';
-            this._buildDOM();
 
             // Disable focus system (player handles own keys)
             if (App.Focus && App.Focus.disable) {
                 App.Focus.disable();
             }
 
-            // Setup key handler
-            this._setupKeyHandler();
-
             // If there's a saved position > 30s, show resume dialog first
             if (this._startPosition > 30) {
+                this._buildResumeDialog();
+                this._setupKeyHandler();
                 this._showResumeDialog();
             } else {
                 this._startPlayback(0);
@@ -67,83 +63,21 @@
         },
 
         /**
-         * Build the player DOM elements.
+         * Build the resume dialog DOM.
          */
-        _buildDOM: function() {
-            var container = this._container;
-
-            // Video element
-            var video = document.createElement('video');
-            video.className = 'player-video';
-            video.setAttribute('preload', 'auto');
-            container.appendChild(video);
-            this._video = video;
-
-            // Title bar (top)
-            var titleBar = document.createElement('div');
-            titleBar.className = 'player-title-bar';
-            titleBar.textContent = this._title;
-            container.appendChild(titleBar);
-            this._titleBar = titleBar;
-
-            // State icon (play/pause indicator in center)
-            var stateIcon = document.createElement('div');
-            stateIcon.className = 'player-state-icon';
-            stateIcon.id = 'player-state-icon';
-            container.appendChild(stateIcon);
-            this._stateIcon = stateIcon;
-
-            // Controls overlay (bottom)
-            var controls = document.createElement('div');
-            controls.className = 'player-controls';
-
-            // Progress bar
-            var progressBar = document.createElement('div');
-            progressBar.className = 'player-progress-bar';
-
-            var progressFill = document.createElement('div');
-            progressFill.className = 'player-progress-fill';
-            progressBar.appendChild(progressFill);
-            this._progressFill = progressFill;
-
-            var progressDot = document.createElement('div');
-            progressDot.className = 'player-progress-dot';
-            progressBar.appendChild(progressDot);
-            this._progressDot = progressDot;
-
-            controls.appendChild(progressBar);
-
-            // Time display
-            var timeRow = document.createElement('div');
-            timeRow.className = 'player-time';
-
-            var timeCurrent = document.createElement('span');
-            timeCurrent.id = 'time-current';
-            timeCurrent.textContent = '0:00';
-            timeRow.appendChild(timeCurrent);
-            this._timeCurrent = timeCurrent;
-
-            var timeTotal = document.createElement('span');
-            timeTotal.id = 'time-total';
-            timeTotal.textContent = '0:00';
-            timeRow.appendChild(timeTotal);
-            this._timeTotal = timeTotal;
-
-            controls.appendChild(timeRow);
-            container.appendChild(controls);
-            this._controls = controls;
-
-            // Resume dialog container (hidden initially)
+        _buildResumeDialog: function() {
             var resumeDialog = document.createElement('div');
             resumeDialog.className = 'resume-dialog';
             resumeDialog.style.display = 'none';
-            container.appendChild(resumeDialog);
+            this._container.appendChild(resumeDialog);
             this._resumeDialog = resumeDialog;
+
+            // Dark background
+            this._container.style.background = '#000';
         },
 
         /**
          * Show the resume position dialog.
-         * The user chooses to continue from saved position or restart.
          */
         _showResumeDialog: function() {
             var dialog = this._resumeDialog;
@@ -184,9 +118,9 @@
          */
         _setResumeFocus: function(index) {
             if (index < 0 || index >= this._resumeButtons.length) return;
-            this._resumeButtons.forEach(function(btn) {
-                btn.classList.remove('focused');
-            });
+            for (var i = 0; i < this._resumeButtons.length; i++) {
+                this._resumeButtons[i].classList.remove('focused');
+            }
             this._resumeFocusIndex = index;
             this._resumeButtons[index].classList.add('focused');
         },
@@ -210,124 +144,170 @@
         },
 
         /**
-         * Start video playback at the given position.
-         * Sets the video source, binds events, and begins playing.
+         * Start video playback by creating an iframe to the server's tv-player page.
          */
         _startPlayback: function(seekTo) {
             var self = this;
-            var video = this._video;
-            if (!video) return;
+            if (this._destroyed) return;
 
-            // Bind video events only once
-            if (!this._eventsBound) {
-                this._eventsBound = true;
+            // Extract just the filename from the full URL
+            var serverUrl = App.Config.SERVER_URL;
+            var url = this._videoUrl;
 
-                // timeupdate: update progress bar and time display
-                video.addEventListener('timeupdate', function() {
-                    self._onTimeUpdate();
-                });
-
-                // ended: video finished
-                video.addEventListener('ended', function() {
-                    self._onEnded();
-                });
-
-                // error
-                video.addEventListener('error', function(e) {
-                    console.error('Video error:', e);
-                });
+            // Remove server prefix to get path
+            if (url.indexOf(serverUrl) === 0) {
+                url = url.substring(serverUrl.length);
             }
 
-            // loadedmetadata: set duration and seek
-            var onMetadata = function() {
-                video.removeEventListener('loadedmetadata', onMetadata);
+            // Extract filename from /stream/FILENAME or /stream-series/FOLDER/FILE
+            var streamPrefix = '/stream/';
+            var seriesPrefix = '/stream-series/';
+            var seriesFolder = '';
+            var filename = '';
 
-                if (self._timeTotal) {
-                    self._timeTotal.textContent = self._formatTime(video.duration || 0);
+            if (url.indexOf(streamPrefix) === 0) {
+                filename = decodeURIComponent(url.substring(streamPrefix.length).split('?')[0]);
+            } else if (url.indexOf(seriesPrefix) === 0) {
+                var subPath = url.substring(seriesPrefix.length).split('?')[0];
+                var slashIdx = subPath.indexOf('/');
+                if (slashIdx > 0) {
+                    seriesFolder = decodeURIComponent(subPath.substring(0, slashIdx));
+                    filename = decodeURIComponent(subPath.substring(slashIdx + 1));
+                } else {
+                    filename = decodeURIComponent(subPath);
                 }
+            } else {
+                var parts = url.split('/');
+                filename = decodeURIComponent(parts[parts.length - 1].split('?')[0]);
+            }
 
-                if (seekTo > 0) {
-                    video.currentTime = seekTo;
+            // Build iframe URL
+            var iframeUrl = serverUrl + '/tv-player'
+                + '?file=' + encodeURIComponent(filename)
+                + '&pos=' + seekTo
+                + '&title=' + encodeURIComponent(this._title);
+
+            if (seriesFolder) {
+                iframeUrl += '&series=' + encodeURIComponent(seriesFolder);
+            }
+
+            var token = App.API._accessToken;
+            if (token) {
+                iframeUrl += '&token=' + encodeURIComponent(token);
+            }
+
+            console.log('[Player] iframe URL: ' + iframeUrl);
+
+            // Clear container and create fullscreen iframe
+            this._container.innerHTML = '';
+            this._container.style.background = '#000';
+
+            var iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;';
+            iframe.setAttribute('allowfullscreen', '');
+            iframe.setAttribute('allow', 'autoplay');
+            iframe.src = iframeUrl;
+            this._container.appendChild(iframe);
+            this._iframe = iframe;
+
+            // Focus iframe when loaded so it receives key events directly
+            iframe.addEventListener('load', function() {
+                try {
+                    iframe.contentWindow.focus();
+                } catch (e) {
+                    console.log('[Player] Could not focus iframe: ' + e.message);
                 }
+            });
 
-                video.play().then(function() {
-                    self._isPlaying = true;
-                    self._showControls();
-                }).catch(function(err) {
-                    console.error('Playback error:', err);
-                    // Retry play without promise handling (older webOS)
-                    try { video.play(); } catch (e) {}
-                    self._isPlaying = true;
-                    self._showControls();
-                });
+            // Listen for messages from iframe
+            this._messageHandler = function(e) {
+                if (self._destroyed) return;
+                var data = e.data;
+                if (!data || !data.type) return;
+
+                switch (data.type) {
+                    case 'timeupdate':
+                        self._lastProgress = {
+                            currentTime: data.currentTime || 0,
+                            duration: data.duration || 0
+                        };
+                        break;
+
+                    case 'progress':
+                        self._lastProgress = {
+                            currentTime: data.currentTime || 0,
+                            duration: data.duration || 0
+                        };
+                        // Save progress to server
+                        if (self._videoPath && data.currentTime > 0) {
+                            App.API.saveProgress(self._videoPath, data.currentTime, data.duration);
+                        }
+                        break;
+
+                    case 'back':
+                        // Save final progress and go back
+                        if (self._videoPath && data.currentTime > 0) {
+                            App.API.saveProgress(self._videoPath, data.currentTime, data.duration);
+                        }
+                        self._goBack();
+                        break;
+
+                    case 'ended':
+                        // Video finished
+                        if (self._videoPath) {
+                            App.API.saveProgress(self._videoPath, data.currentTime, data.duration);
+                        }
+                        setTimeout(function() { self._goBack(); }, 500);
+                        break;
+
+                    case 'playing':
+                        console.log('[Player] Video is playing');
+                        break;
+
+                    case 'error':
+                        console.log('[Player] Iframe error: ' + (data.message || ''));
+                        break;
+                }
             };
+            window.addEventListener('message', this._messageHandler);
 
-            video.addEventListener('loadedmetadata', onMetadata);
+            // Setup key handler (forwards keys to iframe when parent has focus)
+            if (!this._keyHandler) {
+                this._setupKeyHandler();
+            }
 
-            // Set source and load
-            video.src = this._videoUrl;
-            video.load();
-
-            // Start progress save interval
-            if (this._progressTimer) clearInterval(this._progressTimer);
-            this._progressTimer = setInterval(function() {
-                if (self._video && !self._video.paused && self._videoPath) {
-                    App.API.saveProgress(
-                        self._videoPath,
-                        Math.floor(self._video.currentTime),
-                        Math.floor(self._video.duration || 0)
-                    );
+            // Progress save timer (every 10s, in addition to iframe's own progress messages)
+            this._progressSaveTimer = setInterval(function() {
+                if (self._videoPath && self._lastProgress && self._lastProgress.currentTime > 0) {
+                    App.API.saveProgress(self._videoPath, self._lastProgress.currentTime, self._lastProgress.duration);
                 }
-            }, App.Config.PROGRESS_SAVE_INTERVAL);
+            }, 10000);
         },
 
         /**
-         * Handle time update: refresh progress bar and time display.
+         * Send command to iframe via postMessage.
          */
-        _onTimeUpdate: function() {
-            var video = this._video;
-            if (!video || !video.duration) return;
-
-            var pct = (video.currentTime / video.duration) * 100;
-
-            if (this._progressFill) {
-                this._progressFill.style.width = pct + '%';
+        _sendCommand: function(action, params) {
+            if (!this._iframe || !this._iframe.contentWindow) return;
+            var msg = { action: action };
+            if (params) {
+                for (var k in params) {
+                    if (params.hasOwnProperty(k)) {
+                        msg[k] = params[k];
+                    }
+                }
             }
-            if (this._progressDot) {
-                this._progressDot.style.left = pct + '%';
-            }
-            if (this._timeCurrent) {
-                this._timeCurrent.textContent = this._formatTime(video.currentTime);
-            }
-            if (this._timeTotal) {
-                this._timeTotal.textContent = this._formatTime(video.duration);
+            try {
+                this._iframe.contentWindow.postMessage(msg, '*');
+            } catch (e) {
+                console.log('[Player] postMessage error: ' + e.message);
             }
         },
 
         /**
-         * Handle video ended event.
-         */
-        _onEnded: function() {
-            this._isPlaying = false;
-
-            // Save final progress
-            if (this._video && this._videoPath) {
-                App.API.saveProgress(
-                    this._videoPath,
-                    Math.floor(this._video.currentTime),
-                    Math.floor(this._video.duration || 0)
-                );
-            }
-
-            // Go back after a short delay
-            var self = this;
-            setTimeout(function() {
-                self._goBack();
-            }, 500);
-        },
-
-        /**
-         * Setup keyboard handler for remote control.
+         * Setup keyboard handler.
+         * During resume dialog: handles LEFT/RIGHT/OK/BACK.
+         * During playback: forwards media keys to iframe (fallback if parent has focus).
          */
         _setupKeyHandler: function() {
             var self = this;
@@ -335,13 +315,12 @@
             this._keyHandler = function(e) {
                 if (!self._container || self._container.style.display === 'none') return;
 
-                var key = e.keyCode;
-                e.preventDefault();
-                // stopImmediatePropagation prevents Router's global BACK handler from also firing
-                e.stopImmediatePropagation();
-
-                // If in resume dialog, handle dialog keys
+                // Resume dialog mode
                 if (self._isInResumeDialog) {
+                    var key = e.keyCode;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
                     switch (key) {
                         case App.Config.KEYS.LEFT:
                             self._setResumeFocus(0);
@@ -361,144 +340,42 @@
                     return;
                 }
 
-                // Normal player controls
+                // Playback mode — forward keys to iframe (in case parent has focus)
+                var key = e.keyCode;
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
                 switch (key) {
                     case App.Config.KEYS.OK:
-                        self._togglePlayPause();
-                        self._showControls();
+                        self._sendCommand('toggle');
                         break;
-
                     case App.Config.KEYS.PLAY:
-                        if (self._video && self._video.paused) {
-                            self._video.play();
-                            self._isPlaying = true;
-                            self._showStateIcon('\u25B6');
-                        }
-                        self._showControls();
+                        self._sendCommand('play');
                         break;
-
                     case App.Config.KEYS.PAUSE:
-                        if (self._video && !self._video.paused) {
-                            self._video.pause();
-                            self._isPlaying = false;
-                            self._showStateIcon('\u23F8');
-                        }
-                        self._showControls();
+                        self._sendCommand('pause');
                         break;
-
-                    case App.Config.KEYS.STOP:
-                        self._goBack();
-                        break;
-
                     case App.Config.KEYS.LEFT:
                     case App.Config.KEYS.RW:
-                        self._seek(-10);
+                        self._sendCommand('seek', { offset: -10 });
                         break;
-
                     case App.Config.KEYS.RIGHT:
                     case App.Config.KEYS.FF:
-                        self._seek(10);
+                        self._sendCommand('seek', { offset: 10 });
                         break;
-
+                    case App.Config.KEYS.STOP:
+                        self._sendCommand('stop');
+                        break;
                     case App.Config.KEYS.BACK:
+                        if (self._lastProgress && self._videoPath) {
+                            App.API.saveProgress(self._videoPath, self._lastProgress.currentTime, self._lastProgress.duration);
+                        }
                         self._goBack();
-                        break;
-
-                    default:
-                        // Any other key shows controls
-                        self._showControls();
                         break;
                 }
             };
 
             document.addEventListener('keydown', this._keyHandler);
-        },
-
-        /**
-         * Toggle play/pause.
-         */
-        _togglePlayPause: function() {
-            if (!this._video) return;
-
-            if (this._video.paused) {
-                this._video.play();
-                this._isPlaying = true;
-                this._showStateIcon('\u25B6');
-            } else {
-                this._video.pause();
-                this._isPlaying = false;
-                this._showStateIcon('\u23F8');
-            }
-        },
-
-        /**
-         * Seek forward or backward by the given number of seconds.
-         */
-        _seek: function(seconds) {
-            if (!this._video) return;
-            var duration = this._video.duration || 0;
-            var newTime = this._video.currentTime + seconds;
-            this._video.currentTime = Math.max(0, Math.min(newTime, duration));
-            this._showControls();
-
-            // Show seek indicator
-            if (seconds > 0) {
-                this._showStateIcon('\u25B6\u25B6');
-            } else {
-                this._showStateIcon('\u25C0\u25C0');
-            }
-        },
-
-        /**
-         * Show controls overlay. Auto-hide after 3s if playing.
-         */
-        _showControls: function() {
-            var self = this;
-
-            if (this._controls) {
-                this._controls.classList.remove('controls-hidden');
-            }
-            if (this._titleBar) {
-                this._titleBar.classList.remove('controls-hidden');
-            }
-
-            // Clear existing timer
-            if (this._controlsTimer) {
-                clearTimeout(this._controlsTimer);
-                this._controlsTimer = null;
-            }
-
-            // Auto-hide after 3s if playing
-            if (this._isPlaying) {
-                this._controlsTimer = setTimeout(function() {
-                    self._hideControls();
-                }, 3000);
-            }
-        },
-
-        /**
-         * Hide controls overlay.
-         */
-        _hideControls: function() {
-            if (this._controls) {
-                this._controls.classList.add('controls-hidden');
-            }
-            if (this._titleBar) {
-                this._titleBar.classList.add('controls-hidden');
-            }
-        },
-
-        /**
-         * Show a state icon briefly in the center of the screen.
-         */
-        _showStateIcon: function(icon) {
-            var el = this._stateIcon;
-            if (!el) return;
-            el.textContent = icon;
-            el.classList.add('visible');
-            setTimeout(function() {
-                el.classList.remove('visible');
-            }, 800);
         },
 
         /**
@@ -517,21 +394,9 @@
         },
 
         /**
-         * Go back: save progress and return to previous view.
-         * Router.back() calls _hideView(PLAYER) -> this.hide() -> this.stop(),
-         * so we only save progress here and let Router handle cleanup.
+         * Go back: return to previous view.
          */
         _goBack: function() {
-            // Save final progress before stopping
-            if (this._video && this._videoPath) {
-                App.API.saveProgress(
-                    this._videoPath,
-                    Math.floor(this._video.currentTime),
-                    Math.floor(this._video.duration || 0)
-                );
-            }
-
-            // Navigate back (Router will call hide -> stop)
             if (App.Router && App.Router.back) {
                 App.Router.back();
             }
@@ -541,14 +406,18 @@
          * Stop playback and clean up everything.
          */
         stop: function() {
-            // Clear timers
-            if (this._progressTimer) {
-                clearInterval(this._progressTimer);
-                this._progressTimer = null;
+            this._destroyed = true;
+
+            // Clear progress timer
+            if (this._progressSaveTimer) {
+                clearInterval(this._progressSaveTimer);
+                this._progressSaveTimer = null;
             }
-            if (this._controlsTimer) {
-                clearTimeout(this._controlsTimer);
-                this._controlsTimer = null;
+
+            // Remove message handler
+            if (this._messageHandler) {
+                window.removeEventListener('message', this._messageHandler);
+                this._messageHandler = null;
             }
 
             // Remove key handler
@@ -557,12 +426,12 @@
                 this._keyHandler = null;
             }
 
-            // Stop video
-            if (this._video) {
-                this._video.pause();
-                this._video.removeAttribute('src');
-                this._video.load(); // Release resources
-                this._video = null;
+            // Remove iframe
+            if (this._iframe) {
+                try {
+                    this._iframe.src = 'about:blank';
+                } catch (e) {}
+                this._iframe = null;
             }
 
             // Clear DOM
@@ -577,19 +446,11 @@
             }
 
             // Reset state
-            this._isPlaying = false;
             this._isInResumeDialog = false;
-            this._eventsBound = false;
             this._resumeButtons = [];
-            this._controls = null;
-            this._titleBar = null;
-            this._progressFill = null;
-            this._progressDot = null;
-            this._timeCurrent = null;
-            this._timeTotal = null;
-            this._stateIcon = null;
             this._resumeDialog = null;
             this._videoUrl = '';
+            this._lastProgress = null;
 
             // Refresh data (continue watching may have changed)
             App.refreshData();

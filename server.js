@@ -267,6 +267,450 @@ const { movies: moviesRouter, files: filesRouter } = require('./routes/movies')(
 app.use('/api/movies', moviesRouter);
 app.use('/api/files', filesRouter);
 
+// fMP4 streaming endpoint for MSE playback (webOS TV app)
+// Remuxes MP4 to fragmented MP4 on-the-fly (no re-encoding, just container change)
+app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
+    const filename = decodeURIComponent(req.params.filename);
+    const startTime = parseFloat(req.query.t) || 0;
+    const seriesFolder = req.query.series ? decodeURIComponent(req.query.series) : null;
+
+    // Movies: direct in localPath. Series: in Series/folder/filename
+    let localPath;
+    if (seriesFolder) {
+        localPath = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder, filename);
+        // If not found directly, search in subdirectories (season folders)
+        if (!fsSync.existsSync(localPath)) {
+            try {
+                const seriesDir = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder);
+                const entries = fsSync.readdirSync(seriesDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.isDirectory()) {
+                        const subPath = path.join(seriesDir, entry.name, filename);
+                        if (fsSync.existsSync(subPath)) { localPath = subPath; break; }
+                    }
+                }
+            } catch (e) { /* no subdirs */ }
+        }
+    } else {
+        localPath = path.join(storageConfig.localPath, filename);
+    }
+
+    if (!fsSync.existsSync(localPath)) {
+        return res.status(404).send('Not found');
+    }
+
+    console.log(`🎬 fMP4 stream: ${filename} (t=${startTime}s)`);
+
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Transfer-Encoding', 'chunked');
+    res.setHeader('Cache-Control', 'no-cache');
+
+    const cmd = ffmpeg(localPath);
+    // Rate-limit input reading to prevent overwhelming the TV's limited RAM.
+    // Without this, FFmpeg reads as fast as the disk allows, the browser buffers
+    // the entire HTTP response in memory, and the TV OOM-crashes.
+    // -readrate 1.5: read at 1.5x real-time (slight buffer ahead)
+    // -readrate_initial_burst 5: burst first 5s instantly for quick start
+    cmd.inputOptions(['-readrate', '1.5', '-readrate_initial_burst', '5']);
+    if (startTime > 0) {
+        cmd.seekInput(startTime);
+    }
+    cmd.outputOptions([
+        '-c', 'copy',
+        '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
+        '-f', 'mp4'
+    ])
+    .on('start', () => console.log('▶️ fMP4 FFmpeg started'))
+    .on('error', (err) => {
+        if (!err.message.includes('SIGKILL') && !err.message.includes('SIGTERM')) {
+            console.error('❌ fMP4 FFmpeg error:', err.message);
+        }
+    })
+    .on('end', () => console.log('✅ fMP4 stream ended'));
+
+    cmd.pipe(res, { end: true });
+    res.on('close', () => { cmd.kill('SIGKILL'); });
+});
+
+// Get video duration for TV player (quick FFprobe)
+app.get('/video-duration/:filename', jwtAuthMiddleware, (req, res) => {
+    const filename = decodeURIComponent(req.params.filename);
+    const seriesFolder = req.query.series ? decodeURIComponent(req.query.series) : null;
+    let localPath;
+    if (seriesFolder) {
+        localPath = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder, filename);
+        if (!fsSync.existsSync(localPath)) {
+            try {
+                const seriesDir = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder);
+                const entries = fsSync.readdirSync(seriesDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.isDirectory()) {
+                        const subPath = path.join(seriesDir, entry.name, filename);
+                        if (fsSync.existsSync(subPath)) { localPath = subPath; break; }
+                    }
+                }
+            } catch (e) {}
+        }
+    } else {
+        localPath = path.join(storageConfig.localPath, filename);
+    }
+    if (!fsSync.existsSync(localPath)) return res.json({ duration: 0 });
+    ffmpeg.ffprobe(localPath, (err, metadata) => {
+        if (err) return res.json({ duration: 0 });
+        res.json({ duration: Math.floor(metadata.format.duration || 0) });
+    });
+});
+
+// TV Player page — MSE-based video playback for webOS app
+// The <video> element on webOS cannot load HTTP URLs directly (returns SRC_NOT_SUPPORTED).
+// Solution: fetch fMP4 stream via JavaScript and feed it to <video> via Media Source Extensions.
+// CRITICAL: Memory management — TV has limited RAM (~1.5GB). Must limit buffer size and clean old data.
+app.get('/tv-player', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:system-ui,sans-serif}
+video{width:100vw;height:100vh;object-fit:contain}
+#tb{position:fixed;top:0;left:0;right:0;padding:30px 60px;background:linear-gradient(rgba(0,0,0,0.85),transparent);color:#fff;font-size:26px;font-weight:600;z-index:10;transition:opacity 0.3s;text-shadow:0 2px 6px rgba(0,0,0,0.8)}
+#ctrl{position:fixed;bottom:0;left:0;right:0;padding:20px 60px 40px;background:linear-gradient(transparent,rgba(0,0,0,0.92));z-index:10;transition:opacity 0.3s}
+.pb-wrap{padding:16px 0;cursor:pointer}
+.pb{height:14px;background:rgba(255,255,255,0.3);border-radius:7px;position:relative}
+#pf{height:100%;background:linear-gradient(90deg,#7c3aed,#c4b5fd);border-radius:7px;width:0%;transition:width 0.5s linear;position:relative;min-height:14px}
+#pd{position:absolute;top:50%;right:-10px;width:22px;height:22px;background:#fff;border-radius:50%;transform:translateY(-50%);box-shadow:0 0 12px rgba(196,181,253,0.8),0 0 4px rgba(255,255,255,0.5)}
+.tr{display:flex;justify-content:space-between;align-items:center;color:#ccc;font-size:18px;margin-top:10px}
+.btns{display:flex;align-items:center;gap:24px}
+.btn{background:none;border:none;color:#fff;font-size:36px;cursor:pointer;padding:8px;opacity:0.85;transition:opacity 0.2s,transform 0.15s;outline:none}
+.btn:hover,.btn.fc{opacity:1;transform:scale(1.15)}
+.btn-play{font-size:44px;background:rgba(124,58,237,0.3);border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center}
+.btn-play:hover,.btn-play.fc{background:rgba(124,58,237,0.6)}
+#si{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;color:#fff;opacity:0;transition:opacity 0.3s;z-index:20;pointer-events:none;text-shadow:0 4px 16px rgba(0,0,0,0.7)}
+#si.v{opacity:1}
+.hid{opacity:0;pointer-events:none}
+#dbg{display:none}
+</style></head><body>
+<video id="v"></video>
+<div id="tb"></div>
+<div id="ctrl">
+<div class="pb-wrap" id="pbw"><div class="pb"><div id="pf"><div id="pd"></div></div></div></div>
+<div class="tr">
+<span id="tc">0:00</span>
+<div class="btns">
+<button class="btn" id="brw" title="Retroceder 10s">&#x25C0;&#x25C0;</button>
+<button class="btn btn-play" id="bpp" title="Play/Pause">&#x25B6;</button>
+<button class="btn" id="bff" title="Avanzar 10s">&#x25B6;&#x25B6;</button>
+<button class="btn" id="bst" title="Detener">&#x25A0;</button>
+</div>
+<span id="tt">0:00</span>
+</div>
+</div>
+<div id="si"></div>
+<div id="dbg"></div>
+<script>
+var p=new URLSearchParams(location.search);
+var file=p.get('file')||'';
+var series=p.get('series')||'';
+var pos=parseInt(p.get('pos'))||0;
+var title=p.get('title')||'';
+var token=p.get('token')||'';
+var v=document.getElementById('v');
+var pf=document.getElementById('pf');
+var tc=document.getElementById('tc');
+var tt=document.getElementById('tt');
+var si=document.getElementById('si');
+var ctrl=document.getElementById('ctrl');
+var tb=document.getElementById('tb');
+var dbg=document.getElementById('dbg');
+var bpp=document.getElementById('bpp');
+var brw=document.getElementById('brw');
+var bff=document.getElementById('bff');
+var bst=document.getElementById('bst');
+var ht=null;
+var abortCtrl=null;
+var totalDur=0; // real total duration in seconds (from FFprobe)
+tb.textContent=title;
+
+// Fetch real duration from server (FFprobe)
+var durUrl='/video-duration/'+encodeURIComponent(file);
+if(series)durUrl+='?series='+encodeURIComponent(series);
+if(token)durUrl+=(series?'&':'?')+'token='+token;
+fetch(durUrl).then(function(r){return r.json();}).then(function(d){
+totalDur=d.duration||0;
+log('Real duration: '+totalDur+'s');
+tt.textContent=fmt(totalDur);
+}).catch(function(e){log('Duration fetch err: '+e.message);});
+
+// Absolute position = stream offset (pos) + video element time (starts at 0 with -ss)
+function absTime(){return pos+Math.floor(v.currentTime||0);}
+
+// Button click handlers (Magic Remote)
+function doToggle(){if(v.paused){v.play();icon('\\u25B6');bpp.textContent='\\u23F8';}else{v.pause();icon('\\u23F8');bpp.textContent='\\u25B6';}showC();}
+function doRw(){v.currentTime=Math.max(0,v.currentTime-10);icon('\\u25C0\\u25C0');showC();}
+function doFf(){var maxT=totalDur>0?(totalDur-pos):v.currentTime+30;v.currentTime=Math.min(maxT,v.currentTime+10);icon('\\u25B6\\u25B6');showC();}
+function doStop(){if(abortCtrl)abortCtrl.abort();msg('back');}
+bpp.addEventListener('click',function(e){e.stopPropagation();doToggle();});
+brw.addEventListener('click',function(e){e.stopPropagation();doRw();});
+bff.addEventListener('click',function(e){e.stopPropagation();doFf();});
+bst.addEventListener('click',function(e){e.stopPropagation();doStop();});
+v.addEventListener('play',function(){bpp.textContent='\\u23F8';});
+v.addEventListener('pause',function(){bpp.textContent='\\u25B6';});
+
+// Magic Remote: show controls on any mouse movement or click
+document.addEventListener('mousemove',function(){showC();});
+document.addEventListener('click',function(){showC();});
+
+// Click on progress bar to seek (Magic Remote) - reloads stream from new position
+var pbWrap=document.getElementById('pbw');
+var pbBar=document.querySelector('.pb');
+pbWrap.addEventListener('click',function(e){
+e.stopPropagation();
+if(!totalDur)return;
+var rect=pbBar.getBoundingClientRect();
+var x=e.clientX-rect.left;
+var ratio=Math.max(0,Math.min(1,x/rect.width));
+var seekTime=Math.floor(ratio*totalDur);
+log('Seek click: ratio='+ratio.toFixed(2)+' seekTime='+seekTime+'s totalDur='+totalDur);
+// Save progress before seeking
+msg('progress');
+// Reload iframe at new position (MSE can't seek outside buffer)
+var u=location.pathname+'?file='+encodeURIComponent(file)+'&pos='+seekTime+'&title='+encodeURIComponent(title);
+if(series)u+='&series='+encodeURIComponent(series);
+if(token)u+='&token='+encodeURIComponent(token);
+location.href=u;
+});
+
+// Keep controls visible while pointer hovers over them
+ctrl.addEventListener('mouseenter',function(){if(ht){clearTimeout(ht);ht=null;}});
+ctrl.addEventListener('mouseleave',function(){if(!v.paused){ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}});
+
+// Buffer limits — aggressive, TV has ~1.5GB RAM shared with OS
+var MAX_QUEUE_BYTES=3*1024*1024;   // 3MB max pending in JS queue
+var MAX_BUFFER_AHEAD=15;           // 15s ahead before pausing fetch
+var RESUME_BUFFER=8;               // resume fetching when only 8s buffered ahead
+var CLEAN_BEHIND=5;                // keep only 5s behind, aggressively remove old data
+
+function log(m){console.log('[TVPlayer] '+m);if(dbg)dbg.textContent+=m+'\\n';}
+function fmt(s){if(!s||isNaN(s))return'0:00';s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;if(h>0)return h+':'+(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;return m+':'+(sc<10?'0':'')+sc;}
+function icon(i){si.textContent=i;si.classList.add('v');setTimeout(function(){si.classList.remove('v');},800);}
+function showC(){ctrl.classList.remove('hid');tb.classList.remove('hid');if(ht)clearTimeout(ht);if(!v.paused)ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}
+function msg(t,d){d=d||{};d.type=t;d.currentTime=absTime();d.duration=totalDur||0;try{parent.postMessage(d,'*');}catch(e){}}
+
+log('file: '+file);
+log('pos: '+pos);
+log('MSE supported: '+(typeof MediaSource!=='undefined'));
+
+if(typeof MediaSource==='undefined'){
+log('ERROR: MediaSource not available!');
+msg('error',{message:'MSE not supported'});
+}else{
+var mimeTypes=[
+'video/mp4; codecs="avc1.640028, mp4a.40.2"',
+'video/mp4; codecs="avc1.64001f, mp4a.40.2"',
+'video/mp4; codecs="avc1.4d4028, mp4a.40.2"',
+'video/mp4; codecs="avc1.42e01e, mp4a.40.2"',
+'video/mp4; codecs="avc1.640028"',
+'video/mp4'
+];
+var mime=null;
+for(var i=0;i<mimeTypes.length;i++){
+if(MediaSource.isTypeSupported(mimeTypes[i])){mime=mimeTypes[i];break;}
+}
+log('MSE mime: '+mime);
+
+if(!mime){
+log('ERROR: No supported MSE MIME type');
+msg('error',{message:'No MSE MIME'});
+}else{
+var fmp4Url='/stream-fmp4/'+encodeURIComponent(file);
+var qs=[];
+if(pos>0)qs.push('t='+pos);
+if(series)qs.push('series='+encodeURIComponent(series));
+if(token)qs.push('token='+token);
+if(qs.length>0)fmp4Url+='?'+qs.join('&');
+log('fMP4 URL: '+fmp4Url);
+
+var ms=new MediaSource();
+v.src=URL.createObjectURL(ms);
+
+ms.addEventListener('sourceopen',function(){
+log('MSE sourceopen');
+var sb;
+try{sb=ms.addSourceBuffer(mime);log('SourceBuffer created');}
+catch(e){log('addSourceBuffer error: '+e.message);return;}
+
+var queue=[];
+var queueBytes=0;
+var feeding=false;
+var streamDone=false;
+var reader=null;
+var paused=false;     // stream reading paused (backpressure)
+var totalBytes=0;
+var started=false;
+
+// Get buffered seconds ahead of current playback
+function bufferedAhead(){
+try{
+var buf=sb.buffered;
+if(buf.length===0)return 0;
+return buf.end(buf.length-1)-v.currentTime;
+}catch(e){return 0;}
+}
+
+// Remove old data from SourceBuffer to free memory
+function cleanBuffer(){
+if(sb.updating)return;
+try{
+var buf=sb.buffered;
+if(buf.length===0)return;
+// Remove all data more than CLEAN_BEHIND seconds before current position
+var removeEnd=v.currentTime-CLEAN_BEHIND;
+if(removeEnd>buf.start(0)+0.5){
+log('clean: remove 0-'+Math.round(removeEnd)+'s');
+sb.remove(buf.start(0),removeEnd);
+}
+}catch(e){}
+}
+
+function feedNext(){
+if(feeding||queue.length===0)return;
+if(sb.updating)return;
+feeding=true;
+var chunk=queue.shift();
+queueBytes-=chunk.byteLength;
+try{sb.appendBuffer(chunk);}
+catch(e){
+log('appendBuffer err: '+e.message);
+feeding=false;
+// QuotaExceededError — clean buffer and retry
+if(e.name==='QuotaExceededError'){
+cleanBuffer();
+}
+}
+}
+
+sb.addEventListener('updateend',function(){
+feeding=false;
+
+// Clean old buffer data periodically
+if(v.currentTime>CLEAN_BEHIND+5){
+cleanBuffer();
+}
+
+// Feed next chunk from queue
+if(queue.length>0){feedNext();}
+else if(streamDone&&!sb.updating){
+try{if(ms.readyState==='open')ms.endOfStream();}catch(e){}
+}
+
+// Resume stream reading if buffer is low
+if(paused&&!streamDone&&bufferedAhead()<RESUME_BUFFER){
+paused=false;
+pump();
+}
+
+// Auto-play once we have enough data
+if(v.paused&&v.readyState>=2&&!started){
+started=true;
+try{v.play().then(function(){log('play() OK');msg('playing');}).catch(function(e){log('play err: '+e.message);});}
+catch(e){v.play();}
+}
+});
+
+function pump(){
+if(!reader||paused)return;
+reader.read().then(function(result){
+if(result.done){
+log('Stream complete ('+Math.round(totalBytes/1024/1024)+'MB)');
+streamDone=true;
+if(!sb.updating&&queue.length===0){
+try{if(ms.readyState==='open')ms.endOfStream();}catch(e){}
+}
+return;
+}
+totalBytes+=result.value.byteLength;
+queue.push(result.value);
+queueBytes+=result.value.byteLength;
+feedNext();
+
+// Backpressure: pause reading if queue is full or buffer is far ahead
+if(queueBytes>=MAX_QUEUE_BYTES||bufferedAhead()>=MAX_BUFFER_AHEAD){
+paused=true;
+return;
+}
+pump();
+}).catch(function(e){
+if(e.name!=='AbortError')log('Read error: '+e.message);
+});
+}
+
+// Periodic aggressive buffer cleanup every 3s
+setInterval(function(){
+if(v.currentTime>CLEAN_BEHIND+2){cleanBuffer();}
+// Also resume pump if needed
+if(paused&&!streamDone&&bufferedAhead()<RESUME_BUFFER){
+paused=false;
+pump();
+}
+},3000);
+
+log('Fetching fMP4...');
+abortCtrl=new AbortController();
+fetch(fmp4Url,{signal:abortCtrl.signal}).then(function(response){
+log('fMP4: '+response.status);
+if(!response.ok){log('ERROR: HTTP '+response.status);return;}
+reader=response.body.getReader();
+pump();
+}).catch(function(e){
+if(e.name!=='AbortError')log('Fetch error: '+e.message);
+});
+});
+}
+}
+
+v.addEventListener('timeupdate',function(){var at=absTime();var dur=totalDur||0;if(dur>0){pf.style.width=(at/dur*100)+'%';tc.textContent=fmt(at);tt.textContent=fmt(dur);}else{tc.textContent=fmt(at);}});
+v.addEventListener('ended',function(){msg('ended');});
+v.addEventListener('playing',function(){log('playing!');});
+v.addEventListener('error',function(){var e=v.error;var m=e?'code='+e.code:'unknown';log('Video error: '+m);});
+v.addEventListener('waiting',function(){icon('\\u231B');});
+
+// Save progress to server every 10s
+setInterval(function(){if(!v.paused&&v.duration)msg('progress');},10000);
+// Send time updates to parent every 1s
+setInterval(function(){if(v.currentTime>0)parent.postMessage({type:'timeupdate',currentTime:absTime(),duration:totalDur||0,paused:v.paused},'*');},1000);
+
+// Receive commands from parent (player.js) via postMessage
+window.addEventListener('message',function(e){
+var d=e.data;if(!d||!d.action)return;
+switch(d.action){
+case 'toggle':doToggle();break;
+case 'play':v.play();icon('\\u25B6');showC();break;
+case 'pause':v.pause();icon('\\u23F8');showC();break;
+case 'seek':v.currentTime=Math.max(0,Math.min(v.duration||0,v.currentTime+(d.offset||0)));showC();break;
+case 'seekTo':v.currentTime=Math.max(0,Math.min(v.duration||0,d.time||0));showC();break;
+case 'stop':doStop();break;
+}
+});
+
+document.addEventListener('keydown',function(e){
+var k=e.keyCode;e.preventDefault();
+switch(k){
+case 13:doToggle();break;
+case 415:v.play();icon('\\u25B6');showC();break;
+case 19:v.pause();icon('\\u23F8');showC();break;
+case 37:case 412:doRw();break;
+case 39:case 417:doFf();break;
+case 461:case 413:doStop();break;
+default:showC();}
+// Notify parent of key press so it can show OSD
+parent.postMessage({type:'keyInIframe',keyCode:k},'*');
+});
+showC();
+</script></body></html>`);
+});
+
 app.use(require('./routes/streaming')({
     storageConfig, TEMP_DIR
 }));
@@ -282,6 +726,11 @@ const dlnaRoutes = require('./routes/dlna').initRoutes({ storageConfig });
 app.use('/api/dlna', dlnaRoutes.apiRouter);
 // Proxy DLNA montado SIN auth (los TVs no pueden autenticarse)
 app.use('/dlna', dlnaRoutes.mediaRouter);
+
+// ========== NEWSLETTER ==========
+const emailService = require('./lib/email');
+const emailTemplate = require('./lib/email-template');
+app.use('/api/newsletter', require('./routes/newsletter')({ usersDB, emailService, emailTemplate, auth }));
 
 app.use('/api', require('./routes/misc')({
     storageConfig,

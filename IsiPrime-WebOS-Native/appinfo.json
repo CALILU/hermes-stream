@@ -1,6 +1,6 @@
 {
     "id": "com.isiprime.app",
-    "version": "2.0.0",
+    "version": "2.3.1",
     "vendor": "IsiPrime",
     "type": "web",
     "main": "index.html",
@@ -11,5 +11,7 @@
     "resolution": "1920x1080",
     "transparent": false,
     "handlesRelaunch": false,
-    "disableBackHistoryAPI": false
+    "disableBackHistoryAPI": true,
+    "mediaExtension": true,
+    "enableVideoHole": true
 }
