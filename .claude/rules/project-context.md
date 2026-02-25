@@ -55,25 +55,26 @@ F:\plex\
 ├── scripts/
 │   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite
 │   └── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
-├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.0.0
+├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.3.1
 │   ├── appinfo.json       # Manifest webOS (com.isiprime.app)
-│   ├── index.html         # Entry point (13 scripts sin modules)
-│   ├── css/styles.css     # CSS completo (~1500 líneas)
+│   ├── index.html         # Entry point (14 scripts sin modules)
+│   ├── css/styles.css     # CSS completo (~1830 líneas)
 │   ├── js/                # Vanilla JS, window.App namespace
 │   │   ├── config.js      # Constantes, TMDB helpers, keycodes
-│   │   ├── api.js         # HTTP client con JWT auth + auto-refresh
+│   │   ├── api.js         # HTTP client con JWT auth + auto-refresh + filmografía
 │   │   ├── login.js       # Login para usuarios remotos
 │   │   ├── focus.js       # Motor navegación D-pad
 │   │   ├── carousel.js    # Carrusel virtual horizontal
 │   │   ├── images.js      # Lazy loading (IntersectionObserver)
-│   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER...)
+│   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER→ACTOR...)
 │   │   ├── home.js        # Carruseles por género
-│   │   ├── detail.js      # Detalle película/serie
-│   │   ├── player.js      # Reproductor fullscreen
+│   │   ├── detail.js      # Detalle película/serie + cast navegable
+│   │   ├── player.js      # Reproductor iframe + resume dialog + key forwarding
 │   │   ├── series.js      # Temporadas + episodios
 │   │   ├── search.js      # Teclado en pantalla + búsqueda
+│   │   ├── actor.js       # Filmografía de actor (solo películas locales)
 │   │   └── app.js         # Bootstrap (cargado último)
-│   └── assets/            # placeholder.svg
+│   └── assets/            # placeholder.svg, logo.svg
 ├── my-ui/                 # Frontend React 19
 │   ├── src/
 │   │   ├── App.js         # Hub central, role-based UI
@@ -153,8 +154,12 @@ npm run dev
 - `GET /api/requests` - Peticiones de usuarios
 - `GET /api/collections` - Colecciones de películas
 
+### TV Player (webOS)
+- `GET /tv-player` - Página HTML inline para reproducción en iframe (controles, barra de progreso, seek)
+- `GET /video-duration/:filename` - Duración real del video via FFprobe (necesario porque MSE reporta Infinity)
+
 ## Desarrollador
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 25/02/2026
+- Última actualización: 26/02/2026

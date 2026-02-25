@@ -134,6 +134,8 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
 - **Series detection**: Regex `S\d{1,2}E\d{1,2}` in filename routes files to `Series/series_name/` subdirectory.
 - **Streaming**: MP4 served directly with range requests. MKV served with `video/x-matroska` mime type. AVI transcoded on-the-fly via FFmpeg. Protected by JWT (token in query string for `<video>` elements).
+- **TV Player iframe architecture**: Parent (`player.js`) handles resume dialog, progress saving (every 10s), key forwarding via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, and sends `timeupdate`/`progress`/`back`/`ended` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
+- **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
 
@@ -142,24 +144,27 @@ Standalone vanilla JS app for LG webOS 6.0 TVs (Chromium ~87). NO frameworks, NO
 
 **Technical constraints**: No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `?.`, no `??`, no `replaceAll()`. Uses `window.App` namespace pattern.
 
-**Architecture** (13 JS modules loaded via `<script>` tags in dependency order):
+**Architecture** (14 JS modules loaded via `<script>` tags in dependency order):
 | Module | Purpose |
 |--------|---------|
 | `config.js` | Constants, TMDB image helpers, key codes |
-| `api.js` | HTTP client with JWT auth + auto-refresh on 401 |
+| `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography |
 | `login.js` | Login screen for remote (non-LAN) users |
 | `images.js` | Lazy loading with IntersectionObserver (max 4 concurrent) |
 | `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
 | `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
-| `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH) |
+| `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR) |
 | `home.js` | Genre carousels, continue-watching, series, favorites sections |
-| `detail.js` | Movie/series detail overlay with backdrop, cast, play/favorite buttons |
-| `player.js` | Fullscreen video player with remote controls, resume dialog, progress save |
+| `detail.js` | Movie/series detail overlay with backdrop, cast grid (D-pad + click navigation), play/favorite buttons |
+| `player.js` | Video player: iframe to `/tv-player`, resume dialog, progress save, key forwarding |
 | `series.js` | Series detail with season tabs + episode list |
 | `search.js` | On-screen keyboard + local search results |
+| `actor.js` | Actor filmography grid — shows only locally available movies, TMDB data via `/api/tmdb/actor` |
 | `app.js` | Bootstrap, data loading, nav bar setup (loaded last) |
 
 **Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
+
+**TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, and time display. Uses MSE/fMP4 streaming. Duration fetched via FFprobe (`/video-duration/:filename`) since MSE reports `Infinity`. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
 
 **Commands**:
 ```bash
@@ -167,7 +172,7 @@ Standalone vanilla JS app for LG webOS 6.0 TVs (Chromium ~87). NO frameworks, NO
 cd IsiPrime-WebOS-Native && ares-package .
 
 # Install on TV
-ares-install --device IsiPrimeTV com.isiprime.app_2.0.0_all.ipk
+ares-install --device miLGTV com.isiprime.app_2.3.1_all.ipk
 
 # Renew Developer Mode (cron every 24h)
 scripts/renew-webos-devmode.sh
