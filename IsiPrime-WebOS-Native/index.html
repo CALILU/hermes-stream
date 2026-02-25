@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080, initial-scale=1">
+    <title>IsiPrime</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando...</div>
+    </div>
+
+    <!-- Login View -->
+    <div id="login-view" class="view login-view" style="display:none">
+        <div class="login-card">
+            <div class="login-logo-container">
+                <img src="icon.png" alt="IsiPrime" class="login-logo">
+            </div>
+            <h1 class="login-title">IsiPrime</h1>
+            <p class="login-subtitle">Introduce tus credenciales para acceder</p>
+            <div class="login-field">
+                <label class="login-label" for="login-username">Usuario</label>
+                <input type="text" id="login-username" class="login-input focusable" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div class="login-field">
+                <label class="login-label" for="login-password">Contraseña</label>
+                <input type="password" id="login-password" class="login-input focusable" autocomplete="off">
+            </div>
+            <button id="login-btn" class="login-btn focusable">Iniciar sesión</button>
+            <div id="login-error" class="login-error"></div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" style="display:none">
+        <nav id="nav-bar" class="nav-bar">
+            <div class="nav-logo">IsiPrime</div>
+            <button class="nav-item focusable active" data-view="home">Películas</button>
+            <button class="nav-item focusable" data-view="series">Series</button>
+            <button class="nav-item focusable" data-view="favorites">Favoritos</button>
+            <button class="nav-item focusable" data-view="search">Buscar</button>
+        </nav>
+        <div id="home-view" class="view home-view"></div>
+        <div id="detail-overlay" class="view detail-overlay" style="display:none"></div>
+        <div id="player-view" class="view player-view" style="display:none"></div>
+        <div id="series-view" class="view series-view" style="display:none"></div>
+        <div id="search-view" class="view search-view" style="display:none"></div>
+    </div>
+
+    <!-- Scripts in dependency order -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/images.js"></script>
+    <script src="js/focus.js"></script>
+    <script src="js/carousel.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/detail.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/series.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

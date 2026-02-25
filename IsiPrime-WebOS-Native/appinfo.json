@@ -1,0 +1,15 @@
+{
+    "id": "com.isiprime.app",
+    "version": "2.0.0",
+    "vendor": "IsiPrime",
+    "type": "web",
+    "main": "index.html",
+    "title": "IsiPrime",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "bgColor": "#0f0f0f",
+    "resolution": "1920x1080",
+    "transparent": false,
+    "handlesRelaunch": false,
+    "disableBackHistoryAPI": false
+}
