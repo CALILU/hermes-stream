@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e040a0"/>
+      <stop offset="50%" style="stop-color:#c850c0"/>
+      <stop offset="100%" style="stop-color:#6060e0"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8060e0"/>
+      <stop offset="100%" style="stop-color:#c850c0"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="90" ry="90" fill="#2a2a3d"/>
+  <!-- D shape (outer arc) -->
+  <path d="M200,100 L200,100 C310,100 380,170 380,256 C380,342 310,412 200,412 L200,412 L200,360 C280,360 330,316 330,256 C330,196 280,152 200,152 Z" fill="url(#grad1)"/>
+  <!-- I bar (vertical left) -->
+  <rect x="170" y="100" width="52" height="312" rx="6" fill="url(#grad2)"/>
+  <!-- Play triangle -->
+  <polygon points="248,210 248,302 310,256" fill="url(#grad1)" opacity="0.9"/>
+  <!-- ISIPRIME text -->
+  <text x="256" y="470" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700" fill="#ffffff" letter-spacing="8">ISIPRIME</text>
+</svg>

@@ -2,7 +2,7 @@
  * IsiPrime webOS App - Router / State Machine
  * Manages view transitions and navigation history.
  *
- * States: LOADING, LOGIN, HOME, DETAIL, PLAYER, SERIES, SEARCH
+ * States: LOADING, LOGIN, HOME, GENRE, YEARS, DETAIL, PLAYER, SERIES, SEARCH, ACTOR, REQUESTS
  *
  * Each view module must implement:
  *   show(data) - display the view with given data
@@ -18,19 +18,27 @@
         LOADING: 'LOADING',
         LOGIN: 'LOGIN',
         HOME: 'HOME',
+        GENRE: 'GENRE',
+        YEARS: 'YEARS',
         DETAIL: 'DETAIL',
         PLAYER: 'PLAYER',
         SERIES: 'SERIES',
-        SEARCH: 'SEARCH'
+        SEARCH: 'SEARCH',
+        ACTOR: 'ACTOR',
+        REQUESTS: 'REQUESTS'
     };
 
     // Map states to view modules
     var VIEW_MAP = {
         HOME: 'Home',
+        GENRE: 'Genre',
+        YEARS: 'Years',
         DETAIL: 'Detail',
         PLAYER: 'Player',
         SERIES: 'Series',
-        SEARCH: 'Search'
+        SEARCH: 'Search',
+        ACTOR: 'Actor',
+        REQUESTS: 'Requests'
     };
 
     App.Router = {
@@ -129,6 +137,9 @@
          * Internal: switch from current view to target view.
          */
         _switchTo: function(state, data, isBack) {
+            // Always hide tooltip on navigation
+            App._hideHoverTooltip();
+
             // Hide current view
             if (this._current) {
                 this._hideView(this._current);
@@ -165,6 +176,20 @@
                     }
                     break;
 
+                case STATES.GENRE:
+                    this._ensureAppContainer();
+                    if (App.Genre && typeof App.Genre.show === 'function') {
+                        App.Genre.show(data, isBack);
+                    }
+                    break;
+
+                case STATES.YEARS:
+                    this._ensureAppContainer();
+                    if (App.Years && typeof App.Years.show === 'function') {
+                        App.Years.show(data, isBack);
+                    }
+                    break;
+
                 case STATES.DETAIL:
                     if (App.Detail && typeof App.Detail.show === 'function') {
                         App.Detail.show(data);
@@ -186,6 +211,18 @@
                 case STATES.SEARCH:
                     if (App.Search && typeof App.Search.show === 'function') {
                         App.Search.show(data);
+                    }
+                    break;
+
+                case STATES.ACTOR:
+                    if (App.Actor && typeof App.Actor.show === 'function') {
+                        App.Actor.show(data);
+                    }
+                    break;
+
+                case STATES.REQUESTS:
+                    if (App.Requests && typeof App.Requests.show === 'function') {
+                        App.Requests.show(data);
                     }
                     break;
             }
@@ -210,6 +247,18 @@
                     }
                     break;
 
+                case STATES.GENRE:
+                    if (App.Genre && typeof App.Genre.hide === 'function') {
+                        App.Genre.hide();
+                    }
+                    break;
+
+                case STATES.YEARS:
+                    if (App.Years && typeof App.Years.hide === 'function') {
+                        App.Years.hide();
+                    }
+                    break;
+
                 case STATES.DETAIL:
                     if (App.Detail && typeof App.Detail.hide === 'function') {
                         App.Detail.hide();
@@ -231,6 +280,18 @@
                 case STATES.SEARCH:
                     if (App.Search && typeof App.Search.hide === 'function') {
                         App.Search.hide();
+                    }
+                    break;
+
+                case STATES.ACTOR:
+                    if (App.Actor && typeof App.Actor.hide === 'function') {
+                        App.Actor.hide();
+                    }
+                    break;
+
+                case STATES.REQUESTS:
+                    if (App.Requests && typeof App.Requests.hide === 'function') {
+                        App.Requests.hide();
                     }
                     break;
             }
@@ -259,8 +320,11 @@
             // Map state to nav data-view
             var viewMap = {};
             viewMap[STATES.HOME] = 'home';
+            viewMap[STATES.GENRE] = 'genres';
+            viewMap[STATES.YEARS] = 'years';
             viewMap[STATES.SERIES] = 'series';
             viewMap[STATES.SEARCH] = 'search';
+            viewMap[STATES.REQUESTS] = 'requests';
 
             var viewName = viewMap[state];
             if (viewName) {

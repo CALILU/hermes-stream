@@ -13,6 +13,7 @@
         _container: null,
         _currentSection: 'movies',
         _rowGroupIds: [],
+        _cachedFeatured: null,
 
         /**
          * Show home view and build the current section.
@@ -31,6 +32,11 @@
             this._container = document.getElementById('home-view');
             this._container.style.display = '';
             this._container.innerHTML = '';
+
+            // Hide tooltip on scroll (Magic Remote mouseleave unreliable)
+            this._container.addEventListener('scroll', function() {
+                App._hideHoverTooltip();
+            });
             this._destroyCarousels();
             this._rowGroupIds = [];
 
@@ -46,9 +52,219 @@
         /**
          * Build movie carousels grouped by genre.
          */
+        /**
+         * Build the Netflix-style featured section at the top.
+         * 1 large item (2 slots) + 3 small items = 5 slots.
+         */
+        _buildFeaturedSection: function(container, videos) {
+            var self = this;
+
+            // Select 5 movies: current year releases (by releaseDate), with backdrop
+            var currentYear = new Date().getFullYear();
+            var withBackdrop = videos.filter(function(v) { return v.backdrop; });
+
+            // Filter by current year release
+            var currentYearMovies = withBackdrop.filter(function(v) {
+                return v.releaseDate && v.releaseDate.substring(0, 4) === String(currentYear);
+            });
+
+            // Fallback to previous year if not enough
+            if (currentYearMovies.length < 5) {
+                var prevYear = withBackdrop.filter(function(v) {
+                    return v.releaseDate && v.releaseDate.substring(0, 4) === String(currentYear - 1);
+                });
+                currentYearMovies = currentYearMovies.concat(prevYear);
+            }
+
+            // Sort by release date descending (most recent first)
+            currentYearMovies.sort(function(a, b) {
+                var dateA = a.releaseDate || '';
+                var dateB = b.releaseDate || '';
+                return dateB.localeCompare(dateA);
+            });
+
+            // Shuffle top candidates to vary each app open (Fisher-Yates on top 15)
+            var pool = currentYearMovies.slice(0, 15);
+            for (var s = pool.length - 1; s > 0; s--) {
+                var j = Math.floor(Math.random() * (s + 1));
+                var tmp = pool[s];
+                pool[s] = pool[j];
+                pool[j] = tmp;
+            }
+
+            var featured;
+            if (this._cachedFeatured) {
+                // Reuse same selection within this app session
+                featured = this._cachedFeatured;
+            } else {
+                featured = pool.slice(0, 5);
+                if (featured.length < 5) {
+                    // Not enough current/prev year, fill from most recent releases
+                    var remaining = withBackdrop.filter(function(v) {
+                        return featured.indexOf(v) === -1;
+                    });
+                    remaining.sort(function(a, b) {
+                        return (b.releaseDate || '').localeCompare(a.releaseDate || '');
+                    });
+                    for (var r = 0; r < remaining.length && featured.length < 5; r++) {
+                        featured.push(remaining[r]);
+                    }
+                }
+                this._cachedFeatured = featured;
+            }
+            if (featured.length < 5) return; // Not enough movies with backdrops
+
+            // Build section
+            var section = document.createElement('div');
+            section.className = 'featured-section';
+
+            var title = document.createElement('div');
+            title.className = 'featured-title';
+            title.textContent = 'Estrenos ' + currentYear;
+            section.appendChild(title);
+
+            var grid = document.createElement('div');
+            grid.className = 'featured-grid';
+
+            var items = [];
+            var focusElements = [];
+
+            for (var i = 0; i < featured.length; i++) {
+                var movie = featured[i];
+                var isLarge = (i === 0);
+
+                var el = document.createElement('div');
+                el.className = 'featured-item focusable ' + (isLarge ? 'featured-item-large' : 'featured-item-small');
+                el.setAttribute('data-featured-index', i);
+
+                var img = document.createElement('img');
+                img.className = 'featured-item-img';
+                img.alt = movie.title || '';
+                // Large uses backdrop, small uses poster
+                img.setAttribute('data-src', isLarge ? App.Config.backdropUrl(movie.backdrop) : App.Config.posterUrl(movie.poster));
+                img.onload = function() { this.classList.add('loaded'); };
+
+                var overlay = document.createElement('div');
+                overlay.className = 'featured-item-overlay';
+
+                var titleEl = document.createElement('div');
+                titleEl.className = 'featured-item-title';
+                titleEl.textContent = movie.title || '';
+
+                overlay.appendChild(titleEl);
+                el.appendChild(img);
+                el.appendChild(overlay);
+                grid.appendChild(el);
+
+                if (App.Images && App.Images.observe) {
+                    App.Images.observe(img);
+                }
+
+                // Click/pointer support (Magic Remote)
+                (function(idx, mov, element) {
+                    element.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        self._onMovieSelect(mov);
+                    });
+                    element.addEventListener('mouseenter', function() {
+                        // Focus this item visually
+                        for (var f = 0; f < focusElements.length; f++) {
+                            focusElements[f].classList.remove('focused');
+                        }
+                        element.classList.add('focused');
+                        self._updateFeaturedInfo(mov, infoBar);
+                        // Set featured as active focus group
+                        if (App.Focus && App.Focus.setActiveGroup) {
+                            App.Focus.setActiveGroup('featured', idx);
+                        }
+                        // Show hover tooltip
+                        var title = mov.title || '';
+                        if (title) App._showHoverTooltip(title, element);
+                    });
+                    element.addEventListener('mouseleave', function() {
+                        App._hideHoverTooltip();
+                    });
+                })(i, movie, el);
+
+                items.push(movie);
+                focusElements.push(el);
+            }
+
+            section.appendChild(grid);
+
+            // Info bar (updates on focus)
+            var infoBar = document.createElement('div');
+            infoBar.className = 'featured-info-bar';
+            infoBar.id = 'featured-info-bar';
+            section.appendChild(infoBar);
+
+            container.appendChild(section);
+
+            // Register focus group
+            var groupId = 'featured';
+            App.Focus.registerGroup(groupId, focusElements, {
+                orientation: 'horizontal',
+                onFocus: function(el, index) {
+                    self._updateFeaturedInfo(items[index], infoBar);
+                    self._ensureRowVisible(section);
+                },
+                onSelect: function(el, index) {
+                    self._onMovieSelect(items[index]);
+                }
+            });
+            this._rowGroupIds.push(groupId);
+
+            // Show info for first item immediately
+            this._updateFeaturedInfo(items[0], infoBar);
+        },
+
+        /**
+         * Update the featured info bar with movie details.
+         */
+        _updateFeaturedInfo: function(movie, infoBar) {
+            if (!movie || !infoBar) return;
+
+            var year = movie.releaseDate ? movie.releaseDate.substring(0, 4) : '';
+            var genres = [];
+            if (movie.genreIds) {
+                for (var i = 0; i < Math.min(movie.genreIds.length, 2); i++) {
+                    var name = App.getGenreName(movie.genreIds[i]);
+                    if (name) genres.push(name);
+                }
+            }
+            var duration = '';
+            if (movie.runtime) {
+                var h = Math.floor(movie.runtime / 60);
+                var m = movie.runtime % 60;
+                duration = h > 0 ? h + 'h ' + m + 'min' : m + ' min';
+            }
+            var rating = movie.rating ? ('★ ' + movie.rating.toFixed(1)) : '';
+
+            var parts = [];
+            parts.push('<span class="featured-info-type">Película</span>');
+            if (genres.length > 0) parts.push(genres.join(', '));
+            if (year) parts.push(year);
+            if (duration) parts.push(duration);
+            if (rating) parts.push('<span class="featured-info-rating">' + rating + '</span>');
+
+            infoBar.innerHTML = parts.join(' <span class="featured-info-separator">·</span> ');
+            // Synopsis below info bar
+            var synopsisEl = infoBar.parentNode.querySelector('.featured-synopsis');
+            if (!synopsisEl) {
+                synopsisEl = document.createElement('div');
+                synopsisEl.className = 'featured-synopsis';
+                infoBar.parentNode.insertBefore(synopsisEl, infoBar.nextSibling);
+            }
+            synopsisEl.textContent = movie.overview || '';
+            infoBar.classList.add('visible');
+        },
+
         _buildMoviesView: function(videos, genres, continueWatching) {
             var self = this;
             var container = this._container;
+
+            // Featured section (Netflix-style)
+            this._buildFeaturedSection(container, videos);
 
             // Row 1: "Continuar viendo" (if there are items)
             if (continueWatching && continueWatching.length > 0) {
@@ -90,10 +306,18 @@
                 return genreGroups[b].length - genreGroups[a].length;
             });
 
-            // Create a carousel for each genre with >= 3 movies
+            // Create a carousel for each genre with >= 3 movies (shuffled)
             genreOrder.forEach(function(gid) {
                 var movies = genreGroups[gid];
                 if (movies.length < 3) return;
+
+                // Shuffle movies within each genre (Fisher-Yates)
+                for (var sh = movies.length - 1; sh > 0; sh--) {
+                    var rj = Math.floor(Math.random() * (sh + 1));
+                    var temp = movies[sh];
+                    movies[sh] = movies[rj];
+                    movies[rj] = temp;
+                }
 
                 var genreName = gid === 0 ? 'Otros' : App.getGenreName(gid);
                 if (!genreName) genreName = 'Otros';
@@ -214,10 +438,12 @@
                 return;
             }
 
-            // Match favorite videoPath to video objects
+            // Match favorite filenames to video objects
             var favMovies = [];
             favorites.forEach(function(fav) {
-                var movie = self._findVideoByPath(videos, fav.videoPath);
+                // fav can be a string (filename) or object with videoPath
+                var path = (typeof fav === 'string') ? fav : fav.videoPath;
+                var movie = self._findVideoByPath(videos, path);
                 if (movie) {
                     favMovies.push(movie);
                 }
@@ -480,6 +706,13 @@
                 if (c && c.destroy) c.destroy();
             });
             this._carousels = [];
+
+            // Unregister all focus groups from this view
+            if (App.Focus && App.Focus.unregisterGroup) {
+                for (var i = 0; i < this._rowGroupIds.length; i++) {
+                    App.Focus.unregisterGroup(this._rowGroupIds[i]);
+                }
+            }
 
             // Clear images queue
             if (App.Images && App.Images.clearQueue) {

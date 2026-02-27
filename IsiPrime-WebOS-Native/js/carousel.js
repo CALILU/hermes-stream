@@ -135,6 +135,7 @@
                  */
                 _addItem: function(index) {
                     if (index < 0 || index >= this._items.length) return;
+                    var self = this;
 
                     var item = this._items[index];
                     var el;
@@ -155,6 +156,29 @@
                     this._track.appendChild(el);
                     this._rendered[index] = { element: el, item: item };
                     this._focusElements[index] = el;
+
+                    // Click/pointer support (webOS Magic Remote)
+                    (function(idx, itm) {
+                        el.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            if (self._opts.onSelect) {
+                                self._opts.onSelect(itm, idx);
+                            }
+                        });
+                        el.addEventListener('mouseenter', function() {
+                            self.focusAt(idx);
+                            // Set this carousel's focus group as active
+                            if (self._opts.groupId && App.Focus.setActiveGroup) {
+                                App.Focus.setActiveGroup(self._opts.groupId, null);
+                            }
+                            // Show hover tooltip
+                            var title = itm.title || itm.name || itm.seriesName || '';
+                            if (title) App._showHoverTooltip(title, el);
+                        });
+                        el.addEventListener('mouseleave', function() {
+                            App._hideHoverTooltip();
+                        });
+                    })(index, item);
 
                     // Observe images for lazy loading
                     var img = el.querySelector('.poster-img');

@@ -14,6 +14,9 @@
         _isFavorite: false,
         _buttons: [],
         _focusedBtnIndex: 0,
+        _castItems: [],
+        _focusedCastIndex: 0,
+        _focusZone: 'buttons', // 'buttons' or 'cast'
         _keyHandler: null,
 
         /**
@@ -26,12 +29,17 @@
             this._container.innerHTML = '';
             this._buttons = [];
             this._focusedBtnIndex = 0;
+            this._castItems = [];
+            this._focusedCastIndex = 0;
+            this._focusZone = 'buttons';
 
-            // Check if movie is in favorites
+            // Check if movie is in favorites (favorites can be strings or objects)
             this._isFavorite = false;
             if (App._favorites) {
                 for (var i = 0; i < App._favorites.length; i++) {
-                    if (App._favorites[i].videoPath === movie.filename) {
+                    var fav = App._favorites[i];
+                    var favPath = (typeof fav === 'string') ? fav : fav.videoPath;
+                    if (favPath === movie.filename) {
                         this._isFavorite = true;
                         break;
                     }
@@ -160,32 +168,33 @@
             this._buttons = [playBtn, favBtn];
 
             // Cast section
+            this._castItems = [];
             if (movie.cast && movie.cast.length > 0) {
                 var castSection = document.createElement('div');
                 castSection.className = 'detail-cast-section';
 
                 var castTitle = document.createElement('h3');
                 castTitle.className = 'detail-cast-title';
-                castTitle.textContent = 'Reparto';
+                castTitle.textContent = 'Reparto \u2014 selecciona para ver filmograf\u00eda';
                 castSection.appendChild(castTitle);
 
                 var castScroll = document.createElement('div');
                 castScroll.className = 'detail-cast-scroll';
+                this._castScrollEl = castScroll;
 
-                var castLimit = Math.min(movie.cast.length, 10);
+                var castLimit = movie.cast.length;
                 for (var c = 0; c < castLimit; c++) {
                     var actor = movie.cast[c];
                     var castItem = document.createElement('div');
                     castItem.className = 'cast-item';
+                    castItem.setAttribute('data-actor-name', actor.name || '');
+                    castItem.setAttribute('data-actor-photo', actor.photo || '');
+                    castItem.setAttribute('data-cast-index', String(c));
 
                     var photo = document.createElement('img');
                     photo.className = 'cast-photo';
                     photo.alt = actor.name || '';
-                    if (actor.profile_path) {
-                        photo.src = App.Config.posterUrl(actor.profile_path, 'w185');
-                    } else {
-                        photo.src = 'assets/placeholder.svg';
-                    }
+                    photo.src = actor.photo || 'assets/placeholder.svg';
 
                     var nameDiv = document.createElement('div');
                     nameDiv.className = 'cast-name';
@@ -199,7 +208,42 @@
                     castItem.appendChild(nameDiv);
                     castItem.appendChild(charDiv);
                     castScroll.appendChild(castItem);
+                    this._castItems.push(castItem);
+
+                    // Hover tooltip (Magic Remote pointer)
+                    (function(item, name) {
+                        item.addEventListener('mouseenter', function() {
+                            if (name) App._showHoverTooltip(name, item);
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            App._hideHoverTooltip();
+                        });
+                    })(castItem, actor.name || '');
                 }
+
+                // Event delegation: single click handler on the scroll container
+                var self = this;
+                castScroll.addEventListener('click', function(e) {
+                    // Find the closest .cast-item ancestor
+                    var target = e.target;
+                    var castEl = null;
+                    while (target && target !== castScroll) {
+                        if (target.classList && target.classList.contains('cast-item')) {
+                            castEl = target;
+                            break;
+                        }
+                        target = target.parentElement;
+                    }
+                    if (!castEl) return;
+
+                    e.stopPropagation();
+                    var idx = parseInt(castEl.getAttribute('data-cast-index'), 10);
+                    console.log('[Detail] cast click, index:', idx, 'name:', castEl.getAttribute('data-actor-name'));
+                    self._focusZone = 'cast';
+                    self._setCastFocus(idx);
+                    self._clearButtonFocus();
+                    self._openActor(castEl);
+                });
 
                 castSection.appendChild(castScroll);
                 content.appendChild(castSection);
@@ -217,13 +261,70 @@
         _setButtonFocus: function(index) {
             if (index < 0 || index >= this._buttons.length) return;
 
-            // Remove focused from all
+            // Remove focused from all buttons
             this._buttons.forEach(function(btn) {
                 btn.classList.remove('focused');
             });
 
             this._focusedBtnIndex = index;
             this._buttons[index].classList.add('focused');
+        },
+
+        /**
+         * Clear button focus visual.
+         */
+        _clearButtonFocus: function() {
+            this._buttons.forEach(function(btn) {
+                btn.classList.remove('focused');
+            });
+        },
+
+        /**
+         * Set focus on a cast item by index.
+         */
+        _setCastFocus: function(index) {
+            if (index < 0 || index >= this._castItems.length) return;
+
+            for (var i = 0; i < this._castItems.length; i++) {
+                this._castItems[i].classList.remove('focused');
+            }
+
+            this._focusedCastIndex = index;
+            this._castItems[index].classList.add('focused');
+
+            // Vertical scroll: ensure cast section is visible in detail-content
+            var content = this._container.querySelector('.detail-content');
+            if (content) {
+                var castSection = this._container.querySelector('.detail-cast-section');
+                if (castSection) {
+                    var csRect = castSection.getBoundingClientRect();
+                    var ctRect = content.getBoundingClientRect();
+                    if (csRect.bottom > ctRect.bottom) {
+                        content.scrollTop += csRect.bottom - ctRect.bottom + 40;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Clear cast focus visual.
+         */
+        _clearCastFocus: function() {
+            for (var i = 0; i < this._castItems.length; i++) {
+                this._castItems[i].classList.remove('focused');
+            }
+        },
+
+        /**
+         * Open actor filmography view.
+         */
+        _openActor: function(castItem) {
+            var name = castItem.getAttribute('data-actor-name');
+            var photo = castItem.getAttribute('data-actor-photo');
+            console.log('[Detail] openActor:', name, photo);
+            if (!name) return;
+
+            App.Router.navigate('ACTOR', { name: name, photo: photo });
         },
 
         /**
@@ -245,34 +346,126 @@
                 // stopImmediatePropagation prevents Router's global BACK handler from also firing
                 e.stopImmediatePropagation();
 
-                switch (key) {
-                    case App.Config.KEYS.LEFT:
-                        if (self._focusedBtnIndex > 0) {
-                            self._setButtonFocus(self._focusedBtnIndex - 1);
-                        }
-                        break;
-
-                    case App.Config.KEYS.RIGHT:
-                        if (self._focusedBtnIndex < self._buttons.length - 1) {
-                            self._setButtonFocus(self._focusedBtnIndex + 1);
-                        }
-                        break;
-
-                    case App.Config.KEYS.OK:
-                        self._onButtonSelect();
-                        break;
-
-                    case App.Config.KEYS.BACK:
-                        self._goBack();
-                        break;
-
-                    case App.Config.KEYS.PLAY:
-                        self._play();
-                        break;
+                if (self._focusZone === 'buttons') {
+                    self._handleButtonsNav(key);
+                } else {
+                    self._handleCastNav(key);
                 }
             };
 
             document.addEventListener('keydown', this._keyHandler);
+        },
+
+        /**
+         * Handle D-pad in buttons zone.
+         */
+        _handleButtonsNav: function(key) {
+            var self = this;
+
+            switch (key) {
+                case App.Config.KEYS.LEFT:
+                    if (this._focusedBtnIndex > 0) {
+                        this._setButtonFocus(this._focusedBtnIndex - 1);
+                    }
+                    break;
+
+                case App.Config.KEYS.RIGHT:
+                    if (this._focusedBtnIndex < this._buttons.length - 1) {
+                        this._setButtonFocus(this._focusedBtnIndex + 1);
+                    }
+                    break;
+
+                case App.Config.KEYS.DOWN:
+                    if (this._castItems.length > 0) {
+                        this._focusZone = 'cast';
+                        this._clearButtonFocus();
+                        this._setCastFocus(0);
+                    }
+                    break;
+
+                case App.Config.KEYS.OK:
+                    this._onButtonSelect();
+                    break;
+
+                case App.Config.KEYS.BACK:
+                    this._goBack();
+                    break;
+
+                case App.Config.KEYS.PLAY:
+                    this._play();
+                    break;
+            }
+        },
+
+        /**
+         * Get number of cast items per row based on container width.
+         */
+        _getCastColumnsPerRow: function() {
+            if (!this._castScrollEl || this._castItems.length < 2) return 1;
+            // Compare top offset of items to detect row breaks
+            var firstTop = this._castItems[0].offsetTop;
+            for (var i = 1; i < this._castItems.length; i++) {
+                if (this._castItems[i].offsetTop !== firstTop) {
+                    return i;
+                }
+            }
+            return this._castItems.length; // all in one row
+        },
+
+        /**
+         * Handle D-pad in cast zone.
+         */
+        _handleCastNav: function(key) {
+            var cols = this._getCastColumnsPerRow();
+            var idx = this._focusedCastIndex;
+
+            switch (key) {
+                case App.Config.KEYS.LEFT:
+                    if (idx > 0) {
+                        this._setCastFocus(idx - 1);
+                    }
+                    break;
+
+                case App.Config.KEYS.RIGHT:
+                    if (idx < this._castItems.length - 1) {
+                        this._setCastFocus(idx + 1);
+                    }
+                    break;
+
+                case App.Config.KEYS.UP:
+                    if (idx - cols >= 0) {
+                        // Move up one row
+                        this._setCastFocus(idx - cols);
+                    } else {
+                        // First row: go back to buttons
+                        this._focusZone = 'buttons';
+                        this._clearCastFocus();
+                        this._setButtonFocus(this._focusedBtnIndex);
+                    }
+                    break;
+
+                case App.Config.KEYS.DOWN:
+                    if (idx + cols < this._castItems.length) {
+                        // Move down one row
+                        this._setCastFocus(idx + cols);
+                    } else if (idx + cols >= this._castItems.length && idx < this._castItems.length - 1) {
+                        // Partial last row: go to last item
+                        this._setCastFocus(this._castItems.length - 1);
+                    }
+                    break;
+
+                case App.Config.KEYS.OK:
+                    this._openActor(this._castItems[this._focusedCastIndex]);
+                    break;
+
+                case App.Config.KEYS.BACK:
+                    this._goBack();
+                    break;
+
+                case App.Config.KEYS.PLAY:
+                    this._play();
+                    break;
+            }
         },
 
         /**
@@ -383,7 +576,10 @@
             }
 
             this._buttons = [];
+            this._castItems = [];
+            this._castScrollEl = null;
             this._movie = null;
+            this._focusZone = 'buttons';
         }
     };
 })();

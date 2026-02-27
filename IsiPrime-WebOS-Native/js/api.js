@@ -229,6 +229,46 @@
             return base;
         },
 
+        // --- Actor Filmography ---
+
+        getActorFilmography: function(actorName) {
+            return this._fetch('/api/tmdb/actor?query=' + encodeURIComponent(actorName))
+                .then(function(r) { return r.json(); });
+        },
+
+        // --- Requests ---
+
+        searchTMDB: function(query) {
+            return this._fetch('/api/tmdb/search?query=' + encodeURIComponent(query))
+                .then(function(r) { return r.json(); });
+        },
+
+        getRequests: function() {
+            return this._fetch('/api/requests').then(function(r) { return r.json(); });
+        },
+
+        submitRequests: function(movies, requestedBy) {
+            return this._fetch('/api/requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ movies: movies, requestedBy: requestedBy || 'TV' })
+            }).then(function(r) { return r.json(); });
+        },
+
+        updateRequestStatus: function(id, status) {
+            return this._fetch('/api/requests/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: status })
+            }).then(function(r) { return r.json(); });
+        },
+
+        deleteRequest: function(id) {
+            return this._fetch('/api/requests/' + id, {
+                method: 'DELETE'
+            }).then(function(r) { return r.json(); });
+        },
+
         streamSeriesUrl: function(folder, file) {
             var base = App.Config.SERVER_URL + '/stream-series/' + encodeURIComponent(folder) + '/' + encodeURIComponent(file);
             if (!this._isLocal && this._accessToken) {

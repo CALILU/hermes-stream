@@ -16,6 +16,43 @@
     App._favorites = [];
     App._series = [];
 
+    // ---- Hover Tooltip (Magic Remote pointer) ----
+    App._tooltipEl = null;
+    App._tooltipTimer = null;
+
+    App._showHoverTooltip = function(text, targetEl) {
+        if (!App._tooltipEl) {
+            App._tooltipEl = document.createElement('div');
+            App._tooltipEl.className = 'hover-tooltip';
+            document.body.appendChild(App._tooltipEl);
+        }
+        App._tooltipEl.textContent = text;
+        App._tooltipEl.style.display = 'block';
+
+        // Position above the target element
+        var rect = targetEl.getBoundingClientRect();
+        var tooltipX = rect.left + rect.width / 2;
+        var tooltipY = rect.top - 10;
+        App._tooltipEl.style.left = tooltipX + 'px';
+        App._tooltipEl.style.top = tooltipY + 'px';
+
+        // Auto-hide after 2.5s (mouseleave unreliable on webOS Magic Remote)
+        if (App._tooltipTimer) clearTimeout(App._tooltipTimer);
+        App._tooltipTimer = setTimeout(function() {
+            App._hideHoverTooltip();
+        }, 2500);
+    };
+
+    App._hideHoverTooltip = function() {
+        if (App._tooltipTimer) {
+            clearTimeout(App._tooltipTimer);
+            App._tooltipTimer = null;
+        }
+        if (App._tooltipEl) {
+            App._tooltipEl.style.display = 'none';
+        }
+    };
+
     /**
      * Get genre name by TMDB genre ID.
      */
@@ -162,6 +199,22 @@
             });
         }
 
+        // Click + hover for Magic Remote on nav items
+        for (var ni = 0; ni < itemsArray.length; ni++) {
+            (function(navIndex, navEl) {
+                navEl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    App.Focus.setActiveGroup('nav', navIndex);
+                    var view = navEl.getAttribute('data-view');
+                    App._onNavSelect(view, itemsArray);
+                });
+                navEl.addEventListener('mouseenter', function() {
+                    App.Focus.setActiveGroup('nav', navIndex);
+                });
+            })(ni, itemsArray[ni]);
+        }
+
     };
 
     /**
@@ -186,8 +239,32 @@
             return;
         }
 
-        // If currently in Search, hide it and return to HOME
-        if (currentState === 'SEARCH') {
+        if (view === 'genres') {
+            // Navigate to Genre via Router so BACK works correctly
+            if (currentState !== 'GENRE') {
+                App.Router.navigate('GENRE');
+            }
+            return;
+        }
+
+        if (view === 'years') {
+            // Navigate to Years via Router so BACK works correctly
+            if (currentState !== 'YEARS') {
+                App.Router.navigate('YEARS');
+            }
+            return;
+        }
+
+        if (view === 'requests') {
+            // Navigate to Requests via Router so BACK works correctly
+            if (currentState !== 'REQUESTS') {
+                App.Router.navigate('REQUESTS');
+            }
+            return;
+        }
+
+        // If currently in Search, Requests, Genre or Years, hide it and return to HOME
+        if (currentState === 'SEARCH' || currentState === 'REQUESTS' || currentState === 'GENRE' || currentState === 'YEARS') {
             App.Router.clearStack();
             // Set the desired section BEFORE replacing so Home.show only renders once
             if (view === 'home') {
@@ -216,6 +293,20 @@
      * Called by Focus module when DOWN is pressed on nav group.
      */
     App.focusContent = function() {
+        // Check if Genre view is active
+        if (App.Router.getCurrentState() === 'GENRE' && App.Genre) {
+            App.Genre._activePanel = 'genres';
+            App.Genre._updateGenreFocus(App.Genre._genreFocusIndex);
+            return;
+        }
+
+        // Check if Years view is active
+        if (App.Router.getCurrentState() === 'YEARS' && App.Years) {
+            App.Years._activePanel = 'years';
+            App.Years._updateYearFocus(App.Years._yearFocusIndex);
+            return;
+        }
+
         if (App.Home && App.Home._carousels && App.Home._carousels.length > 0) {
             var firstCarousel = App.Home._carousels[0];
             if (firstCarousel && firstCarousel.groupId) {

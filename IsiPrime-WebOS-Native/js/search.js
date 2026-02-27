@@ -14,9 +14,13 @@
     var KEYBOARD_COLS = 6;
 
     // Keyboard layout: letters, numbers, then action keys
-    var KEYS_LAYOUT = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('');
+    var KEYS_LAYOUT = 'ABCDEFGHIJKLMN\u00d1OPQRSTUVWXYZ0123456789'.split('');
     var RESULTS_COLS = 5;
     var MAX_RESULTS = 20;
+
+    function stripAccents(str) {
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
 
     App.Search = {
         _container: null,       // #search-view element
@@ -39,6 +43,7 @@
          * Show the search view and build the UI.
          */
         show: function() {
+            var self = this;
             this._container = document.getElementById('search-view');
             this._container.style.display = '';
             this._container.innerHTML = '';
@@ -95,21 +100,41 @@
                 this._keyElements.push(keyEl);
             }
 
-            // Space key (wide, spans 3 columns)
+            // Space key (full width)
             var spaceEl = document.createElement('div');
-            spaceEl.className = 'keyboard-key keyboard-key-wide keyboard-key-action focusable';
+            spaceEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
             spaceEl.textContent = 'ESPACIO';
             spaceEl.setAttribute('data-key', ' ');
             gridEl.appendChild(spaceEl);
             this._keyElements.push(spaceEl);
 
-            // Delete key (wide, spans 3 columns)
+            // Delete key (full width)
             var delEl = document.createElement('div');
-            delEl.className = 'keyboard-key keyboard-key-wide keyboard-key-action focusable';
+            delEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
             delEl.textContent = 'BORRAR';
             delEl.setAttribute('data-key', 'DEL');
             gridEl.appendChild(delEl);
             this._keyElements.push(delEl);
+
+            // Click + hover for Magic Remote on all keys
+            for (var ki = 0; ki < this._keyElements.length; ki++) {
+                (function(keyIndex, keyElement) {
+                    keyElement.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        self._activePanel = 'keyboard';
+                        self._updateKeyboardFocus(keyIndex);
+                        self._onKeyPress(keyElement);
+                    });
+                    keyElement.addEventListener('mouseenter', function() {
+                        if (self._activePanel !== 'keyboard') {
+                            self._clearResultsFocus();
+                        }
+                        self._activePanel = 'keyboard';
+                        self._updateKeyboardFocus(keyIndex);
+                    });
+                })(ki, this._keyElements[ki]);
+            }
 
             leftPanel.appendChild(gridEl);
             this._container.appendChild(leftPanel);
@@ -194,58 +219,40 @@
          */
         _handleKeyboardNav: function(key) {
             var idx = this._keyboardFocusIndex;
-            var totalKeys = this._keyElements.length;
-
-            // The last row has 2 wide keys: SPACE (index totalKeys-2) and DELETE (index totalKeys-1)
-            // Regular keys: indices 0 to KEYS_LAYOUT.length - 1 (0 to 35)
-            // Action keys: SPACE = 36, DELETE = 37
-            var regularCount = KEYS_LAYOUT.length; // 36
-            var isOnActionRow = idx >= regularCount;
+            var regularCount = KEYS_LAYOUT.length; // 37 (A-Z + Ñ + 0-9)
+            var SPACE_IDX = regularCount;      // 37
+            var DEL_IDX = regularCount + 1;    // 38
+            var isOnAction = idx >= regularCount;
 
             switch (key) {
                 case App.Config.KEYS.LEFT:
-                    if (isOnActionRow) {
-                        // Move between SPACE and DELETE
-                        if (idx === regularCount + 1) {
-                            this._updateKeyboardFocus(regularCount);
-                        }
-                        // At SPACE, LEFT does nothing (already at left edge)
-                    } else {
+                    if (!isOnAction) {
                         var col = idx % KEYBOARD_COLS;
                         if (col > 0) {
                             this._updateKeyboardFocus(idx - 1);
                         }
-                        // At left edge, do nothing
                     }
                     break;
 
                 case App.Config.KEYS.RIGHT:
-                    if (isOnActionRow) {
-                        if (idx === regularCount) {
-                            // From SPACE to DELETE
-                            this._updateKeyboardFocus(regularCount + 1);
-                        } else {
-                            // From DELETE (rightmost action key) -> jump to results
-                            this._switchToResults();
-                        }
+                    if (isOnAction) {
+                        this._switchToResults();
                     } else {
                         var colR = idx % KEYBOARD_COLS;
                         if (colR < KEYBOARD_COLS - 1 && idx + 1 < regularCount) {
                             this._updateKeyboardFocus(idx + 1);
                         } else {
-                            // At right edge -> jump to results
                             this._switchToResults();
                         }
                     }
                     break;
 
                 case App.Config.KEYS.UP:
-                    if (isOnActionRow) {
-                        // Move up from action row to last row of regular keys
-                        // SPACE covers cols 0-2, DELETE covers cols 3-5
-                        var targetCol = (idx === regularCount) ? 1 : 4; // middle of each wide key
-                        var lastRegularRow = Math.floor((regularCount - 1) / KEYBOARD_COLS);
-                        var target = lastRegularRow * KEYBOARD_COLS + targetCol;
+                    if (idx === DEL_IDX) {
+                        this._updateKeyboardFocus(SPACE_IDX);
+                    } else if (idx === SPACE_IDX) {
+                        var lastRow = Math.floor((regularCount - 1) / KEYBOARD_COLS);
+                        var target = lastRow * KEYBOARD_COLS + 2;
                         if (target >= regularCount) target = regularCount - 1;
                         this._updateKeyboardFocus(target);
                     } else {
@@ -253,28 +260,22 @@
                         if (rowU > 0) {
                             this._updateKeyboardFocus(idx - KEYBOARD_COLS);
                         } else {
-                            // At top row -> switch to nav panel
                             this._switchToNav();
                         }
                     }
                     break;
 
                 case App.Config.KEYS.DOWN:
-                    if (isOnActionRow) {
-                        // Already at bottom, do nothing
+                    if (idx === DEL_IDX) {
+                        // Already at bottom
+                    } else if (idx === SPACE_IDX) {
+                        this._updateKeyboardFocus(DEL_IDX);
                     } else {
-                        var rowD = Math.floor(idx / KEYBOARD_COLS);
                         var nextIdx = idx + KEYBOARD_COLS;
                         if (nextIdx < regularCount) {
                             this._updateKeyboardFocus(nextIdx);
                         } else {
-                            // Move to action row
-                            var colD = idx % KEYBOARD_COLS;
-                            if (colD < 3) {
-                                this._updateKeyboardFocus(regularCount); // SPACE
-                            } else {
-                                this._updateKeyboardFocus(regularCount + 1); // DELETE
-                            }
+                            this._updateKeyboardFocus(SPACE_IDX);
                         }
                     }
                     break;
@@ -304,21 +305,17 @@
 
             switch (key) {
                 case App.Config.KEYS.LEFT:
-                    var colL = idx % cols;
-                    if (colL > 0) {
+                    if (idx > 0) {
                         this._updateResultsFocus(idx - 1);
                     } else {
-                        // At left edge of results -> switch to keyboard
+                        // At first result -> switch to keyboard
                         this._switchToKeyboard();
                     }
                     break;
 
                 case App.Config.KEYS.RIGHT:
                     if (idx + 1 < total) {
-                        var colLR = idx % cols;
-                        if (colLR < cols - 1) {
-                            this._updateResultsFocus(idx + 1);
-                        }
+                        this._updateResultsFocus(idx + 1);
                     }
                     break;
 
@@ -546,30 +543,30 @@
             }
 
             this._debounceTimer = setTimeout(function() {
-                var query = self._searchText.toLowerCase().trim();
+                var query = stripAccents(self._searchText.toLowerCase().trim());
 
                 if (query.length < 2) {
                     self._showResults([], []);
                     return;
                 }
 
-                // Search movies
+                // Search movies (accent-insensitive)
                 var movieResults = [];
                 var videos = App._videos || [];
                 for (var i = 0; i < videos.length; i++) {
                     var v = videos[i];
-                    var title = (v.title || v.filename || '').toLowerCase();
+                    var title = stripAccents((v.title || v.filename || '').toLowerCase());
                     if (title.indexOf(query) !== -1) {
                         movieResults.push({ type: 'movie', data: v });
                     }
                 }
 
-                // Search series
+                // Search series (accent-insensitive)
                 var seriesResults = [];
                 var series = App._series || [];
                 for (var j = 0; j < series.length; j++) {
                     var s = series[j];
-                    var sTitle = (s.name || s.title || s.folder_name || '').toLowerCase();
+                    var sTitle = stripAccents((s.name || s.title || s.folder_name || '').toLowerCase());
                     if (sTitle.indexOf(query) !== -1) {
                         seriesResults.push({ type: 'series', data: s });
                     }
@@ -668,6 +665,26 @@
             if (App.Images && App.Images.observe) {
                 App.Images.observe(img);
             }
+
+            // Click/pointer support (Magic Remote)
+            var self = this;
+            (function(idx, res, element) {
+                element.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    self._onResultSelect(idx);
+                });
+                element.addEventListener('mouseenter', function() {
+                    self._activePanel = 'results';
+                    self._clearKeyboardFocus();
+                    self._updateResultsFocus(idx);
+                    // Show hover tooltip
+                    var title = isSeries ? (res.data.name || res.data.title) : (res.data.title || '');
+                    if (title) App._showHoverTooltip(title, element);
+                });
+                element.addEventListener('mouseleave', function() {
+                    App._hideHoverTooltip();
+                });
+            })(index, result, itemEl);
 
             return itemEl;
         },

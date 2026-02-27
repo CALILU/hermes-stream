@@ -12,7 +12,7 @@
         _observer: null,
         _loading: 0,
         _queue: [],
-        MAX_CONCURRENT: 4,
+        MAX_CONCURRENT: 10,
 
         /**
          * Initialize the IntersectionObserver.
@@ -31,7 +31,7 @@
                     self._onIntersect(entries);
                 },
                 {
-                    rootMargin: '300px',
+                    rootMargin: '800px',
                     threshold: 0
                 }
             );

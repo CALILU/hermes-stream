@@ -329,18 +329,13 @@
                     }
 
                     var folderName = self._series.folder_name || self._series.name || '';
-                    var streamPath = fileName;
 
-                    // If episode has a subfolder, include it in the path
-                    if (ep.subfolder) {
-                        streamPath = ep.subfolder + '/' + fileName;
-                    }
-
+                    // Pass bare filename — backend searches season subdirectories automatically
                     var epNum = ep.episode_number || (index + 1);
                     var seasonNum = self._currentSeason;
 
                     App.Router.navigate('PLAYER', {
-                        url: App.API.streamSeriesUrl(folderName, streamPath),
+                        url: App.API.streamSeriesUrl(folderName, fileName),
                         title: (self._series.name || self._series.title || folderName) +
                             ' - S' + self._padZero(seasonNum) +
                             'E' + self._padZero(epNum) +
@@ -373,9 +368,12 @@
             // Still image
             var still = document.createElement('img');
             still.className = 'episode-still';
-            var stillPath = ep.still_path || null;
-            if (stillPath) {
-                still.setAttribute('data-src', App.Config.posterUrl(stillPath, 'w300'));
+            var stillUrl = ep.still || ep.still_path || null;
+            if (stillUrl) {
+                // ep.still is already a full URL from the backend
+                // ep.still_path is a relative TMDB path (needs posterUrl)
+                var imgSrc = ep.still ? stillUrl : App.Config.posterUrl(stillUrl, 'w300');
+                still.setAttribute('data-src', imgSrc);
                 still.alt = ep.name || '';
                 App.Images.observe(still);
             } else {

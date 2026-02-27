@@ -261,6 +261,25 @@
             var group = this._groups[this._currentGroup];
             if (!group || group.elements.length === 0) return;
 
+            // Virtual carousel: use total items count, not rendered elements count
+            if (group._carousel) {
+                var carousel = group._carousel;
+                var newCarouselIndex = carousel._focusIndex + dir;
+                if (newCarouselIndex < 0 || newCarouselIndex >= carousel._items.length) return;
+                carousel.focusAt(newCarouselIndex);
+                carousel._updateFocusElements();
+                // Sync _currentIndex to the rendered element matching the new carousel index
+                for (var ci = 0; ci < group.elements.length; ci++) {
+                    var dataIdx = parseInt(group.elements[ci].getAttribute('data-index'), 10);
+                    if (dataIdx === newCarouselIndex) {
+                        this._currentIndex = ci;
+                        group.memoryIndex = ci;
+                        break;
+                    }
+                }
+                return;
+            }
+
             var newIndex = this._currentIndex + dir;
 
             if (group.loop) {

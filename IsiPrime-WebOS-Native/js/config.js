@@ -29,9 +29,9 @@
             RW: 412
         },
 
-        POSTER_WIDTH: 160,
-        POSTER_GAP: 12,
-        VISIBLE_BUFFER: 2,
+        POSTER_WIDTH: 230,
+        POSTER_GAP: 16,
+        VISIBLE_BUFFER: 5,
         PROGRESS_SAVE_INTERVAL: 10000,
 
         TMDB_IMG: 'https://image.tmdb.org/t/p/',
