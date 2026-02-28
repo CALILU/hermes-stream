@@ -140,17 +140,28 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
 
 ### webOS Native TV App (`IsiPrime-WebOS-Native/`)
-Standalone vanilla JS app for LG webOS 6.0 TVs (Chromium ~87). NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API.
+Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API. Compatible with webOS 4.0+ (Chromium ~53+).
 
-**Technical constraints**: No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `?.`, no `??`, no `replaceAll()`. Uses `window.App` namespace pattern.
+**Target TVs**:
+| Device | Model | webOS | Chromium | IP | Connection |
+|--------|-------|-------|----------|-----|-----------|
+| `miLGTV` | LG 43UP80006LR | 6.0 | ~87 | 192.168.1.94 | Wired |
+| `nuevaTV` | LG 32LK6100PLB (2018) | 4.0 | ~53 | 192.168.1.108 | WiFi (Archer) |
+
+**Technical constraints** (lowest common denominator — webOS 4.0/Chromium ~53):
+- No `URLSearchParams`, `fetch`, `AbortController`, `ReadableStream` (use XHR/regex)
+- No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `?.`, no `??`, no `replaceAll()`
+- `IntersectionObserver` exists but is unreliable on webOS 4.0 — images loaded directly with concurrency limit
+- `appinfo.json` must include `accessibleUrl: "http://*:*;https://*:*"` for external HTTP requests
+- Uses `window.App` namespace pattern
 
 **Architecture** (14 JS modules loaded via `<script>` tags in dependency order):
 | Module | Purpose |
 |--------|---------|
-| `config.js` | Constants, TMDB image helpers, key codes |
+| `config.js` | Constants, TMDB image helpers (detect full URLs), key codes |
 | `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography |
 | `login.js` | Login screen for remote (non-LAN) users |
-| `images.js` | Lazy loading with IntersectionObserver (max 4 concurrent) |
+| `images.js` | Direct image loading with concurrency limit (max 10 concurrent) |
 | `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
 | `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
 | `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR) |
@@ -158,29 +169,74 @@ Standalone vanilla JS app for LG webOS 6.0 TVs (Chromium ~87). NO frameworks, NO
 | `detail.js` | Movie/series detail overlay with backdrop, cast grid (D-pad + click navigation), play/favorite buttons |
 | `player.js` | Video player: iframe to `/tv-player`, resume dialog, progress save, key forwarding |
 | `series.js` | Series detail with season tabs + episode list |
-| `search.js` | On-screen keyboard + local search results |
+| `search.js` | On-screen keyboard + local search results (dynamic column detection) |
 | `actor.js` | Actor filmography grid — shows only locally available movies, TMDB data via `/api/tmdb/actor` |
 | `app.js` | Bootstrap, data loading, nav bar setup (loaded last) |
 
 **Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
 
-**TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, and time display. Uses MSE/fMP4 streaming. Duration fetched via FFprobe (`/video-duration/:filename`) since MSE reports `Infinity`. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
+**TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Uses Chromium ~53 compatible JS (regex params, XHR for duration). Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, and time display. Streaming strategy: MSE/fMP4 with fetch (webOS 6.0), MSE/fMP4 with XHR fallback, or direct stream (`v.src=/stream/`) as last resort. Duration fetched via FFprobe (`/video-duration/:filename`) using XHR. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
+
+**MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
+
+**UI Details (v2.7.0)**:
+- Loading screen: HD logo (1024x1024 `assets/icon-hd.png`) centered, spinner below, background `#1a1a2e`
+- Nav bar: icon (112px) + logo text (108px) + nav buttons (30px font)
+- Detail view: enlarged meta (23px), genres (20px), overview (24px), buttons (26px), cast photos (105px), cast names (19px)
+- Cast grid: flex-wrap with D-pad vertical navigation between rows (calculates columns per row dynamically)
+- Hover tooltip: Magic Remote pointer shows movie/actor name on mouseenter (carousel, featured, cast items, actor grid, search results)
 
 **Commands**:
 ```bash
 # Package for webOS
 cd IsiPrime-WebOS-Native && ares-package .
 
-# Install on TV
-ares-install --device miLGTV com.isiprime.app_2.3.1_all.ipk
+# Install on TVs
+ares-install --device miLGTV com.isiprime.app_2.7.0_all.ipk    # comedor
+ares-install --device nuevaTV com.isiprime.app_2.7.0_all.ipk   # hijo
+
+# Debug: close + relaunch + inspect
+ares-launch --device miLGTV --close com.isiprime.app
+ares-launch --device miLGTV com.isiprime.app
+ares-inspect --device miLGTV --app com.isiprime.app
 
 # Renew Developer Mode (cron every 24h)
 scripts/renew-webos-devmode.sh
 ```
 
+## NAS Migration (LincStation N2)
+
+Target: LincStation N2 (Intel N100, 16GB LPDDR5, 128GB eMMC, Ubuntu 24.04). Movies on WD_Black SN7100 4TB NVMe (NTFS, mounted via ntfs-3g). PM2 in fork mode (SQLite not cluster-safe).
+
+**Migration scripts** (in `scripts/`):
+- `transfer-to-nas.sh` — Run from WSL: rsync code + build + DBs to NAS
+- `migrate-to-nas.sh` — Run on NAS: validates Node.js, FFmpeg, gcc, files, storage path
+- `start-tv-nas.sh` — NAS version of start-tv.sh (no rclone, PM2 support)
+
+**Config files**:
+- `ecosystem.config.js` — PM2 config (fork mode, 1 instance, logs in `logs/`)
+- `.env.nas` — Template .env for NAS (same JWT_SECRET, no FTP/Radarr)
+
+Only 3 files change: `.env` (LOCAL_VIDEOS_PATH), `storage-settings.json` (localPath), `IsiPrime-WebOS-Native/js/config.js` (SERVER_URL → NAS IP).
+
 ## Install Package
 
 `IsiPrime-Install/` contains a standalone read-only package for other users. Has its own `.env`, `INSTALAR.bat` (auto-installs Node.js + deps), and `IsiPrime.bat` (launcher). Must be manually updated when the main codebase changes.
+
+## Redirect IPK (for other LG TVs)
+
+`IsiPrime-WebOS-Redirect/` is a lightweight webOS app (`com.isiprime.redirect`) that redirects to the IsiPrime web UI. Tries HTTPS (`calilu.mooo.com`) first, falls back to LAN IP. For TVs that don't have the native app installed — opens IsiPrime in the TV's built-in browser.
+
+**Config**: Edit `SERVER_URL` and `SERVER_URL_LAN` in `index.html` before packaging.
+
+```bash
+cd IsiPrime-WebOS-Redirect && ares-package .
+ares-install --device <TV> com.isiprime.redirect_1.0.0_all.ipk
+```
+
+## HTTPS / nginx
+
+`scripts/setup-nginx-https.sh` — Run on the NAS to configure nginx reverse proxy + Let's Encrypt SSL. Requires ports 80 and 443 forwarded in the router and DDNS configured for `calilu.mooo.com`.
 
 ## Troubleshooting
 
