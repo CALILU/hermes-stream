@@ -50,6 +50,7 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 - `REQUESTS_READONLY` — Read-only mode for requests (default: `false`)
 - `TMDB_API_KEY` / `TMDB_API_KEY_BACKUP` — TMDB API keys
 - `LOCAL_VIDEOS_PATH` — Default local video directory
+- `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM_NAME` — Gmail SMTP for newsletter emails
 
 ### Routes (`routes/`)
 | File | Mount Point | Purpose |
@@ -63,7 +64,8 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 | `tmdb.js` | `/api/tmdb` | TMDB search, cast lookup, actor filmography |
 | `collections.js` | `/api/collections` | Custom and auto-generated movie collections |
 | `downloads.js` | `/api/download-queue`, `/api/search-torrents` | Download queue management |
-| `conversion.js` | `/api/convert` | Single video conversion with SSE progress |
+| `conversion.js` | `/api/convert` | Single video conversion with SSE progress (duplicate protection) |
+| `newsletter.js` | `/api/newsletter` | Newsletter email system (preview, send, test, history) |
 | `storage.js` | `/api/storage` | Storage configuration |
 | `movies.js` | `/api/movies`, `/api/files` | Poster update, file deletion, renaming |
 | `dlna.js` | `/api/dlna`, `/dlna` | DLNA/Cast to TV (optional via `DLNA_ENABLED`) |
@@ -82,12 +84,14 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 - **requests-helpers.js** — Request operations (SQLite), auto-detect from filenames
 - **download-helpers.js** — Download queue persistence (SQLite) and state tracking
 - **dlna.js** — DLNA/UPnP service, media renderer client, LG webOS SSAP control (pause/resume/volume via WebSocket on port 3000). Cast strategies: Browser+fMP4 (primary), Media Viewer native, Web Video Caster, Browser+proxy
+- **email.js** — SMTP email sending via nodemailer (Gmail)
+- **email-template.js** — Newsletter HTML template (dark Netflix-style, table-based, inline CSS, genre grouping)
 
 ### Database (`db/`)
 All data persisted in SQLite via `better-sqlite3` (WAL mode):
 
 - **`db/media-db.js`** → `isiprime.db` — 5 tables: `movies_cache`, `series_cache`, `series_episodes`, `collections`, `download_queue`. 30+ exported functions.
-- **`db/users-db.js`** → `isiprime.db` — 5 tables: `users`, `sessions`, `user_progress`, `user_favorites`, `invitations`. 29 exported functions. Seeds admin user on first init.
+- **`db/users-db.js`** → `isiprime.db` — 7 tables: `users` (+ `email`, `email_notifications` columns), `sessions`, `user_progress`, `user_favorites`, `invitations`, `newsletter_logs`, `newsletter_movies`. 36+ exported functions. Seeds admin user on first init.
 - **`db/requests-db.js`** → `requests.db` — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`.
 
 **Migration**: Run `node scripts/migrate-json-to-sqlite.js` to import legacy JSON files (`cache.json`, `cache-series.json`, `series-episodes.json`, `collections.json`, `download-queue.json`) into SQLite.
@@ -102,26 +106,31 @@ React 19 app with Tailwind CSS and Framer Motion. Built with react-scripts, outp
 - `useVideos` — Catalog + favorites (server-synced) + search
 - `useSeries` — Series + episodes
 - `useRequests` — Requests + SSE real-time updates
-- `useUsers` — User management + invitations (admin CRUD, create/delete users, generate invitation codes)
+- `useUsers` — User management + invitations (admin CRUD, create/delete/update users, email management, generate invitation codes)
 - `useVideoProgress` — Playback position (server-synced + localStorage cache)
 - `useVolumeBoost` — Audio gain control
 - `useRecommendations` — AI-based personalized recommendations
 - `useCast` — DLNA/Cast to TV
+- `useNewsletter` — Newsletter management (movie selection, preview, send, history, sent-movie tracking)
 
 **Components** (in `my-ui/src/components/`):
 - `VideoPlayer.js` — Custom video player with seek bar (mouse+touch), thumbnail preview, volume boost, PiP, fullscreen, cast button, keyboard shortcuts, recommended movies
-- `UserManagementModal.js` — Admin modal: user CRUD + invitation management (2 tabs)
+- `UserManagementModal.js` — Admin modal: user CRUD (with email) + invitation management (2 tabs)
+- `NewsletterModal.js` — Newsletter admin modal: movie selector (with "sent" badges), preview, send/test, history (3 tabs)
 - `CastButton.js` — Cast to TV button with status indicator
 - `CastDeviceModal.js` — DLNA device selector modal
 - `RandomPickerModal.js` — Smart random movie picker
 - `RequestsAdminModal.js` — Requests management modal
 
-**App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + requests admin, viewer does not). Includes inline registration page triggered by `?code=` URL parameter.
+**App.js** is the central hub — manages all state via hooks, role-based UI (admin sees user management + newsletter + requests admin, viewer does not). Includes inline registration page triggered by `?code=` URL parameter. Section headers are sticky. Pagination loads 20 items at a time.
 
 ### Batch Converter
 Two entry points:
 - `batch-converter.js` — CLI tool for mass AVI/MKV→MP4 conversion with GPU acceleration
 - `converter-server.js` + `converter-ui/index.html` — Web UI for the same
+
+### Newsletter System
+Email newsletter for notifying users about new movies. Admin selects movies (with "already sent" badges), previews HTML email, and sends to all users with email configured. Uses nodemailer with Gmail SMTP. Dark Netflix-style template with genre grouping, table-based layout, inline CSS. Sent movies tracked in `newsletter_movies` table to avoid duplicates. History with delete support.
 
 ### Requests System
 Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "server" when found on disk. Requests with status `downloaded`/`server` are auto-deleted after 7 days based on `requestedAt`. `REQUESTS_READONLY` env var makes the instance view-only.

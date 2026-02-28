@@ -24,7 +24,7 @@ F:\plex\
 ├── server.js              # Backend principal (Express 5)
 ├── db/                    # Módulos SQLite
 │   ├── media-db.js        # Películas, series, colecciones, descargas
-│   ├── users-db.js        # Usuarios, sesiones, progreso, favoritos
+│   ├── users-db.js        # Usuarios, sesiones, progreso, favoritos, newsletter
 │   └── requests-db.js     # Peticiones de películas
 ├── lib/                   # Lógica de negocio
 │   ├── auth.js            # JWT, bcrypt, middleware de autenticación
@@ -36,7 +36,9 @@ F:\plex\
 │   ├── normalizers.js     # Normalización cache → API
 │   ├── utils.js           # Utilidades compartidas
 │   ├── requests-helpers.js # Helpers de peticiones
-│   └── dlna.js            # DLNA/UPnP + LG webOS SSAP (Cast a TV)
+│   ├── dlna.js            # DLNA/UPnP + LG webOS SSAP (Cast a TV)
+│   ├── email.js           # SMTP nodemailer (Gmail)
+│   └── email-template.js  # Template newsletter dark Netflix-style
 ├── routes/                # Rutas Express
 │   ├── auth.js            # Login, refresh, registro, invitaciones
 │   ├── user-data.js       # Progreso, favoritos per-user
@@ -46,7 +48,8 @@ F:\plex\
 │   ├── requests.js        # Peticiones CRUD + SSE
 │   ├── collections.js     # Colecciones de películas
 │   ├── downloads.js       # Cola de descargas
-│   ├── conversion.js      # Conversión de video + SSE
+│   ├── conversion.js      # Conversión de video + SSE (protección duplicados)
+│   ├── newsletter.js      # Newsletter email (preview, send, test, historial)
 │   ├── storage.js         # Configuración de almacenamiento
 │   ├── movies.js          # Gestión de archivos de películas
 │   ├── dlna.js            # DLNA/Cast a TV
@@ -87,9 +90,9 @@ F:\plex\
 ├── my-ui/                 # Frontend React 19
 │   ├── src/
 │   │   ├── App.js         # Hub central, role-based UI
-│   │   ├── hooks/         # useAuth, useVideos, useSeries, useUsers, etc.
+│   │   ├── hooks/         # useAuth, useVideos, useSeries, useUsers, useNewsletter, etc.
 │   │   ├── utils/api.js   # authFetch con JWT auto-refresh
-│   │   └── components/    # VideoPlayer, UserManagementModal, CastButton, RandomPickerModal, etc.
+│   │   └── components/    # VideoPlayer, UserManagementModal, NewsletterModal, CastButton, etc.
 │   └── build/             # Build compilado (CRÍTICO)
 ├── backups/               # Backups del build
 ├── .env                   # Variables de entorno
@@ -144,6 +147,7 @@ npm run dev
 - `GET /api/auth/status` - Estado de autenticación (LAN auto-auth)
 - `GET /api/auth/users` - Listar usuarios (admin)
 - `POST /api/auth/users` - Crear usuario (admin)
+- `PUT /api/auth/users/:id` - Actualizar usuario/email (admin)
 - `DELETE /api/auth/users/:id` - Eliminar usuario (admin)
 - `POST /api/auth/invitations` - Crear invitación (admin)
 - `GET /api/auth/invitations` - Listar invitaciones (admin)
@@ -163,6 +167,14 @@ npm run dev
 - `GET /stream-series/:folder/:file` - Streaming de episodio
 - `GET /api/requests` - Peticiones de usuarios
 - `GET /api/collections` - Colecciones de películas
+
+### Newsletter
+- `POST /api/newsletter/preview` - Generar preview HTML del newsletter
+- `POST /api/newsletter/send` - Enviar newsletter a usuarios con email
+- `POST /api/newsletter/test` - Enviar email de prueba a un destinatario
+- `GET /api/newsletter/history` - Historial de newsletters enviados
+- `GET /api/newsletter/sent-movies` - Lista de películas ya enviadas
+- `DELETE /api/newsletter/history/:id` - Eliminar entrada del historial
 
 ### TV Player (webOS) — compatible Chromium ~53+
 - `GET /tv-player` - Página HTML inline para reproducción en iframe (controles, barra de progreso, seek). Usa getParam() regex (no URLSearchParams), XHR (no fetch) para duración. Streaming: MSE+fetch → MSE+XHR → directo v.src
