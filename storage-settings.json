@@ -1,13 +1,5 @@
 {
-  "mode": "local",
-  "localPath": "/home/isidr/ftp-mount",
-  "ftpPath": "/volume-1",
-  "nasTotalSize": 4000000000000,
-  "dlnaManualDevices": [
-    {
-      "ip": "192.168.1.94",
-      "name": "LG webOS TV Salon",
-      "url": "http://192.168.1.94:36866/"
-    }
-  ]
+  "mode": "ftp",
+  "localPath": "/home/isidr/ftp-mount/volume-1",
+  "ftpPath": "/volume-1"
 }

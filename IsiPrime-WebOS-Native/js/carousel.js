@@ -213,7 +213,7 @@
                     div.className = 'carousel-item focusable';
 
                     var posterUrl = App.Config.posterUrl(
-                        item.poster_path || item.posterPath || '',
+                        item.poster || item.poster_path || item.posterPath || '',
                         'w342'
                     );
 

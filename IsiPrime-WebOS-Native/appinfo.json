@@ -1,6 +1,6 @@
 {
     "id": "com.isiprime.app",
-    "version": "2.6.5",
+    "version": "2.7.0",
     "vendor": "IsiPrime",
     "type": "web",
     "main": "index.html",
@@ -13,5 +13,6 @@
     "handlesRelaunch": false,
     "disableBackHistoryAPI": true,
     "mediaExtension": true,
-    "enableVideoHole": true
+    "enableVideoHole": true,
+    "accessibleUrl": "http://*:*;https://*:*"
 }

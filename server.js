@@ -315,11 +315,12 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
     if (startTime > 0) {
         cmd.seekInput(startTime);
     }
-    cmd.outputOptions([
+    const outputOpts = [
         '-c', 'copy',
         '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
         '-f', 'mp4'
-    ])
+    ];
+    cmd.outputOptions(outputOpts)
     .on('start', () => console.log('▶️ fMP4 FFmpeg started'))
     .on('error', (err) => {
         if (!err.message.includes('SIGKILL') && !err.message.includes('SIGTERM')) {
@@ -410,12 +411,12 @@ video{width:100vw;height:100vh;object-fit:contain}
 <div id="si"></div>
 <div id="dbg"></div>
 <script>
-var p=new URLSearchParams(location.search);
-var file=p.get('file')||'';
-var series=p.get('series')||'';
-var pos=parseInt(p.get('pos'))||0;
-var title=p.get('title')||'';
-var token=p.get('token')||'';
+function getParam(n){var m=location.search.match(new RegExp('[?&]'+n+'=([^&]*)'));return m?decodeURIComponent(m[1]):'';}
+var file=getParam('file');
+var series=getParam('series');
+var pos=parseInt(getParam('pos'))||0;
+var title=getParam('title');
+var token=getParam('token');
 var v=document.getElementById('v');
 var pf=document.getElementById('pf');
 var tc=document.getElementById('tc');
@@ -437,11 +438,11 @@ tb.textContent=title;
 var durUrl='/video-duration/'+encodeURIComponent(file);
 if(series)durUrl+='?series='+encodeURIComponent(series);
 if(token)durUrl+=(series?'&':'?')+'token='+token;
-fetch(durUrl).then(function(r){return r.json();}).then(function(d){
-totalDur=d.duration||0;
-log('Real duration: '+totalDur+'s');
-tt.textContent=fmt(totalDur);
-}).catch(function(e){log('Duration fetch err: '+e.message);});
+function xhrGet(url,cb){var x=new XMLHttpRequest();x.open('GET',url);x.onload=function(){try{cb(null,JSON.parse(x.responseText));}catch(e){cb(e);}};x.onerror=function(){cb(new Error('xhr error'));};x.send();}
+xhrGet(durUrl,function(err,d){
+if(!err&&d){totalDur=d.duration||0;log('Real duration: '+totalDur+'s');tt.textContent=fmt(totalDur);}
+else{log('Duration fetch err: '+(err?err.message:'unknown'));}
+});
 
 // Absolute position = stream offset (pos) + video element time (starts at 0 with -ss)
 function absTime(){return pos+Math.floor(v.currentTime||0);}
@@ -502,10 +503,9 @@ log('file: '+file);
 log('pos: '+pos);
 log('MSE supported: '+(typeof MediaSource!=='undefined'));
 
-if(typeof MediaSource==='undefined'){
-log('ERROR: MediaSource not available!');
-msg('error',{message:'MSE not supported'});
-}else{
+var useMSE=false;
+var mime=null;
+if(typeof MediaSource!=='undefined'){
 var mimeTypes=[
 'video/mp4; codecs="avc1.640028, mp4a.40.2"',
 'video/mp4; codecs="avc1.64001f, mp4a.40.2"',
@@ -514,15 +514,24 @@ var mimeTypes=[
 'video/mp4; codecs="avc1.640028"',
 'video/mp4'
 ];
-var mime=null;
 for(var i=0;i<mimeTypes.length;i++){
 if(MediaSource.isTypeSupported(mimeTypes[i])){mime=mimeTypes[i];break;}
 }
-log('MSE mime: '+mime);
+if(mime)useMSE=true;
+}
+log('MSE: '+(useMSE?'yes ('+mime+')':'no, using direct stream'));
 
-if(!mime){
-log('ERROR: No supported MSE MIME type');
-msg('error',{message:'No MSE MIME'});
+if(!useMSE){
+// Fallback: direct stream via range requests (no seek from position, but plays)
+var directUrl='/stream/'+encodeURIComponent(file);
+var dqs=[];
+if(token)dqs.push('token='+token);
+if(series)dqs.push('series='+encodeURIComponent(series));
+if(dqs.length>0)directUrl+='?'+dqs.join('&');
+log('Direct URL: '+directUrl);
+v.src=directUrl;
+if(pos>0){v.addEventListener('loadedmetadata',function(){v.currentTime=pos;},false);}
+v.play();
 }else{
 var fmp4Url='/stream-fmp4/'+encodeURIComponent(file);
 var qs=[];
@@ -657,6 +666,7 @@ pump();
 },3000);
 
 log('Fetching fMP4...');
+if(typeof fetch==='function'&&typeof AbortController==='function'){
 abortCtrl=new AbortController();
 fetch(fmp4Url,{signal:abortCtrl.signal}).then(function(response){
 log('fMP4: '+response.status);
@@ -666,8 +676,28 @@ pump();
 }).catch(function(e){
 if(e.name!=='AbortError')log('Fetch error: '+e.message);
 });
+}else{
+// Old browser: XHR progressive via overrideMimeType
+var xhr=new XMLHttpRequest();
+xhr.open('GET',fmp4Url);
+xhr.responseType='arraybuffer';
+abortCtrl={abort:function(){try{xhr.abort();}catch(e){}}};
+xhr.onload=function(){
+if(xhr.status>=200&&xhr.status<300){
+var buf=new Uint8Array(xhr.response);
+log('fMP4 XHR received: '+Math.round(buf.byteLength/1024/1024)+'MB');
+totalBytes=buf.byteLength;
+queue.push(buf);queueBytes+=buf.byteLength;feedNext();
+sb.addEventListener('updateend',function onue(){
+if(queue.length>0){feedNext();}
+else if(!streamDone){streamDone=true;try{if(ms.readyState==='open')ms.endOfStream();}catch(e){}}
 });
+}else{log('XHR error: HTTP '+xhr.status);}
+};
+xhr.onerror=function(){log('XHR network error');};
+xhr.send();
 }
+});
 }
 
 v.addEventListener('timeupdate',function(){var at=absTime();var dur=totalDur||0;if(dur>0){pf.style.width=(at/dur*100)+'%';tc.textContent=fmt(at);tt.textContent=fmt(dur);}else{tc.textContent=fmt(at);}});

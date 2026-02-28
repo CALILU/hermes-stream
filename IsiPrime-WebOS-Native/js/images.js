@@ -43,13 +43,8 @@
          */
         observe: function(img) {
             if (!img || !img.dataset.src) return;
-
-            if (this._observer) {
-                this._observer.observe(img);
-            } else {
-                // Fallback: load immediately
-                this._loadImage(img);
-            }
+            // Load directly with concurrency limit (IntersectionObserver unreliable on some webOS)
+            this._enqueueImage(img);
         },
 
         /**

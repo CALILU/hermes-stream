@@ -289,6 +289,18 @@
         /**
          * Handle D-pad navigation within the results grid.
          */
+        _getResultsCols: function() {
+            if (this._resultItems.length < 2) return 1;
+            // Use offsetTop — not affected by CSS transform: scale()
+            var firstTop = this._resultItems[0].offsetTop;
+            for (var c = 1; c < this._resultItems.length; c++) {
+                if (this._resultItems[c].offsetTop > firstTop + 5) {
+                    return c;
+                }
+            }
+            return this._resultItems.length;
+        },
+
         _handleResultsNav: function(key) {
             var idx = this._resultsFocusIndex;
             var total = this._resultItems.length;
@@ -301,20 +313,21 @@
                 return;
             }
 
-            var cols = Math.min(total, RESULTS_COLS);
+            var cols = this._getResultsCols();
+            var col = idx % cols;
 
             switch (key) {
                 case App.Config.KEYS.LEFT:
-                    if (idx > 0) {
+                    if (col > 0) {
                         this._updateResultsFocus(idx - 1);
                     } else {
-                        // At first result -> switch to keyboard
+                        // At first column -> switch to keyboard
                         this._switchToKeyboard();
                     }
                     break;
 
                 case App.Config.KEYS.RIGHT:
-                    if (idx + 1 < total) {
+                    if (col < cols - 1 && idx + 1 < total) {
                         this._updateResultsFocus(idx + 1);
                     }
                     break;
@@ -322,12 +335,18 @@
                 case App.Config.KEYS.UP:
                     if (idx - cols >= 0) {
                         this._updateResultsFocus(idx - cols);
+                    } else {
+                        // First row — go to nav
+                        this._switchToNav();
                     }
                     break;
 
                 case App.Config.KEYS.DOWN:
                     if (idx + cols < total) {
                         this._updateResultsFocus(idx + cols);
+                    } else if (idx < total - 1) {
+                        // Last full row but partial row below — snap to last item
+                        this._updateResultsFocus(total - 1);
                     }
                     break;
 

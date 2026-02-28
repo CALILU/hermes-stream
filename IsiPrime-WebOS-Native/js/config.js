@@ -37,11 +37,15 @@
         TMDB_IMG: 'https://image.tmdb.org/t/p/',
 
         posterUrl: function(path, size) {
-            return path ? this.TMDB_IMG + (size || 'w342') + path : 'assets/placeholder.svg';
+            if (!path) return 'assets/placeholder.svg';
+            if (path.indexOf('http') === 0) return path;
+            return this.TMDB_IMG + (size || 'w342') + path;
         },
 
         backdropUrl: function(path) {
-            return path ? this.TMDB_IMG + 'w1280' + path : '';
+            if (!path) return '';
+            if (path.indexOf('http') === 0) return path;
+            return this.TMDB_IMG + 'w1280' + path;
         }
     };
 })();
