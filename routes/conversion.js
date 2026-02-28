@@ -36,6 +36,13 @@ module.exports = function createConversionRoutes(deps) {
             return res.status(400).json({ error: 'Solo se pueden convertir archivos AVI o MKV' });
         }
 
+        // Protección contra duplicados: buscar conversión activa del mismo archivo
+        for (const [existingJobId, job] of conversionJobs.entries()) {
+            if (job.filename === filename && ['starting', 'converting', 'finalizing'].includes(job.status)) {
+                return res.json({ jobId: existingJobId, mp4Filename: job.mp4Filename, duplicate: true });
+            }
+        }
+
         const jobId = Date.now().toString();
         const mp4Filename = filename.replace(/\.(avi|mkv)$/i, '.mp4');
 

@@ -121,7 +121,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/download-queue", {
+      const response = await fetch("http://localhost:9876/api/download-queue", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -152,13 +152,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         // Abrir IsiPrime o reutilizar pestaña existente
         try {
           // Buscar si ya hay una pestaña de IsiPrime abierta
-          const tabs = await chrome.tabs.query({ url: "http://localhost:8080/*" });
+          const tabs = await chrome.tabs.query({ url: "http://localhost:9876/*" });
 
           if (tabs.length > 0) {
             // Reutilizar la primera pestaña existente
             const existingTab = tabs[0];
             await chrome.tabs.update(existingTab.id, {
-              url: "http://localhost:8080/?showRequests=true",
+              url: "http://localhost:9876/?showRequests=true",
               active: true
             });
             // Enfocar la ventana que contiene la pestaña
@@ -167,7 +167,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           } else {
             // Crear nueva pestaña solo si no existe ninguna
             await chrome.tabs.create({
-              url: "http://localhost:8080/?showRequests=true",
+              url: "http://localhost:9876/?showRequests=true",
               active: true
             });
             console.log("IsiPrime: Nueva pestaña creada");

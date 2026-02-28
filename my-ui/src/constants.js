@@ -5,7 +5,7 @@ export const API_BASE = '';
 export const CACHE_KEY = 'hermes_posters_cache';
 
 // Paginacion
-export const LOAD_MORE_COUNT = 50;
+export const LOAD_MORE_COUNT = 20;
 
 // Alfabeto para filtro A-Z
 export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');

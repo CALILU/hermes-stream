@@ -241,7 +241,7 @@ module.exports = function createAuthRoutes(deps) {
      */
     router.post('/register', async (req, res) => {
         try {
-            const { code, username, password } = req.body;
+            const { code, username, password, email } = req.body;
 
             if (!code || !username || !password) {
                 return res.status(400).json({
@@ -303,6 +303,10 @@ module.exports = function createAuthRoutes(deps) {
 
             // Mark invitation as used
             usersDB.useInvitation(invitation.code, newUser.id);
+
+            if (email) {
+                usersDB.updateUserEmail(newUser.id, email);
+            }
 
             res.status(201).json({
                 success: true,
@@ -400,7 +404,7 @@ module.exports = function createAuthRoutes(deps) {
      */
     router.post('/users', authenticate, adminOnly, async (req, res) => {
         try {
-            const { username, password, role, displayName } = req.body;
+            const { username, password, role, displayName, email } = req.body;
 
             if (!username || !password) {
                 return res.status(400).json({
@@ -432,6 +436,11 @@ module.exports = function createAuthRoutes(deps) {
                 role: role || 'user',
                 displayName: displayName || username
             });
+
+            // After newUser is created
+            if (email) {
+                usersDB.updateUserEmail(newUser.id, email);
+            }
 
             res.status(201).json({
                 success: true,
@@ -481,6 +490,41 @@ module.exports = function createAuthRoutes(deps) {
             res.json({ success: true });
         } catch (err) {
             console.error('[Auth] Error eliminando usuario:', err);
+            res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
+        }
+    });
+
+    /**
+     * PUT /users/:id
+     * Update user fields (admin only) — currently supports email
+     */
+    router.put('/users/:id', authenticate, adminOnly, (req, res) => {
+        try {
+            const userId = parseInt(req.params.id);
+            if (isNaN(userId)) {
+                return res.status(400).json({ error: 'ID de usuario invalido', code: 'INVALID_ID' });
+            }
+
+            const user = usersDB.getUserById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado', code: 'NOT_FOUND' });
+            }
+
+            const { email, emailNotifications } = req.body;
+
+            // Validate email format if provided
+            if (email && email.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email.trim())) {
+                    return res.status(400).json({ error: 'Formato de email invalido', code: 'INVALID_EMAIL' });
+                }
+            }
+
+            usersDB.updateUserEmail(userId, email !== undefined ? (email.trim() || null) : undefined, emailNotifications);
+
+            res.json({ success: true });
+        } catch (err) {
+            console.error('[Auth] Error actualizando usuario:', err);
             res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
         }
     });

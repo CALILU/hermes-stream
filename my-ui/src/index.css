@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Fallback for browsers without aspect-ratio support (webOS 6.0 / Chromium <88) */
+@supports not (aspect-ratio: 1) {
+  /* Use ::before pseudo-element to create real height (not height:0 + padding) */
+  .aspect-\[3\/4\]::before {
+    content: '';
+    display: block;
+    padding-bottom: 133.33%;
+  }
+  .aspect-\[2\/3\]::before {
+    content: '';
+    display: block;
+    padding-bottom: 150%;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, Users, LogOut, Heart, Shuffle, Sparkles, ChevronDown, UserPlus } from 'lucide-react';
+import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, Users, LogOut, Heart, Shuffle, Sparkles, ChevronDown, UserPlus, Mail } from 'lucide-react';
 import { API_BASE, CACHE_KEY, ALPHABET, genreEmojis } from './constants';
 import { authFetch, getAccessToken } from './utils/api';
 import { loadCache, saveCache } from './utils/cache';
@@ -31,6 +31,8 @@ import RandomPickerModal from './components/RandomPickerModal';
 import RecommendationsSection from './components/RecommendationsSection';
 import UserManagementModal from './components/UserManagementModal';
 import { useRecommendations } from './hooks/useRecommendations';
+import { useNewsletter } from './hooks/useNewsletter';
+import NewsletterModal from './components/NewsletterModal';
 
 export default function HermesApp() {
   // ========== HOOKS EXTRAIDOS ==========
@@ -86,9 +88,20 @@ export default function HermesApp() {
     createUserForm, creatingUser, createUserError,
     invitationForm, creatingInvitation, lastCreatedInvitation,
     setActiveTab: setUsersActiveTab, setCreateUserForm, setInvitationForm, setLastCreatedInvitation,
-    createUser, deleteUser, createInvitation, deleteInvitation,
+    createUser, deleteUser, updateUserEmail, createInvitation, deleteInvitation,
     openUserManagement, closeUserManagement
   } = useUsers();
+
+  const {
+    newsletterModal, selectedMovies: newsletterSelectedMovies, newsletterSubject,
+    previewHTML: newsletterPreviewHTML, loadingPreview: newsletterLoadingPreview,
+    sending: newsletterSending, sendResult: newsletterSendResult,
+    history: newsletterHistory, loadingHistory: newsletterLoadingHistory, sentMovies,
+    setNewsletterSubject,
+    toggleMovie: newsletterToggleMovie, generatePreview: newsletterGeneratePreview,
+    sendNewsletter, sendTest: newsletterSendTest,
+    loadHistory: loadNewsletterHistory, deleteHistory: deleteNewsletterHistory, openNewsletter, closeNewsletter
+  } = useNewsletter(genres);
 
   // Registration page state (for ?code= URL)
   const [registerMode, setRegisterMode] = useState(null);
@@ -1111,17 +1124,17 @@ export default function HermesApp() {
       <motion.div
         animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
         transition={{ duration: 20, repeat: Infinity }}
-        className="absolute -top-20 -left-20 w-96 h-96 bg-purple-900/30 rounded-full blur-3xl opacity-60"
+        className="absolute -top-20 -left-20 w-[30rem] h-[30rem] bg-purple-700/40 rounded-full blur-3xl opacity-80"
       />
       <motion.div
         animate={{ scale: [1, 1.5, 1], rotate: [0, -90, 0] }}
         transition={{ duration: 25, repeat: Infinity }}
-        className="absolute -bottom-20 -right-20 w-[30rem] h-[30rem] bg-indigo-900/30 rounded-full blur-3xl opacity-60"
+        className="absolute -bottom-20 -right-20 w-[35rem] h-[35rem] bg-indigo-700/40 rounded-full blur-3xl opacity-80"
       />
 
       {/* Header Glassmorphism - Fijo */}
-      <header className="sticky top-0 z-30 mx-4 md:mx-8 mt-2 flex flex-col md:flex-row justify-between items-center bg-slate-900/80 backdrop-blur-md border border-slate-700 p-2 md:p-3 rounded-2xl shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-4 mb-4 md:mb-0">
+      <header className="sticky top-0 z-30 mx-4 md:mx-8 mt-2 flex flex-col lg:flex-row justify-between items-center bg-slate-900/80 backdrop-blur-md border border-slate-700 p-2 md:p-3 rounded-2xl shadow-sm flex-shrink-0">
+        <div className="flex items-center gap-4 mb-4 lg:mb-0 shrink-0">
           <img
             src="/logo.jpg"
             alt="IsiPrime"
@@ -1132,7 +1145,7 @@ export default function HermesApp() {
             }}
           />
           {/* Tabs Películas / Series */}
-          <div className="hidden md:flex bg-slate-800 p-1 rounded-xl">
+          <div className="hidden lg:flex bg-slate-800 p-1 rounded-xl gap-1 shrink-0">
             <button
               onClick={() => setViewMode('movies')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
@@ -1157,23 +1170,23 @@ export default function HermesApp() {
         </div>
 
         {/* Tabs Películas/Series para móviles */}
-        <div className="flex w-full lg:hidden mb-3 bg-slate-800 p-1 rounded-xl">
+        <div className="flex w-full lg:hidden mb-3 bg-slate-800 p-1 rounded-xl gap-1">
           <button
             onClick={() => setViewMode('movies')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-0 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 relative z-10 ${
               viewMode === 'movies'
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-                : 'text-slate-400'
+                : 'text-slate-400 bg-slate-800'
             }`}
           >
             🎬 Películas
           </button>
           <button
             onClick={() => setViewMode('series')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-0 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 relative z-10 ${
               viewMode === 'series'
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md'
-                : 'text-slate-400'
+                : 'text-slate-400 bg-slate-800'
             }`}
           >
             📺 Series
@@ -1464,6 +1477,16 @@ export default function HermesApp() {
               title="Gestionar usuarios"
             >
               <Users className="text-slate-400" size={20} />
+            </button>
+          )}
+          {/* Botón Newsletter (solo admin/local) */}
+          {(authState.isLocal || authState.user?.role === 'admin') && (
+            <button
+              onClick={openNewsletter}
+              className="p-3 bg-slate-800/80 rounded-xl border border-slate-600 hover:shadow-md transition-all"
+              title="Newsletter"
+            >
+              <Mail className="text-slate-400" size={20} />
             </button>
           )}
           <button
@@ -1850,6 +1873,14 @@ export default function HermesApp() {
               <Users size={16} /> Gestionar Usuarios
             </button>
           )}
+          {(authState.isLocal || authState.user?.role === 'admin') && (
+            <button
+              onClick={openNewsletter}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
+            >
+              <Mail size={16} /> Newsletter
+            </button>
+          )}
         </div>
         </div>
       </div>
@@ -2038,20 +2069,22 @@ export default function HermesApp() {
               </section>
             )}
 
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              {selectedCollection ? <Layers className="text-indigo-400" /> : <HardDrive className="text-indigo-400" />}
-              {selectedCollection
-                ? selectedCollection || 'Colección'
-                : selectedGenre
-                  ? genres.find(g => g.id === selectedGenre)?.name
-                  : selectedLetter
-                    ? `Letra ${selectedLetter}`
-                    : searchQuery
-                      ? 'Resultados de búsqueda'
-                      : 'Mi Biblioteca'
-              }
-              <span className="text-sm font-normal text-slate-500">({filteredVideos.length})</span>
-            </h2>
+            <div className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur-md -mx-4 px-4 md:-mx-0 md:px-0 pb-4 pt-2">
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                {selectedCollection ? <Layers className="text-indigo-400" /> : <HardDrive className="text-indigo-400" />}
+                {selectedCollection
+                  ? selectedCollection || 'Colección'
+                  : selectedGenre
+                    ? genres.find(g => g.id === selectedGenre)?.name
+                    : selectedLetter
+                      ? `Letra ${selectedLetter}`
+                      : searchQuery
+                        ? 'Resultados de búsqueda'
+                        : 'Mi Biblioteca'
+                }
+                <span className="text-sm font-normal text-slate-500">({filteredVideos.length})</span>
+              </h2>
+            </div>
 
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-pulse">
@@ -2171,16 +2204,18 @@ export default function HermesApp() {
         ) : (
           /* ========== VISTA DE SERIES ========== */
           <>
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-              <span className="text-emerald-400">📺</span>
-              {selectedSeriesGenre
-                ? seriesGenres.find(g => g.id === selectedSeriesGenre)?.name
-                : seriesSearchQuery
-                  ? 'Resultados de búsqueda'
-                  : 'Mis Series'
-              }
-              <span className="text-sm font-normal text-slate-500">({filteredSeries.length})</span>
-            </h2>
+            <div className="sticky top-0 z-20 bg-slate-950/90 backdrop-blur-md -mx-4 px-4 md:-mx-0 md:px-0 pb-4 pt-2">
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                <span className="text-emerald-400">📺</span>
+                {selectedSeriesGenre
+                  ? seriesGenres.find(g => g.id === selectedSeriesGenre)?.name
+                  : seriesSearchQuery
+                    ? 'Resultados de búsqueda'
+                    : 'Mis Series'
+                }
+                <span className="text-sm font-normal text-slate-500">({filteredSeries.length})</span>
+              </h2>
+            </div>
 
             {loadingSeries ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 animate-pulse">
@@ -2496,10 +2531,33 @@ export default function HermesApp() {
         onInvitationFormChange={setInvitationForm}
         onCreateUser={createUser}
         onDeleteUser={deleteUser}
+        onUpdateUserEmail={updateUserEmail}
         onCreateInvitation={createInvitation}
         onDeleteInvitation={deleteInvitation}
         onDismissInvitation={() => setLastCreatedInvitation(null)}
         onClose={closeUserManagement}
+      />
+
+      <NewsletterModal
+        newsletterModal={newsletterModal}
+        videos={videos}
+        selectedMovies={newsletterSelectedMovies}
+        newsletterSubject={newsletterSubject}
+        previewHTML={newsletterPreviewHTML}
+        loadingPreview={newsletterLoadingPreview}
+        sending={newsletterSending}
+        sendResult={newsletterSendResult}
+        history={newsletterHistory}
+        loadingHistory={newsletterLoadingHistory}
+        sentMovies={sentMovies}
+        onSubjectChange={setNewsletterSubject}
+        onToggleMovie={newsletterToggleMovie}
+        onGeneratePreview={newsletterGeneratePreview}
+        onSendNewsletter={sendNewsletter}
+        onSendTest={newsletterSendTest}
+        onLoadHistory={loadNewsletterHistory}
+        onDeleteHistory={deleteNewsletterHistory}
+        onClose={closeNewsletter}
       />
 
       <SeriesDetailModal

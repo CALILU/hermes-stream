@@ -120,6 +120,41 @@ function init() {
         console.log('🔐 Columna role añadida a invitations');
     }
 
+    // Migrar: añadir columna email a users si no existe
+    try { db.prepare("SELECT email FROM users LIMIT 1").get(); } catch(e) {
+        db.exec("ALTER TABLE users ADD COLUMN email TEXT");
+        console.log('🔐 Columna email añadida a users');
+    }
+    try { db.prepare("SELECT email_notifications FROM users LIMIT 1").get(); } catch(e) {
+        db.exec("ALTER TABLE users ADD COLUMN email_notifications INTEGER DEFAULT 1");
+        console.log('🔐 Columna email_notifications añadida a users');
+    }
+
+    // Crear tabla de logs de newsletter
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS newsletter_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject TEXT NOT NULL,
+            movie_count INTEGER DEFAULT 0,
+            recipients_count INTEGER DEFAULT 0,
+            sent_by INTEGER REFERENCES users(id),
+            sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'sent'
+        );
+    `);
+
+    // Crear tabla de peliculas enviadas por newsletter
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS newsletter_movies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            newsletter_id INTEGER REFERENCES newsletter_logs(id),
+            filename TEXT NOT NULL,
+            title TEXT,
+            sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_newsletter_movies_filename ON newsletter_movies(filename);`);
+
     console.log('🔐 Tablas de usuarios SQLite creadas/verificadas');
 
     // Seed admin si no hay usuarios
@@ -233,6 +268,14 @@ function updateUser(id, data) {
         updates.push('last_login = @last_login');
         params.last_login = data.last_login;
     }
+    if (data.email !== undefined) {
+        updates.push('email = @email');
+        params.email = data.email;
+    }
+    if (data.email_notifications !== undefined) {
+        updates.push('email_notifications = @email_notifications');
+        params.email_notifications = data.email_notifications;
+    }
 
     if (updates.length === 0) {
         return getUserById(id);
@@ -255,7 +298,7 @@ function updateUser(id, data) {
 function getAllUsers() {
     init();
     return db.prepare(`
-        SELECT id, username, display_name, role, invited_by, created_at, last_login, active
+        SELECT id, username, display_name, role, invited_by, created_at, last_login, active, email, email_notifications
         FROM users
         ORDER BY id ASC
     `).all();
@@ -649,6 +692,88 @@ function close() {
     }
 }
 
+// ============================================================
+// Newsletter
+// ============================================================
+
+function getUsersWithEmail() {
+    init();
+    return db.prepare(`
+        SELECT id, username, display_name, email
+        FROM users
+        WHERE active = 1 AND email IS NOT NULL AND email != '' AND email_notifications = 1
+    `).all();
+}
+
+function updateUserEmail(id, email, emailNotifications) {
+    init();
+    const updates = [];
+    const params = { id };
+    if (email !== undefined) { updates.push('email = @email'); params.email = email; }
+    if (emailNotifications !== undefined) { updates.push('email_notifications = @email_notifications'); params.email_notifications = emailNotifications ? 1 : 0; }
+    if (updates.length === 0) return getUserById(id);
+    db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = @id`).run(params);
+    return getUserById(id);
+}
+
+function logNewsletter({ subject, movieCount, recipientsCount, sentBy, status }) {
+    init();
+    const stmt = db.prepare(`
+        INSERT INTO newsletter_logs (subject, movie_count, recipients_count, sent_by, status)
+        VALUES (@subject, @movie_count, @recipients_count, @sent_by, @status)
+    `);
+    const info = stmt.run({
+        subject,
+        movie_count: movieCount,
+        recipients_count: recipientsCount,
+        sent_by: sentBy,
+        status: status || 'sent'
+    });
+    return db.prepare('SELECT * FROM newsletter_logs WHERE id = ?').get(info.lastInsertRowid);
+}
+
+function logNewsletterMovies(newsletterId, movies) {
+    init();
+    const stmt = db.prepare(`
+        INSERT INTO newsletter_movies (newsletter_id, filename, title)
+        VALUES (@newsletter_id, @filename, @title)
+    `);
+    const insertMany = db.transaction((items) => {
+        for (const m of items) {
+            stmt.run({
+                newsletter_id: newsletterId,
+                filename: m.filename || m.title || '',
+                title: m.title || m.filename || ''
+            });
+        }
+    });
+    insertMany(movies);
+}
+
+function getSentMovieFilenames() {
+    init();
+    return db.prepare(`
+        SELECT DISTINCT filename FROM newsletter_movies
+    `).all().map(r => r.filename);
+}
+
+function deleteNewsletterLog(id) {
+    init();
+    db.prepare('DELETE FROM newsletter_movies WHERE newsletter_id = ?').run(id);
+    db.prepare('DELETE FROM newsletter_logs WHERE id = ?').run(id);
+}
+
+function getNewsletterHistory(limit = 50) {
+    init();
+    return db.prepare(`
+        SELECT nl.*, u.username as sent_by_username
+        FROM newsletter_logs nl
+        LEFT JOIN users u ON nl.sent_by = u.id
+        ORDER BY nl.sent_at DESC
+        LIMIT ?
+    `).all(limit);
+}
+
 module.exports = {
     init,
 
@@ -688,6 +813,15 @@ module.exports = {
     useInvitation,
     getInvitations,
     deleteInvitation,
+
+    // Newsletter
+    getUsersWithEmail,
+    updateUserEmail,
+    logNewsletter,
+    logNewsletterMovies,
+    getSentMovieFilenames,
+    deleteNewsletterLog,
+    getNewsletterHistory,
 
     // Utilities
     getDb,

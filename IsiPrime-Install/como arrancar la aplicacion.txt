@@ -1,0 +1,10 @@
+Instrucciones para el usuario final
+
+  1. Copiar la carpeta IsiPrime-Install al ordenador
+  2. Doble clic en INSTALAR.bat (solo la primera vez)
+    - Detecta si Node.js está instalado, si no lo descarga e instala
+    - Instala las dependencias (npm install)
+    - Ofrece crear acceso directo en el escritorio
+  3. Doble clic en IsiPrime.bat (o el acceso directo) para usar la app
+    - Arranca el servidor oculto
+    - Abre el navegador en httplocalhost8080

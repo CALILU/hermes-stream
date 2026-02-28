@@ -4,7 +4,7 @@
   "version": "1.2",
   "description": "Añade videos de OK.ru a la cola de descargas de IsiPrime",
   "permissions": ["contextMenus", "activeTab", "scripting"],
-  "host_permissions": ["http://localhost:8080/*", "https://ok.ru/*", "https://*.ok.ru/*", "<all_urls>"],
+  "host_permissions": ["http://localhost:9876/*", "https://ok.ru/*", "https://*.ok.ru/*", "<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },

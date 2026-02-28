@@ -10,7 +10,7 @@ export function useUsers() {
   const [activeTab, setActiveTab] = useState('users');
 
   // Create user form
-  const [createUserForm, setCreateUserForm] = useState({ username: '', password: '', role: 'viewer', displayName: '' });
+  const [createUserForm, setCreateUserForm] = useState({ username: '', password: '', role: 'viewer', displayName: '', email: '' });
   const [creatingUser, setCreatingUser] = useState(false);
   const [createUserError, setCreateUserError] = useState('');
 
@@ -51,7 +51,7 @@ export function useUsers() {
       });
       const data = await res.json();
       if (data.success) {
-        setCreateUserForm({ username: '', password: '', role: 'viewer', displayName: '' });
+        setCreateUserForm({ username: '', password: '', role: 'viewer', displayName: '', email: '' });
         loadUsers();
       } else {
         setCreateUserError(data.error || 'Error al crear usuario');
@@ -104,6 +104,22 @@ export function useUsers() {
     }
   };
 
+  const updateUserEmail = async (userId, email) => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/auth/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success) loadUsers();
+      return data;
+    } catch (err) {
+      console.error('Error actualizando email:', err);
+      return { success: false };
+    }
+  };
+
   const openUserManagement = () => {
     setUserManagementModal(true);
     setLoadingUsers(true);
@@ -121,7 +137,7 @@ export function useUsers() {
     createUserForm, creatingUser, createUserError,
     invitationForm, creatingInvitation, lastCreatedInvitation,
     setActiveTab, setCreateUserForm, setInvitationForm, setLastCreatedInvitation,
-    createUser, deleteUser, createInvitation, deleteInvitation,
+    createUser, deleteUser, updateUserEmail, createInvitation, deleteInvitation,
     openUserManagement, closeUserManagement
   };
 }

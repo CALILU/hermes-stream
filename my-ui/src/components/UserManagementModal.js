@@ -8,7 +8,7 @@ export default function UserManagementModal({
   invitationForm, creatingInvitation, lastCreatedInvitation,
   authState,
   onTabChange, onCreateUserFormChange, onInvitationFormChange,
-  onCreateUser, onDeleteUser, onCreateInvitation, onDeleteInvitation,
+  onCreateUser, onDeleteUser, onUpdateUserEmail, onCreateInvitation, onDeleteInvitation,
   onDismissInvitation, onClose
 }) {
   const [copiedId, setCopiedId] = useState(null);
@@ -120,6 +120,13 @@ export default function UserManagementModal({
                         onChange={e => onCreateUserFormChange({ ...createUserForm, displayName: e.target.value })}
                         className="px-3 py-2 bg-slate-700 rounded-lg border border-slate-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
+                      <input
+                        type="email"
+                        placeholder="Email (opcional)"
+                        value={createUserForm.email}
+                        onChange={e => onCreateUserFormChange({ ...createUserForm, email: e.target.value })}
+                        className="px-3 py-2 bg-slate-700 rounded-lg border border-slate-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
                       <select
                         value={createUserForm.role}
                         onChange={e => onCreateUserFormChange({ ...createUserForm, role: e.target.value })}
@@ -159,23 +166,40 @@ export default function UserManagementModal({
                                 {user.role}
                               </span>
                             </div>
+                            {user.email && (
+                              <span className="text-slate-500 text-xs flex items-center gap-1">
+                                <Mail size={10} /> {user.email}
+                              </span>
+                            )}
                             <p className="text-slate-500 text-xs mt-0.5">
                               {user.last_login ? `Ultimo acceso: ${formatDate(user.last_login)}` : 'Sin acceso'}
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Eliminar usuario "${user.username}"?`)) {
-                              onDeleteUser(user.id);
-                            }
-                          }}
-                          disabled={user.id === authState?.user?.id}
-                          className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
-                          title={user.id === authState?.user?.id ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => {
+                              const newEmail = window.prompt('Email para ' + user.username + ':', user.email || '');
+                              if (newEmail !== null) onUpdateUserEmail(user.id, newEmail);
+                            }}
+                            className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/20 rounded-lg transition-all flex-shrink-0"
+                            title="Editar email"
+                          >
+                            <Mail size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Eliminar usuario "${user.username}"?`)) {
+                                onDeleteUser(user.id);
+                              }
+                            }}
+                            disabled={user.id === authState?.user?.id}
+                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+                            title={user.id === authState?.user?.id ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

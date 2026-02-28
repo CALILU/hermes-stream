@@ -6,9 +6,11 @@ my-ui/node_modules/
 .env
 .env.local
 .env.production
+.env.nas
 
 # Logs
 *.log
+logs/
 npm-debug.log*
 
 # Sistema operativo
@@ -18,6 +20,37 @@ Thumbs.db
 # Build del frontend
 my-ui/build/
 
+# Bases de datos SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Cache JSON (legacy, migrado a SQLite)
+cache.json
+cache-series.json
+collections.json
+series-episodes.json
+
+# Binarios y paquetes
+*.ipk
+*.zip
+IsiPrime-Install/.env
+
+# Backups y temporales
+backups/
+salvamento/
+temp_conversions/
+
+# Archivos de prueba
+prueba.*
+test-*.py
+
+# Assets sueltos
+Logo_resolucion_maxima.png
+
+# Claude sessions
+.claude/session-*
+claude-workflow-documenta/
 
 # IDE
 .vscode/
