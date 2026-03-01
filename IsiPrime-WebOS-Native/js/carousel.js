@@ -54,6 +54,8 @@
                 _bufferCount: bufferCount,
                 _focusElements: [],    // sparse array of focusable elements
                 _destroyed: false,
+                _scrollTimer: null,       // Auto-scroll timer for Magic Remote edge zones
+                _lastMouseX: 0,           // Last mouse X position in container
 
                 /**
                  * Initial render of visible items.
@@ -62,6 +64,7 @@
                     this._containerWidth = this._container.offsetWidth || 1800;
                     this._updateVisibleItems();
                     this._registerFocusGroup();
+                    this._setupEdgeScroll();
                 },
 
                 /**
@@ -169,10 +172,15 @@
                             }
                         });
                         el.addEventListener('mouseenter', function() {
-                            self.focusAt(idx);
+                            // Update focus visual without centering/scrolling
+                            self._focusIndex = idx;
+                            self._updateItemFocus(idx);
                             // Set this carousel's focus group as active
                             if (self._opts.groupId && App.Focus.setActiveGroup) {
                                 App.Focus.setActiveGroup(self._opts.groupId, null);
+                            }
+                            if (self._opts.onFocus) {
+                                self._opts.onFocus(itm, idx);
                             }
                             // Show hover tooltip
                             var title = itm.title || itm.name || itm.seriesName || '';
@@ -388,6 +396,12 @@
                 destroy: function() {
                     this._destroyed = true;
 
+                    // Stop edge-scroll timer
+                    if (this._scrollTimer) {
+                        clearInterval(this._scrollTimer);
+                        this._scrollTimer = null;
+                    }
+
                     // Unregister focus group
                     if (this._opts.groupId) {
                         App.Focus.unregisterGroup(this._opts.groupId);
@@ -408,6 +422,53 @@
                     this._rendered = {};
                     this._focusElements = [];
                     this._items = [];
+                },
+
+                /**
+                 * Setup Magic Remote edge-scroll zones.
+                 * When cursor is near left/right edge of the carousel container,
+                 * auto-scroll the carousel in that direction.
+                 */
+                _setupEdgeScroll: function() {
+                    var self = this;
+                    var EDGE_ZONE = 200; // px from edge to trigger scroll
+                    var SCROLL_INTERVAL = 250; // ms between scroll steps
+
+                    this._container.addEventListener('mousemove', function(e) {
+                        var rect = self._container.getBoundingClientRect();
+                        var x = e.clientX - rect.left;
+                        self._lastMouseX = x;
+
+                        var inRightZone = x > (rect.width - EDGE_ZONE);
+                        var inLeftZone = x < EDGE_ZONE;
+
+                        if (inRightZone || inLeftZone) {
+                            if (!self._scrollTimer) {
+                                var dir = inRightZone ? 1 : -1;
+                                self._scrollTimer = setInterval(function() {
+                                    var newIdx = self._focusIndex + dir;
+                                    if (newIdx < 0 || newIdx >= self._items.length) {
+                                        clearInterval(self._scrollTimer);
+                                        self._scrollTimer = null;
+                                        return;
+                                    }
+                                    self.focusAt(newIdx);
+                                }, SCROLL_INTERVAL);
+                            }
+                        } else {
+                            if (self._scrollTimer) {
+                                clearInterval(self._scrollTimer);
+                                self._scrollTimer = null;
+                            }
+                        }
+                    });
+
+                    this._container.addEventListener('mouseleave', function() {
+                        if (self._scrollTimer) {
+                            clearInterval(self._scrollTimer);
+                            self._scrollTimer = null;
+                        }
+                    });
                 },
 
                 /**
