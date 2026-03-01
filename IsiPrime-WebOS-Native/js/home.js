@@ -39,6 +39,7 @@
             });
             this._destroyCarousels();
             this._rowGroupIds = [];
+            this._lazyRows = [];
 
             if (this._currentSection === 'movies') {
                 this._buildMoviesView(videos, genres, continueWatching);
@@ -306,7 +307,8 @@
                 return genreGroups[b].length - genreGroups[a].length;
             });
 
-            // Create a carousel for each genre with >= 3 movies (shuffled)
+            // Create genre rows lazily — only initialize carousel when scrolled into view
+            var lazyRows = [];
             genreOrder.forEach(function(gid) {
                 var movies = genreGroups[gid];
                 if (movies.length < 3) return;
@@ -322,12 +324,58 @@
                 var genreName = gid === 0 ? 'Otros' : App.getGenreName(gid);
                 if (!genreName) genreName = 'Otros';
 
-                self._createGenreRow(container, genreName, movies, 'genre-' + gid, function(item) {
-                    return self._renderPosterItem(item, continueWatching);
-                }, function(item) {
-                    self._onMovieSelect(item);
-                });
+                // Create the row DOM but defer carousel creation
+                var groupId = 'genre-' + gid;
+                var row = document.createElement('div');
+                row.className = 'genre-row';
+
+                var titleEl = document.createElement('div');
+                titleEl.className = 'genre-title';
+                titleEl.textContent = genreName;
+                row.appendChild(titleEl);
+
+                var carouselContainer = document.createElement('div');
+                carouselContainer.className = 'carousel-container';
+                row.appendChild(carouselContainer);
+
+                container.appendChild(row);
+
+                var lazyEntry = {
+                    row: row,
+                    container: carouselContainer,
+                    movies: movies,
+                    groupId: groupId,
+                    initialized: false
+                };
+
+                // Register a focus group with a dummy element so D-pad DOWN can land here
+                // On focus, the carousel gets initialized and replaces the dummy
+                (function(entry) {
+                    var dummy = document.createElement('div');
+                    dummy.className = 'carousel-item focusable';
+                    dummy.style.cssText = 'width:1px;height:1px;opacity:0;position:absolute;';
+                    carouselContainer.appendChild(dummy);
+
+                    App.Focus.registerGroup(entry.groupId, [dummy], {
+                        orientation: 'horizontal',
+                        onFocus: function() {
+                            // Lazy init: create carousel on first D-pad focus
+                            if (!entry.initialized) {
+                                carouselContainer.removeChild(dummy);
+                                self._initLazyRow(entry, continueWatching);
+                            }
+                        },
+                        onSelect: function() {}
+                    });
+                })(lazyEntry);
+
+                self._rowGroupIds.push(groupId);
+                lazyRows.push(lazyEntry);
             });
+
+            // Lazy init: observe which rows become visible
+            self._lazyRows = lazyRows;
+            self._initLazyObserver(continueWatching);
 
             // Focus the first carousel
             if (this._carousels.length > 0) {
@@ -654,6 +702,75 @@
         },
 
         /**
+         * Initialize lazy observer for genre rows.
+         * Uses scroll listener (IntersectionObserver unreliable on webOS 4.0).
+         */
+        _initLazyObserver: function(continueWatching) {
+            var self = this;
+            if (!this._lazyRows || this._lazyRows.length === 0) return;
+
+            // Check which rows are visible and init them
+            function checkVisibleRows() {
+                if (!self._container) return;
+                var viewTop = self._container.scrollTop;
+                var viewBottom = viewTop + self._container.clientHeight;
+
+                for (var i = 0; i < self._lazyRows.length; i++) {
+                    var lr = self._lazyRows[i];
+                    if (lr.initialized) continue;
+
+                    // Row position relative to container
+                    var rowTop = lr.row.offsetTop;
+                    // Init if within 600px of visible area (1 screen ahead)
+                    if (rowTop < viewBottom + 600) {
+                        self._initLazyRow(lr, continueWatching);
+                    }
+                }
+            }
+
+            // Check on scroll (throttled)
+            var scrollThrottle = null;
+            this._container.addEventListener('scroll', function() {
+                if (scrollThrottle) return;
+                scrollThrottle = setTimeout(function() {
+                    scrollThrottle = null;
+                    checkVisibleRows();
+                }, 100);
+            });
+
+            // Initial check (first few rows)
+            checkVisibleRows();
+        },
+
+        /**
+         * Initialize a lazy genre row — create its carousel.
+         */
+        _initLazyRow: function(lr, continueWatching) {
+            var self = this;
+            if (lr.initialized) return;
+            lr.initialized = true;
+
+            if (App.Carousel && App.Carousel.create) {
+                var carousel = App.Carousel.create(lr.container, lr.movies, {
+                    groupId: lr.groupId,
+                    itemWidth: App.Config.POSTER_WIDTH,
+                    gap: App.Config.POSTER_GAP,
+                    onSelect: function(item) {
+                        self._onMovieSelect(item);
+                    },
+                    onFocus: function(item, index) {
+                        self._ensureRowVisible(lr.row);
+                    },
+                    renderItem: function(item) {
+                        return self._renderPosterItem(item, continueWatching);
+                    }
+                });
+                carousel.groupId = lr.groupId;
+                self._carousels.push(carousel);
+            }
+        },
+
+        /**
          * Ensure a row is scrolled into view.
          */
         _ensureRowVisible: function(row) {
@@ -726,6 +843,7 @@
         destroy: function() {
             this._destroyCarousels();
             this._rowGroupIds = [];
+            this._lazyRows = [];
         }
     };
 })();
