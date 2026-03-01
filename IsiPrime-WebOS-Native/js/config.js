@@ -8,7 +8,7 @@
     window.App = window.App || {};
 
     App.Config = {
-        SERVER_URL: localStorage.getItem('isiprime_server_url') || 'http://192.168.1.18:8080',
+        SERVER_URL: localStorage.getItem('isiprime_server_url') || 'http://192.168.1.45:8080',
 
         KEYS: {
             LEFT: 37,
@@ -38,12 +38,16 @@
 
         posterUrl: function(path, size) {
             if (!path) return 'assets/placeholder.svg';
+            // Proxy URL from server (/api/img/w342/xxx.jpg)
+            if (path.indexOf('/api/img/') === 0) return this.SERVER_URL + path;
             if (path.indexOf('http') === 0) return path;
             return this.TMDB_IMG + (size || 'w342') + path;
         },
 
         backdropUrl: function(path) {
             if (!path) return '';
+            // Proxy URL from server (/api/img/w780/xxx.jpg)
+            if (path.indexOf('/api/img/') === 0) return this.SERVER_URL + path;
             if (path.indexOf('http') === 0) return path;
             return this.TMDB_IMG + 'w1280' + path;
         }

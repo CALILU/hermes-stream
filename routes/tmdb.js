@@ -58,8 +58,8 @@ module.exports = function createTMDBRoutes(deps) {
                     title: movie.title,
                     originalTitle: movie.original_title,
                     overview: movie.overview ? movie.overview.substring(0, 200) + '...' : null,
-                    poster: movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : null,
-                    backdrop: movie.backdrop_path ? `${TMDB_IMAGE_BASE}${movie.backdrop_path}` : null,
+                    poster: movie.poster_path ? `/api/img/w342${movie.poster_path}` : null,
+                    backdrop: movie.backdrop_path ? `/api/img/w780${movie.backdrop_path}` : null,
                     releaseDate: movie.release_date,
                     year: movie.release_date ? movie.release_date.substring(0, 4) : null,
                     rating: movie.vote_average,
@@ -121,8 +121,8 @@ module.exports = function createTMDBRoutes(deps) {
                     title: show.name,
                     originalTitle: show.original_name,
                     overview: show.overview ? show.overview.substring(0, 200) + '...' : null,
-                    poster: show.poster_path ? `${TMDB_IMAGE_BASE}${show.poster_path}` : null,
-                    backdrop: show.backdrop_path ? `${TMDB_IMAGE_BASE}${show.backdrop_path}` : null,
+                    poster: show.poster_path ? `/api/img/w342${show.poster_path}` : null,
+                    backdrop: show.backdrop_path ? `/api/img/w780${show.backdrop_path}` : null,
                     firstAirDate: show.first_air_date,
                     year: show.first_air_date ? show.first_air_date.substring(0, 4) : null,
                     rating: show.vote_average,
@@ -164,7 +164,7 @@ module.exports = function createTMDBRoutes(deps) {
                         id: actor.id,
                         name: actor.name,
                         character: actor.character,
-                        photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
+                        photo: actor.profile_path ? `/api/img/h632${actor.profile_path}` : null
                     }));
 
                 const { filename } = req.query;
@@ -226,7 +226,7 @@ module.exports = function createTMDBRoutes(deps) {
                     id: actor.id,
                     name: actor.name,
                     character: actor.character,
-                    photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
+                    photo: actor.profile_path ? `/api/img/h632${actor.profile_path}` : null
                 }));
 
             if (filename) {
@@ -238,7 +238,7 @@ module.exports = function createTMDBRoutes(deps) {
                     overview: movie.overview
                 };
                 if (movie.poster_path) {
-                    updateData.poster = `${TMDB_IMAGE_BASE}${movie.poster_path}`;
+                    updateData.poster = `/api/img/w342${movie.poster_path}`;
                 }
                 await updateCacheEntry(filename, updateData, true);
                 console.log(`✅ Metadatos actualizados en cache para: ${filename}`);
@@ -313,7 +313,7 @@ module.exports = function createTMDBRoutes(deps) {
                     title: movie.title,
                     originalTitle: movie.original_title,
                     character: movie.character,
-                    poster: `${TMDB_IMAGE_BASE}${movie.poster_path}`,
+                    poster: `/api/img/w342${movie.poster_path}`,
                     year: movie.release_date ? movie.release_date.substring(0, 4) : null,
                     rating: movie.vote_average,
                     overview: movie.overview
@@ -326,7 +326,7 @@ module.exports = function createTMDBRoutes(deps) {
                 actor: {
                     id: actor.id,
                     name: actor.name,
-                    photo: actor.profile_path ? `${TMDB_IMAGE_BASE}${actor.profile_path}` : null
+                    photo: actor.profile_path ? `/api/img/h632${actor.profile_path}` : null
                 },
                 movies
             });

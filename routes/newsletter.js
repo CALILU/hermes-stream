@@ -11,9 +11,22 @@
 
 const express = require('express');
 const router = express.Router();
+const posterCache = require('../lib/poster-cache');
 
 module.exports = function createNewsletterRoutes(deps) {
     const { usersDB, emailService, emailTemplate, auth } = deps;
+
+    /**
+     * Convert proxy image URLs in movies to absolute TMDB URLs for email clients.
+     * Email clients can't access LAN URLs like /api/img/...
+     */
+    function moviesForEmail(movies) {
+        return movies.map(m => ({
+            ...m,
+            poster: posterCache.toTMDBURL(m.poster) || m.poster,
+            backdrop: posterCache.toTMDBURL(m.backdrop) || m.backdrop
+        }));
+    }
 
     const authenticate = auth.authMiddleware(usersDB);
     const adminOnly = auth.requireRole('admin');
@@ -30,7 +43,7 @@ module.exports = function createNewsletterRoutes(deps) {
                 return res.status(400).json({ error: 'Se requiere al menos una pelicula', code: 'NO_MOVIES' });
             }
 
-            const html = emailTemplate.generateNewsletterHTML(movies, { subject: subject || 'Nuevas peliculas en IsiPrime' });
+            const html = emailTemplate.generateNewsletterHTML(moviesForEmail(movies), { subject: subject || 'Nuevas peliculas en IsiPrime' });
 
             res.json({ success: true, html });
         } catch (err) {
@@ -58,7 +71,7 @@ module.exports = function createNewsletterRoutes(deps) {
             }
 
             const emailSubject = subject || 'Nuevas peliculas en IsiPrime';
-            const html = emailTemplate.generateNewsletterHTML(movies, { subject: emailSubject });
+            const html = emailTemplate.generateNewsletterHTML(moviesForEmail(movies), { subject: emailSubject });
 
             const results = await emailService.sendBulkEmails(recipients, emailSubject, html);
 
@@ -150,7 +163,7 @@ module.exports = function createNewsletterRoutes(deps) {
             }
 
             const emailSubject = `[TEST] ${subject || 'Nuevas peliculas en IsiPrime'}`;
-            const html = emailTemplate.generateNewsletterHTML(movies, { subject: subject || 'Nuevas peliculas en IsiPrime' });
+            const html = emailTemplate.generateNewsletterHTML(moviesForEmail(movies), { subject: subject || 'Nuevas peliculas en IsiPrime' });
 
             await emailService.sendEmail(email, emailSubject, html);
 

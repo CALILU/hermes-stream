@@ -26,6 +26,8 @@ const { createCacheManager } = require('./lib/cache');
 const { createSeriesManager } = require('./lib/series');
 const { createRequestsHelpers } = require('./lib/requests-helpers');
 const { createDownloadHelpers } = require('./lib/download-helpers');
+const posterCache = require('./lib/poster-cache');
+const { probeNewFiles } = require('./lib/probe');
 
 const app = express();
 
@@ -68,7 +70,7 @@ app.get('/api/test', (req, res) => {
 // PROTEGER RUTAS DE API (excepto auth y públicas)
 // ============================================
 app.use('/api', (req, res, next) => {
-    const publicPaths = ['/auth/', '/test', '/storage/config'];
+    const publicPaths = ['/auth/', '/test', '/storage/config', '/img/'];
     if (publicPaths.some(p => req.path.startsWith(p))) {
         return next();
     }
@@ -224,6 +226,7 @@ const PORT = process.env.PORT || 3002;
 
 // ========== MONTAR RUTAS ==========
 app.use('/api/storage', require('./routes/storage')({ storageConfig, saveStorageSettings }));
+app.use('/api/img', require('./routes/poster-cache'));
 app.use('/api/tmdb', require('./routes/tmdb')({ tmdbFetch, TMDB_BASE_URL, TMDB_IMAGE_BASE, TMDB_API_KEY, updateCacheEntry }));
 app.use('/api', require('./routes/videos')({
     storageConfig,
@@ -307,16 +310,22 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
 
     const cmd = ffmpeg(localPath);
     // Rate-limit input reading to prevent overwhelming the TV's limited RAM.
-    // Without this, FFmpeg reads as fast as the disk allows, the browser buffers
-    // the entire HTTP response in memory, and the TV OOM-crashes.
     // -readrate 1.5: read at 1.5x real-time (slight buffer ahead)
-    // -readrate_initial_burst 5: burst first 5s instantly for quick start
-    cmd.inputOptions(['-readrate', '1.5', '-readrate_initial_burst', '5']);
+    // -readrate_initial_burst 10: burst first 10s instantly for quick start (Mejora 6)
+    cmd.inputOptions(['-readrate', '1.5', '-readrate_initial_burst', '10']);
     if (startTime > 0) {
         cmd.seekInput(startTime);
     }
+
+    // Mejora 3: Audio passthrough — check if audio is already AAC (no re-encode needed)
+    // If audio is not AAC, re-encode to AAC for MSE compatibility
+    const movie = mediaDB.getMovie(filename);
+    const audioCodec = movie ? movie.audio_codec : null;
+    const audioOpt = (audioCodec === 'aac') ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '192k'];
+
     const outputOpts = [
-        '-c', 'copy',
+        '-c:v', 'copy',
+        ...audioOpt,
         '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
         '-f', 'mp4'
     ];
@@ -331,6 +340,50 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
 
     cmd.pipe(res, { end: true });
     res.on('close', () => { cmd.kill('SIGKILL'); });
+});
+
+// Get video codec info for TV player (from DB or quick FFprobe)
+app.get('/video-info/:filename', jwtAuthMiddleware, (req, res) => {
+    const filename = decodeURIComponent(req.params.filename);
+    const movie = mediaDB.getMovie(filename);
+    if (movie && movie.video_codec) {
+        return res.json({
+            video_codec: movie.video_codec,
+            audio_codec: movie.audio_codec,
+            audio_channels: movie.audio_channels,
+            duration: movie.duration_seconds || 0
+        });
+    }
+    // Fallback: FFprobe on the fly
+    const seriesFolder = req.query.series ? decodeURIComponent(req.query.series) : null;
+    let localPath;
+    if (seriesFolder) {
+        localPath = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder, filename);
+        if (!fsSync.existsSync(localPath)) {
+            try {
+                const seriesDir = path.join(storageConfig.localPath, SERIES_FOLDER, seriesFolder);
+                const entries = fsSync.readdirSync(seriesDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.isDirectory()) {
+                        const subPath = path.join(seriesDir, entry.name, filename);
+                        if (fsSync.existsSync(subPath)) { localPath = subPath; break; }
+                    }
+                }
+            } catch (e) {}
+        }
+    } else {
+        localPath = path.join(storageConfig.localPath, filename);
+    }
+    if (!fsSync.existsSync(localPath)) return res.json({ video_codec: null, audio_codec: null, duration: 0 });
+    const { probeFile } = require('./lib/probe');
+    probeFile(localPath).then(info => {
+        res.json({
+            video_codec: info ? info.video_codec : null,
+            audio_codec: info ? info.audio_codec : null,
+            audio_channels: info ? info.audio_channels : null,
+            duration: info ? info.duration_seconds : 0
+        });
+    });
 });
 
 // Get video duration for TV player (quick FFprobe)
@@ -417,6 +470,17 @@ var series=getParam('series');
 var pos=parseInt(getParam('pos'))||0;
 var title=getParam('title');
 var token=getParam('token');
+var ext=getParam('ext');
+var vcodec=getParam('vcodec');
+var acodec=getParam('acodec');
+// directMode: true if browser can play natively via <video src> (no MSE needed)
+// Conditions: (1) MP4/MOV container, or (2) H.264+AAC in any container, or (3) HEVC with compatible audio (HW decode)
+var directMode=(ext==='mp4'||ext==='mov');
+if(!directMode&&vcodec){
+var directAudio=(acodec==='aac'||acodec==='ac3'||acodec==='eac3'||acodec==='mp3');
+if(vcodec==='h264'&&directAudio)directMode=true;
+if((vcodec==='hevc'||vcodec==='h265')&&directAudio)directMode=true;
+}
 var v=document.getElementById('v');
 var pf=document.getElementById('pf');
 var tc=document.getElementById('tc');
@@ -434,23 +498,38 @@ var abortCtrl=null;
 var totalDur=0; // real total duration in seconds (from FFprobe)
 tb.textContent=title;
 
-// Fetch real duration from server (FFprobe)
-var durUrl='/video-duration/'+encodeURIComponent(file);
-if(series)durUrl+='?series='+encodeURIComponent(series);
-if(token)durUrl+=(series?'&':'?')+'token='+token;
+// Fetch real duration and codec info from server
+var infoUrl='/video-info/'+encodeURIComponent(file);
+var infoQs=[];
+if(series)infoQs.push('series='+encodeURIComponent(series));
+if(token)infoQs.push('token='+token);
+if(infoQs.length>0)infoUrl+='?'+infoQs.join('&');
 function xhrGet(url,cb){var x=new XMLHttpRequest();x.open('GET',url);x.onload=function(){try{cb(null,JSON.parse(x.responseText));}catch(e){cb(e);}};x.onerror=function(){cb(new Error('xhr error'));};x.send();}
-xhrGet(durUrl,function(err,d){
-if(!err&&d){totalDur=d.duration||0;log('Real duration: '+totalDur+'s');tt.textContent=fmt(totalDur);}
-else{log('Duration fetch err: '+(err?err.message:'unknown'));}
+xhrGet(infoUrl,function(err,d){
+if(!err&&d){
+totalDur=d.duration||0;log('Duration: '+totalDur+'s');tt.textContent=fmt(totalDur);
+// If server provides codec info and we don't have it from URL params, update directMode
+if(!vcodec&&d.video_codec){
+vcodec=d.video_codec;acodec=d.audio_codec||'';
+var directAudio=(acodec==='aac'||acodec==='ac3'||acodec==='eac3'||acodec==='mp3');
+if(!directMode&&vcodec==='h264'&&directAudio){directMode=true;log('Switching to direct mode (h264+'+acodec+')');startDirect();}
+if(!directMode&&(vcodec==='hevc'||vcodec==='h265')&&directAudio){directMode=true;log('Switching to direct mode (hevc+'+acodec+')');startDirect();}
+}
+}else{
+// Fallback: try old endpoint
+xhrGet('/video-duration/'+encodeURIComponent(file)+(token?'?token='+token:''),function(e2,d2){
+if(!e2&&d2){totalDur=d2.duration||0;tt.textContent=fmt(totalDur);}
+});
+}
 });
 
-// Absolute position = stream offset (pos) + video element time (starts at 0 with -ss)
-function absTime(){return pos+Math.floor(v.currentTime||0);}
+// Absolute position: direct mode uses v.currentTime directly, MSE uses offset + v.currentTime
+function absTime(){return directMode?Math.floor(v.currentTime||0):(pos+Math.floor(v.currentTime||0));}
 
 // Button click handlers (Magic Remote)
 function doToggle(){if(v.paused){v.play();icon('\\u25B6');bpp.textContent='\\u23F8';}else{v.pause();icon('\\u23F8');bpp.textContent='\\u25B6';}showC();}
 function doRw(){v.currentTime=Math.max(0,v.currentTime-10);icon('\\u25C0\\u25C0');showC();}
-function doFf(){var maxT=totalDur>0?(totalDur-pos):v.currentTime+30;v.currentTime=Math.min(maxT,v.currentTime+10);icon('\\u25B6\\u25B6');showC();}
+function doFf(){var maxT=directMode?(totalDur||v.currentTime+30):(totalDur>0?(totalDur-pos):v.currentTime+30);v.currentTime=Math.min(maxT,v.currentTime+10);icon('\\u25B6\\u25B6');showC();}
 function doStop(){if(abortCtrl)abortCtrl.abort();msg('back');}
 bpp.addEventListener('click',function(e){e.stopPropagation();doToggle();});
 brw.addEventListener('click',function(e){e.stopPropagation();doRw();});
@@ -474,23 +553,31 @@ var x=e.clientX-rect.left;
 var ratio=Math.max(0,Math.min(1,x/rect.width));
 var seekTime=Math.floor(ratio*totalDur);
 log('Seek click: ratio='+ratio.toFixed(2)+' seekTime='+seekTime+'s totalDur='+totalDur);
-// Save progress before seeking
+if(directMode){
+// Direct mode: native seek via range requests
+v.currentTime=seekTime;showC();
+}else{
+// MSE mode: reload iframe at new position (can't seek outside buffer)
 msg('progress');
-// Reload iframe at new position (MSE can't seek outside buffer)
 var u=location.pathname+'?file='+encodeURIComponent(file)+'&pos='+seekTime+'&title='+encodeURIComponent(title);
 if(series)u+='&series='+encodeURIComponent(series);
 if(token)u+='&token='+encodeURIComponent(token);
+if(ext)u+='&ext='+ext;
+if(vcodec)u+='&vcodec='+vcodec;
+if(acodec)u+='&acodec='+acodec;
 location.href=u;
+}
 });
 
 // Keep controls visible while pointer hovers over them
 ctrl.addEventListener('mouseenter',function(){if(ht){clearTimeout(ht);ht=null;}});
 ctrl.addEventListener('mouseleave',function(){if(!v.paused){ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}});
 
-// Buffer limits — aggressive, TV has ~1.5GB RAM shared with OS
-var MAX_QUEUE_BYTES=3*1024*1024;   // 3MB max pending in JS queue
-var MAX_BUFFER_AHEAD=15;           // 15s ahead before pausing fetch
-var RESUME_BUFFER=8;               // resume fetching when only 8s buffered ahead
+// Buffer limits — TV has ~1.5GB RAM shared with OS
+// Mejora 6: Increased buffers (images now served locally, less memory pressure)
+var MAX_QUEUE_BYTES=4*1024*1024;   // 4MB max pending in JS queue (was 3MB)
+var MAX_BUFFER_AHEAD=20;           // 20s ahead before pausing fetch (was 15s)
+var RESUME_BUFFER=12;              // resume fetching when only 12s buffered ahead (was 8s)
 var CLEAN_BEHIND=5;                // keep only 5s behind, aggressively remove old data
 
 function log(m){console.log('[TVPlayer] '+m);if(dbg)dbg.textContent+=m+'\\n';}
@@ -519,19 +606,36 @@ if(MediaSource.isTypeSupported(mimeTypes[i])){mime=mimeTypes[i];break;}
 }
 if(mime)useMSE=true;
 }
-log('MSE: '+(useMSE?'yes ('+mime+')':'no, using direct stream'));
+log('MSE: '+(useMSE?'yes ('+mime+')':'no'));
+log('Direct mode: '+directMode+' (ext='+ext+', vcodec='+vcodec+', acodec='+acodec+')');
 
-if(!useMSE){
-// Fallback: direct stream via range requests (no seek from position, but plays)
+var directStarted=false;
+function startDirect(){
+if(directStarted)return;
+directStarted=true;
 var directUrl='/stream/'+encodeURIComponent(file);
 var dqs=[];
 if(token)dqs.push('token='+token);
 if(series)dqs.push('series='+encodeURIComponent(series));
 if(dqs.length>0)directUrl+='?'+dqs.join('&');
-log('Direct URL: '+directUrl);
+log('Direct stream URL: '+directUrl);
+if(abortCtrl){try{abortCtrl.abort();}catch(e){}}
 v.src=directUrl;
-if(pos>0){v.addEventListener('loadedmetadata',function(){v.currentTime=pos;},false);}
-v.play();
+v.addEventListener('loadedmetadata',function(){
+if(!totalDur||totalDur===0)totalDur=Math.floor(v.duration||0);
+tt.textContent=fmt(totalDur);
+if(pos>0)v.currentTime=pos;
+try{v.play().then(function(){log('play() OK');msg('playing');}).catch(function(e){log('play err: '+e.message);});}
+catch(e){v.play();}
+},false);
+}
+
+if(directMode){
+startDirect();
+}else if(!useMSE){
+// Fallback: direct stream for browsers without MSE
+directMode=true;
+startDirect();
 }else{
 var fmp4Url='/stream-fmp4/'+encodeURIComponent(file);
 var qs=[];
@@ -825,6 +929,14 @@ async function startServer() {
         console.error('❌ Error inicializando SQLite:', err.message);
     }
 
+    // Inicializar poster cache
+    try {
+        posterCache.init();
+        console.log('📸 Poster cache inicializado');
+    } catch (err) {
+        console.error('⚠️ Error inicializando poster cache:', err.message);
+    }
+
     // Limpiar sesiones expiradas cada hora
     setInterval(() => {
         try { usersDB.cleanExpiredSessions(); } catch (e) {}
@@ -834,6 +946,16 @@ async function startServer() {
         console.log(`🚀 Servidor IsiPrime activo en puerto ${PORT}`);
         console.log(`📍 Escuchando en http://0.0.0.0:${PORT} (accesible desde la red)`);
         console.log('⏳ Servidor en ejecución... (presiona Ctrl+C para detener)');
+
+        // Prewarm poster cache en background (no bloquea el arranque)
+        posterCache.prewarm(mediaDB).catch(err => {
+            console.warn('⚠️ Poster cache prewarm error:', err.message);
+        });
+
+        // Probe codec info de archivos nuevos en background
+        probeNewFiles(mediaDB, storageConfig.localPath).catch(err => {
+            console.warn('⚠️ Codec probe error:', err.message);
+        });
 
         // Iniciar servicio DLNA si está habilitado
         if (process.env.DLNA_ENABLED === 'true') {

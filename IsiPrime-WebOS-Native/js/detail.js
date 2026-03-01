@@ -48,6 +48,14 @@
 
             this._buildDOM();
             this._setupKeyHandler();
+
+            // Mejora 5: Prefetch — pre-warm connection for video streaming
+            // When user opens detail, pre-fetch video-info and HEAD the stream
+            if (movie.filename) {
+                var preUrl = App.Config.SERVER_URL + '/video-info/' + encodeURIComponent(movie.filename);
+                if (App.API._accessToken) preUrl += '?token=' + encodeURIComponent(App.API._accessToken);
+                App.API._xhrGet(preUrl, function() { /* just warm the connection */ });
+            }
         },
 
         /**

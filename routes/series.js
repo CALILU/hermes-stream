@@ -19,6 +19,7 @@ const fsSync = require('fs');
 const fs = require('fs').promises;
 const path = require('path');
 const router = express.Router();
+const { ensureFullPosterURL } = require('../lib/utils');
 
 module.exports = function createSeriesRoutes(deps) {
     const {
@@ -71,6 +72,8 @@ module.exports = function createSeriesRoutes(deps) {
 
                     return {
                         ...cached,
+                        poster: ensureFullPosterURL(cached.poster || cached.poster_path, 'w342'),
+                        backdrop: ensureFullPosterURL(cached.backdrop || cached.backdrop_path, 'w780'),
                         folder_name: folderName,
                         watched_count: watchedCount,
                         total_episodes_available: totalCount,
@@ -171,6 +174,8 @@ module.exports = function createSeriesRoutes(deps) {
 
             res.json({
                 ...seriesData,
+                poster: ensureFullPosterURL(seriesData.poster || seriesData.poster_path, 'w342'),
+                backdrop: ensureFullPosterURL(seriesData.backdrop || seriesData.backdrop_path, 'w780'),
                 folder_name: folderName,
                 seasons: episodes.seasons || {}
             });

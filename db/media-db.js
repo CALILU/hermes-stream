@@ -132,6 +132,21 @@ function init() {
         );
     `);
 
+    // Migración: añadir columnas de codec info si no existen
+    const movieCols = db.prepare("PRAGMA table_info(movies_cache)").all().map(c => c.name);
+    if (!movieCols.includes('video_codec')) {
+        db.exec(`
+            ALTER TABLE movies_cache ADD COLUMN video_codec TEXT;
+            ALTER TABLE movies_cache ADD COLUMN audio_codec TEXT;
+            ALTER TABLE movies_cache ADD COLUMN audio_channels INTEGER;
+            ALTER TABLE movies_cache ADD COLUMN bitrate INTEGER;
+            ALTER TABLE movies_cache ADD COLUMN width INTEGER;
+            ALTER TABLE movies_cache ADD COLUMN height INTEGER;
+            ALTER TABLE movies_cache ADD COLUMN duration_seconds INTEGER;
+        `);
+        console.log('🗄️  Columnas codec info añadidas a movies_cache');
+    }
+
     console.log('🗄️  Tablas media SQLite creadas/verificadas');
 
     const movieCount = db.prepare('SELECT COUNT(*) as count FROM movies_cache').get().count;
@@ -374,6 +389,79 @@ function cleanupMovies(existingFilenames) {
 
     transaction(orphans);
     return orphans.length;
+}
+
+/**
+ * Actualiza la info de codec de una película
+ * @param {string} filename
+ * @param {Object} codecInfo - { video_codec, audio_codec, audio_channels, bitrate, width, height, duration_seconds }
+ */
+function updateMovieCodecInfo(filename, codecInfo) {
+    init();
+    const stmt = db.prepare(`
+        UPDATE movies_cache SET
+            video_codec = @video_codec,
+            audio_codec = @audio_codec,
+            audio_channels = @audio_channels,
+            bitrate = @bitrate,
+            width = @width,
+            height = @height,
+            duration_seconds = @duration_seconds
+        WHERE filename = @filename
+    `);
+    stmt.run({
+        filename,
+        video_codec: codecInfo.video_codec || null,
+        audio_codec: codecInfo.audio_codec || null,
+        audio_channels: codecInfo.audio_channels || null,
+        bitrate: codecInfo.bitrate || null,
+        width: codecInfo.width || null,
+        height: codecInfo.height || null,
+        duration_seconds: codecInfo.duration_seconds || null
+    });
+}
+
+/**
+ * Actualiza codec info en batch (transacción)
+ * @param {Array} entries - [{ filename, video_codec, audio_codec, ... }, ...]
+ */
+function updateMovieCodecInfoBatch(entries) {
+    init();
+    const stmt = db.prepare(`
+        UPDATE movies_cache SET
+            video_codec = @video_codec,
+            audio_codec = @audio_codec,
+            audio_channels = @audio_channels,
+            bitrate = @bitrate,
+            width = @width,
+            height = @height,
+            duration_seconds = @duration_seconds
+        WHERE filename = @filename
+    `);
+    const transaction = db.transaction((items) => {
+        for (const item of items) {
+            stmt.run({
+                filename: item.filename,
+                video_codec: item.video_codec || null,
+                audio_codec: item.audio_codec || null,
+                audio_channels: item.audio_channels || null,
+                bitrate: item.bitrate || null,
+                width: item.width || null,
+                height: item.height || null,
+                duration_seconds: item.duration_seconds || null
+            });
+        }
+    });
+    transaction(entries);
+}
+
+/**
+ * Obtiene películas sin info de codec
+ * @returns {Array<string>} filenames sin codec info
+ */
+function getMoviesWithoutCodecInfo() {
+    init();
+    return db.prepare('SELECT filename FROM movies_cache WHERE video_codec IS NULL').all().map(r => r.filename);
 }
 
 // ============================================================
@@ -914,6 +1002,9 @@ module.exports = {
     deleteMovie,
     clearMovies,
     cleanupMovies,
+    updateMovieCodecInfo,
+    updateMovieCodecInfoBatch,
+    getMoviesWithoutCodecInfo,
 
     // Series Cache
     getAllSeries,

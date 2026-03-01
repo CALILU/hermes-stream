@@ -12,7 +12,7 @@
         _observer: null,
         _loading: 0,
         _queue: [],
-        MAX_CONCURRENT: 10,
+        MAX_CONCURRENT: 20,
 
         /**
          * Initialize the IntersectionObserver.

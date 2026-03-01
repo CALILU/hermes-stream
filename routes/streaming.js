@@ -157,7 +157,7 @@ module.exports = function createStreamingRoutes(deps) {
         const fileSize = stat.size;
         console.log(`📁 Archivo local: ${(fileSize / 1024 / 1024).toFixed(1)} MB`);
 
-        // Si necesita transcodificación (MKV, AVI)
+        // Si necesita transcodificación (AVI)
         if (needsTranscode) {
             console.log(`🔄 Transcodificando archivo local a MP4 (pista audio: ${audioTrack})...`);
 

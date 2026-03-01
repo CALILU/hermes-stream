@@ -155,6 +155,23 @@
             });
         },
 
+        /**
+         * Simple XHR GET (webOS 4.0 compatible, no fetch needed).
+         * Calls cb(err, data) with parsed JSON.
+         */
+        _xhrGet: function(url, cb) {
+            var x = new XMLHttpRequest();
+            x.open('GET', url);
+            x.timeout = 3000;
+            x.onload = function() {
+                try { cb(null, JSON.parse(x.responseText)); }
+                catch (e) { cb(e, null); }
+            };
+            x.onerror = function() { cb(new Error('xhr error'), null); };
+            x.ontimeout = function() { cb(new Error('xhr timeout'), null); };
+            x.send();
+        },
+
         // --- Movies ---
 
         getVideos: function() {

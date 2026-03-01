@@ -181,6 +181,35 @@
                 filename = decodeURIComponent(parts[parts.length - 1].split('?')[0]);
             }
 
+            // Extract file extension for direct MP4 streaming
+            var ext = '';
+            var dotIdx = filename.lastIndexOf('.');
+            if (dotIdx > 0) ext = filename.substring(dotIdx + 1).toLowerCase();
+
+            // Fetch codec info from server, then build iframe with codec params
+            var infoUrl = serverUrl + '/video-info/' + encodeURIComponent(filename);
+            var infoQs = [];
+            if (seriesFolder) infoQs.push('series=' + encodeURIComponent(seriesFolder));
+            var token = App.API._accessToken;
+            if (token) infoQs.push('token=' + encodeURIComponent(token));
+            if (infoQs.length > 0) infoUrl += '?' + infoQs.join('&');
+
+            App.API._xhrGet(infoUrl, function(err, info) {
+                if (self._destroyed) return;
+                var vcodec = (info && info.video_codec) ? info.video_codec : '';
+                var acodec = (info && info.audio_codec) ? info.audio_codec : '';
+
+                self._launchIframe(seekTo, filename, seriesFolder, ext, vcodec, acodec, token);
+            });
+        },
+
+        /**
+         * Build and launch the iframe with streaming parameters.
+         */
+        _launchIframe: function(seekTo, filename, seriesFolder, ext, vcodec, acodec, token) {
+            var self = this;
+            var serverUrl = App.Config.SERVER_URL;
+
             // Build iframe URL
             var iframeUrl = serverUrl + '/tv-player'
                 + '?file=' + encodeURIComponent(filename)
@@ -191,7 +220,19 @@
                 iframeUrl += '&series=' + encodeURIComponent(seriesFolder);
             }
 
-            var token = App.API._accessToken;
+            // Pass extension so tv-player can use direct streaming for MP4/MOV
+            if (ext) {
+                iframeUrl += '&ext=' + ext;
+            }
+
+            // Pass codec info for intelligent streaming decision
+            if (vcodec) {
+                iframeUrl += '&vcodec=' + vcodec;
+            }
+            if (acodec) {
+                iframeUrl += '&acodec=' + acodec;
+            }
+
             if (token) {
                 iframeUrl += '&token=' + encodeURIComponent(token);
             }
