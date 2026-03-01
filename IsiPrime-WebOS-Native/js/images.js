@@ -12,6 +12,7 @@
         _observer: null,
         _loading: 0,
         _queue: [],
+        _prefetched: {},
         MAX_CONCURRENT: 20,
 
         /**
@@ -116,6 +117,20 @@
         _processQueue: function() {
             while (this._queue.length > 0 && this._loading < this.MAX_CONCURRENT) {
                 this._loadImage(this._queue.shift());
+            }
+        },
+
+        /**
+         * Prefetch images into browser cache (no DOM needed).
+         * @param {Array} urls - Array of image URLs to prefetch.
+         */
+        prefetch: function(urls) {
+            if (!urls || !urls.length) return;
+            for (var i = 0; i < urls.length; i++) {
+                if (!urls[i] || this._prefetched[urls[i]]) continue;
+                this._prefetched[urls[i]] = true;
+                var img = new Image();
+                img.src = urls[i];
             }
         },
 

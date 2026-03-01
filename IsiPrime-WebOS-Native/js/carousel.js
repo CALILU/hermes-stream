@@ -95,6 +95,9 @@
 
                     // Update focus visual on items
                     this._updateItemFocus(index);
+
+                    // Prefetch poster images ahead of scroll direction
+                    this._prefetchAhead(index);
                 },
 
                 /**
@@ -405,6 +408,36 @@
                     this._rendered = {};
                     this._focusElements = [];
                     this._items = [];
+                },
+
+                /**
+                 * Prefetch poster images beyond the visible+buffer range.
+                 * Pre-downloads the next 10 posters so they're in browser cache
+                 * when the user scrolls to them.
+                 */
+                _prefetchAhead: function(focusIndex) {
+                    if (!App.Images || !App.Images.prefetch) return;
+                    var ahead = 10;
+                    var urls = [];
+                    // Prefetch forward
+                    var startFwd = Math.ceil((this._currentOffset + this._containerWidth) / this._totalItemWidth) + this._bufferCount + 1;
+                    for (var i = startFwd; i < startFwd + ahead && i < this._items.length; i++) {
+                        var item = this._items[i];
+                        var url = App.Config.posterUrl(
+                            item.poster || item.poster_path || item.posterPath || '', 'w342'
+                        );
+                        if (url && url !== 'assets/placeholder.svg') urls.push(url);
+                    }
+                    // Prefetch backward
+                    var startBwd = Math.floor(this._currentOffset / this._totalItemWidth) - this._bufferCount - 1;
+                    for (var j = startBwd; j > startBwd - ahead && j >= 0; j--) {
+                        var itm = this._items[j];
+                        var u = App.Config.posterUrl(
+                            itm.poster || itm.poster_path || itm.posterPath || '', 'w342'
+                        );
+                        if (u && u !== 'assets/placeholder.svg') urls.push(u);
+                    }
+                    if (urls.length > 0) App.Images.prefetch(urls);
                 },
 
                 /**
