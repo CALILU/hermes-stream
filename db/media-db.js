@@ -118,6 +118,19 @@ function init() {
         );
     `);
 
+    // Crear tabla de cache de detalles completos de colecciones (TMDB)
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS collection_details (
+            collection_id TEXT PRIMARY KEY,
+            name TEXT,
+            overview TEXT,
+            poster TEXT,
+            parts TEXT,
+            total_parts INTEGER,
+            cached_at INTEGER
+        );
+    `);
+
     // Crear tabla de cola de descargas
     db.exec(`
         CREATE TABLE IF NOT EXISTS download_queue (
@@ -868,6 +881,57 @@ function deleteCollection(id) {
 }
 
 // ============================================================
+// Collection Details (TMDB full data cache)
+// ============================================================
+
+const COLLECTION_DETAILS_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+/**
+ * Obtiene los detalles completos de una coleccion desde cache
+ * @param {string} id - Collection ID
+ * @returns {Object|null} null si no existe o expirado
+ */
+function getCollectionDetails(id) {
+    init();
+    const row = db.prepare('SELECT * FROM collection_details WHERE collection_id = ?').get(String(id));
+    if (!row) return null;
+
+    // Check TTL
+    if (Date.now() - row.cached_at > COLLECTION_DETAILS_TTL) return null;
+
+    return {
+        id: row.collection_id,
+        name: row.name,
+        overview: row.overview,
+        poster: row.poster,
+        parts: row.parts ? JSON.parse(row.parts) : [],
+        totalParts: row.total_parts
+    };
+}
+
+/**
+ * Guarda los detalles completos de una coleccion en cache
+ * @param {string} id - Collection ID
+ * @param {Object} data - { name, overview, poster, parts, totalParts }
+ */
+function saveCollectionDetails(id, data) {
+    init();
+    db.prepare(`
+        INSERT OR REPLACE INTO collection_details (
+            collection_id, name, overview, poster, parts, total_parts, cached_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+        String(id),
+        data.name || null,
+        data.overview || null,
+        data.poster || null,
+        JSON.stringify(data.parts || []),
+        data.totalParts || 0,
+        Date.now()
+    );
+}
+
+// ============================================================
 // Download Queue
 // ============================================================
 
@@ -1026,6 +1090,10 @@ module.exports = {
     upsertCollection,
     upsertCollectionsBatch,
     deleteCollection,
+
+    // Collection Details (TMDB full cache)
+    getCollectionDetails,
+    saveCollectionDetails,
 
     // Download Queue
     getQueue,

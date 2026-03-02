@@ -8,14 +8,16 @@ Servidor autónomo de streaming de películas y series para 5-10 usuarios remoto
 - **Nombre**: IsiPrime / HermesStream
 - **Backend**: Node.js + Express 5 (server.js) - Puerto 8080 (env PORT)
 - **Frontend**: React 19 (my-ui/) - Compilado en my-ui/build/
-- **Almacenamiento**: Local (disco directo, sin FTP)
+- **Almacenamiento**: Local (NVMe 4TB en NAS, sin FTP/rclone)
 - **Base de datos**: SQLite via better-sqlite3 (WAL mode)
   - `isiprime.db` — media cache, series, colecciones, descargas, usuarios
   - `requests.db` — peticiones de películas
 - **Autenticación**: JWT (access token 15min + refresh token 30d) + bcrypt
 - **APIs externas**: TMDB (metadatos de películas)
 - **Usuario GitHub**: CALILU
-- **Target**: LincStation N2 (Debian 12)
+- **Producción**: LincStation N2 (Ubuntu 24.04 Server, IP 192.168.1.45)
+- **Acceso remoto**: https://calilu.mooo.com (nginx + Let's Encrypt)
+- **Gestor procesos**: PM2 fork mode (systemd auto-start)
 
 ## Estructura del proyecto
 
@@ -58,7 +60,7 @@ F:\plex\
 ├── scripts/
 │   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite
 │   └── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
-├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.7.0 (compatible webOS 4.0+)
+├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.10.5 (compatible webOS 4.0+)
 │   ├── appinfo.json       # Manifest webOS (com.isiprime.app, accessibleUrl)
 │   ├── index.html         # Entry point (14 scripts sin modules)
 │   ├── css/styles.css     # CSS completo (~1830 líneas)
@@ -68,11 +70,11 @@ F:\plex\
 │   │   ├── login.js       # Login para usuarios remotos
 │   │   ├── focus.js       # Motor navegación D-pad
 │   │   ├── carousel.js    # Carrusel virtual horizontal (poster fallback)
-│   │   ├── images.js      # Carga directa con límite concurrencia (max 10)
+│   │   ├── images.js      # Carga directa con límite concurrencia (max 20) + timeout 15s
 │   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER→ACTOR...)
 │   │   ├── home.js        # Carruseles por género
 │   │   ├── detail.js      # Detalle película/serie + cast navegable
-│   │   ├── player.js      # Reproductor iframe + resume dialog + key forwarding
+│   │   ├── player.js      # Reproductor iframe + auto-resume + key forwarding
 │   │   ├── series.js      # Temporadas + episodios
 │   │   ├── search.js      # Teclado en pantalla + búsqueda (columnas dinámicas)
 │   │   ├── actor.js       # Filmografía de actor (solo películas locales)
@@ -186,20 +188,21 @@ npm run dev
 | `miLGTV` | LG 43UP80006LR | 6.0 | ~87 | 192.168.1.94 (wired) | Comedor |
 | `nuevaTV` | LG 32LK6100PLB | 4.0 | ~53 | 192.168.1.108 (WiFi) | Hijo |
 
-## Migración a LincStation N2 NAS (preparada)
+## NAS LincStation N2 — OPERATIVO
 
-- **Hardware**: LincStation N2 (Intel N100, 16GB LPDDR5, 128GB eMMC, 6 bahías)
-- **SO target**: Ubuntu 24.04 Server (en eMMC)
-- **Disco películas**: WD_Black SN7100 4TB NVMe (NTFS, montado via ntfs-3g)
-- **Gestor procesos**: PM2 fork mode (SQLite no soporta cluster)
-- **Scripts de migración**: `scripts/transfer-to-nas.sh`, `scripts/migrate-to-nas.sh`, `scripts/start-tv-nas.sh`
-- **Config PM2**: `ecosystem.config.js`
-- **Template env**: `.env.nas`
-- **Solo cambian 3 archivos**: `.env`, `storage-settings.json`, `IsiPrime-WebOS-Native/js/config.js`
-- **Estado**: Pendiente — esperando que llegue el NAS
+- **Hardware**: LincStation N2 (Intel N100, 16GB LPDDR5, 128GB eMMC)
+- **SO**: Ubuntu 24.04 Server, IP estática 192.168.1.45
+- **Disco**: WD_Black SN7100 4TB NVMe (NTFS, ntfs-3g, `/mnt/peliculas`)
+- **PM2**: fork mode, systemd auto-start (`pm2-isidro.service`)
+- **Seguridad**: UFW + fail2ban + SSH hardened (no root, MaxAuthTries 4)
+- **Acceso remoto**: nginx + Let's Encrypt (calilu.mooo.com), DMZ en Livebox 6
+- **LEDs**: daemon `lincstation_leds` (I2C bus 2, systemd)
+- **Developer Mode TV**: cron renewal diario 3AM (`~/scripts/renew-webos-devmode.sh`)
+- **Scripts**: `transfer-to-nas.sh`, `migrate-to-nas.sh`, `start-tv-nas.sh`, `setup-nginx-https.sh`
+- **Config**: `ecosystem.config.js`, `.env.nas`, `HermesStream.bat` (launcher simplificado)
 
 ## Desarrollador
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 28/02/2026
+- Última actualización: 02/03/2026

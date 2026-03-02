@@ -20,6 +20,7 @@
         HOME: 'HOME',
         GENRE: 'GENRE',
         YEARS: 'YEARS',
+        SAGAS: 'SAGAS',
         DETAIL: 'DETAIL',
         PLAYER: 'PLAYER',
         SERIES: 'SERIES',
@@ -33,6 +34,7 @@
         HOME: 'Home',
         GENRE: 'Genre',
         YEARS: 'Years',
+        SAGAS: 'Sagas',
         DETAIL: 'Detail',
         PLAYER: 'Player',
         SERIES: 'Series',
@@ -190,6 +192,13 @@
                     }
                     break;
 
+                case STATES.SAGAS:
+                    this._ensureAppContainer();
+                    if (App.Sagas && typeof App.Sagas.show === 'function') {
+                        App.Sagas.show(data, isBack);
+                    }
+                    break;
+
                 case STATES.DETAIL:
                     if (App.Detail && typeof App.Detail.show === 'function') {
                         App.Detail.show(data);
@@ -259,6 +268,12 @@
                     }
                     break;
 
+                case STATES.SAGAS:
+                    if (App.Sagas && typeof App.Sagas.hide === 'function') {
+                        App.Sagas.hide();
+                    }
+                    break;
+
                 case STATES.DETAIL:
                     if (App.Detail && typeof App.Detail.hide === 'function') {
                         App.Detail.hide();
@@ -322,6 +337,7 @@
             viewMap[STATES.HOME] = 'home';
             viewMap[STATES.GENRE] = 'genres';
             viewMap[STATES.YEARS] = 'years';
+            viewMap[STATES.SAGAS] = 'sagas';
             viewMap[STATES.SERIES] = 'series';
             viewMap[STATES.SEARCH] = 'search';
             viewMap[STATES.REQUESTS] = 'requests';

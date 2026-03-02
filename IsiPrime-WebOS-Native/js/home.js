@@ -582,17 +582,17 @@
             titleDiv.textContent = movie.title || movie.filename || '';
             item.appendChild(titleDiv);
 
-            // Add progress bar if the movie has saved progress
+            // Add progress bar if the movie has saved progress (API returns snake_case fields)
             if (continueWatching) {
                 var progress = null;
                 for (var i = 0; i < continueWatching.length; i++) {
-                    if (continueWatching[i].videoPath === movie.filename) {
+                    if (continueWatching[i].video_path === movie.filename) {
                         progress = continueWatching[i];
                         break;
                     }
                 }
-                if (progress && progress.duration && progress.duration > 0) {
-                    var pct = Math.min(100, Math.round((progress.position / progress.duration) * 100));
+                if (progress && progress.duration_seconds && progress.duration_seconds > 0) {
+                    var pct = Math.min(100, Math.round((progress.position_seconds / progress.duration_seconds) * 100));
                     if (pct > 0) {
                         var progressBar = document.createElement('div');
                         progressBar.className = 'poster-progress';
@@ -660,7 +660,7 @@
             var self = this;
             var result = [];
             continueWatching.forEach(function(cw) {
-                var movie = self._findVideoByPath(videos, cw.videoPath);
+                var movie = self._findVideoByPath(videos, cw.video_path);
                 if (movie) {
                     result.push(movie);
                 }

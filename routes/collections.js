@@ -15,7 +15,8 @@ module.exports = function createCollectionsRoutes(deps) {
     const {
         readCollections, updateCollectionWithMovie,
         readCache, writeCache,
-        tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY
+        tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY,
+        mediaDB
     } = deps;
 
     // Listar colecciones
@@ -24,7 +25,10 @@ module.exports = function createCollectionsRoutes(deps) {
             const { genre } = req.query;
             const collections = await readCollections();
 
-            let collectionsList = Object.values(collections);
+            let collectionsList = Object.keys(collections).map(key => ({
+                ...collections[key],
+                id: parseInt(key) || key
+            }));
 
             // Filtrar por género si se especifica
             if (genre) {
@@ -46,6 +50,83 @@ module.exports = function createCollectionsRoutes(deps) {
         } catch (error) {
             console.error('Error obteniendo colecciones:', error.message);
             res.status(500).json({ error: 'Error al obtener colecciones' });
+        }
+    });
+
+    // Detalle completo de una colección (incluye películas no locales desde TMDB)
+    // Usa caché SQLite con TTL de 14 días para evitar llamadas repetidas a TMDB
+    router.get('/:id/full', async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // Build set of local tmdb_ids from cache (always fresh)
+            const movieCache = await readCache();
+            const localTmdbIds = new Set();
+            for (const filename of Object.keys(movieCache)) {
+                const entry = movieCache[filename];
+                if (entry.tmdb_id) {
+                    localTmdbIds.add(entry.tmdb_id);
+                }
+            }
+
+            // Check SQLite cache first
+            let collectionData = mediaDB.getCollectionDetails(id);
+
+            if (!collectionData) {
+                // Cache miss or expired — fetch from TMDB
+                const tmdbResponse = await tmdbFetch(`${TMDB_BASE_URL}/collection/${id}`, {
+                    params: { api_key: TMDB_API_KEY, language: 'es-ES' },
+                    timeout: 10000
+                });
+                const tmdbData = tmdbResponse.data;
+
+                // Map TMDB parts, sorted by release_date ascending
+                const parts = (tmdbData.parts || [])
+                    .sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''))
+                    .map(part => ({
+                        tmdbId: part.id,
+                        title: part.title,
+                        release_date: part.release_date,
+                        year: part.release_date ? part.release_date.substring(0, 4) : '',
+                        poster: part.poster_path ? `/api/img/w342${part.poster_path}` : null,
+                        overview: part.overview
+                    }));
+
+                collectionData = {
+                    id: tmdbData.id,
+                    name: tmdbData.name,
+                    overview: tmdbData.overview,
+                    poster: tmdbData.poster_path ? `/api/img/w342${tmdbData.poster_path}` : null,
+                    parts: parts,
+                    totalParts: parts.length
+                };
+
+                // Save to SQLite cache
+                mediaDB.saveCollectionDetails(id, collectionData);
+                console.log(`📚 Colección TMDB → caché: ${tmdbData.name} (${parts.length} películas)`);
+            }
+
+            // Always compute inCatalog fresh (catalog changes independently of TMDB data)
+            const parts = collectionData.parts.map(part => ({
+                ...part,
+                inCatalog: localTmdbIds.has(part.tmdbId)
+            }));
+
+            const localParts = parts.filter(p => p.inCatalog).length;
+
+            res.json({
+                id: collectionData.id || parseInt(id),
+                name: collectionData.name,
+                overview: collectionData.overview,
+                poster: collectionData.poster,
+                parts: parts,
+                totalParts: collectionData.totalParts,
+                localParts: localParts
+            });
+
+        } catch (error) {
+            console.error('Error obteniendo colección completa:', error.message);
+            res.status(500).json({ error: 'Error al obtener colección completa' });
         }
     });
 

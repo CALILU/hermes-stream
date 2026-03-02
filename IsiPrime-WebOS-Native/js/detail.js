@@ -175,6 +175,29 @@
             content.appendChild(buttonsDiv);
             this._buttons = [playBtn, favBtn];
 
+            // Magic Remote pointer: click handlers for buttons
+            var self = this;
+            playBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                self._play();
+            });
+            favBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                self._toggleFavorite();
+            });
+
+            // Magic Remote pointer: hover to focus buttons
+            playBtn.addEventListener('mouseenter', function() {
+                self._focusZone = 'buttons';
+                self._clearCastFocus();
+                self._setButtonFocus(0);
+            });
+            favBtn.addEventListener('mouseenter', function() {
+                self._focusZone = 'buttons';
+                self._clearCastFocus();
+                self._setButtonFocus(1);
+            });
+
             // Cast section
             this._castItems = [];
             if (movie.cast && movie.cast.length > 0) {
@@ -202,7 +225,7 @@
                     var photo = document.createElement('img');
                     photo.className = 'cast-photo';
                     photo.alt = actor.name || '';
-                    photo.src = actor.photo || 'assets/placeholder.svg';
+                    photo.src = App.Config.posterUrl(actor.photo, 'h632');
 
                     var nameDiv = document.createElement('div');
                     nameDiv.className = 'cast-name';
@@ -497,14 +520,14 @@
         _play: function() {
             var movie = this._movie;
 
-            // Check for saved progress
+            // Check for saved progress (API returns snake_case fields)
             var startPos = 0;
             var duration = 0;
             if (App._continueWatching) {
                 for (var i = 0; i < App._continueWatching.length; i++) {
-                    if (App._continueWatching[i].videoPath === movie.filename) {
-                        startPos = App._continueWatching[i].position || 0;
-                        duration = App._continueWatching[i].duration || 0;
+                    if (App._continueWatching[i].video_path === movie.filename) {
+                        startPos = App._continueWatching[i].position_seconds || 0;
+                        duration = App._continueWatching[i].duration_seconds || 0;
                         break;
                     }
                 }

@@ -17,7 +17,7 @@ const router = express.Router();
 module.exports = function createVideosRoutes(deps) {
     const {
         storageConfig,
-        readCache, getMovieMetadata,
+        readCache, getMovieMetadata, updateCacheEntry,
         normalizeCacheToAPI,
         VIDEO_EXTENSIONS_REGEX
     } = deps;
@@ -53,9 +53,29 @@ module.exports = function createVideosRoutes(deps) {
             // Cargar caché del backend para aplicar carátulas guardadas
             const cache = await readCache();
 
+            // Build a lookup by basename (without extension) for fallback matching
+            // Handles MKV→MP4 conversions where cache key is still the old filename
+            const cacheByBasename = {};
+            for (const key of Object.keys(cache)) {
+                const base = key.replace(/\.[^.]+$/, '');
+                if (!cacheByBasename[base]) cacheByBasename[base] = cache[key];
+            }
+
             // Crear lista de videos con metadata del caché si existe
+            let migratedCount = 0;
             const videosWithMetadata = videoFiles.map((file) => {
-                const cached = cache[file.name];
+                let cached = cache[file.name];
+                // Fallback: match by basename if exact filename not in cache
+                // (e.g., file is .mp4 but cache entry is .mkv)
+                if (!cached) {
+                    const base = file.name.replace(/\.[^.]+$/, '');
+                    cached = cacheByBasename[base];
+                    if (cached) {
+                        // Migrate cache entry to new filename
+                        if (updateCacheEntry) updateCacheEntry(file.name, cached, false);
+                        migratedCount++;
+                    }
+                }
                 const normalized = normalizeCacheToAPI(cached);
                 const fileDate = file.mtime || file.modifiedAt || null;
                 return {
@@ -79,6 +99,9 @@ module.exports = function createVideosRoutes(deps) {
                 };
             });
 
+            if (migratedCount > 0) {
+                console.log(`🔄 ${migratedCount} películas migradas de caché (MKV→MP4 u otro cambio de extensión)`);
+            }
             console.log(`📦 Videos cargados: ${videosWithMetadata.length} (${Object.keys(cache).length} en caché) [Modo: LOCAL]`);
 
             const moviesWithoutMetadata = videosWithMetadata.filter(v => !v.tmdbId);

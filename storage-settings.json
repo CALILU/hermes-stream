@@ -1,5 +1,5 @@
 {
   "mode": "ftp",
-  "localPath": "/home/isidr/ftp-mount/volume-1",
+  "localPath": "/home/isidr/ftp-mount",
   "ftpPath": "/volume-1"
 }

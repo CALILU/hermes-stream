@@ -197,7 +197,8 @@ module.exports = function createRequestsRoutes(deps) {
                 success: true,
                 created: result.created,
                 duplicates: result.duplicates,
-                total: result.total
+                total: result.total,
+                added: result.added || []
             });
 
         } catch (error) {

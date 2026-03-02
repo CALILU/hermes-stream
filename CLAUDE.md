@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IsiPrime (HermesStream) is a self-hosted streaming video application designed to run as a standalone server on a LincStation N2 (Debian 12) for 5-10 remote users. Node.js/Express backend serves a React frontend. Movies and TV series are stored on local disk. All metadata and user data is persisted in SQLite.
+IsiPrime (HermesStream) is a self-hosted streaming video application running on a LincStation N2 (Ubuntu 24.04 Server) for 5-10 remote users. Node.js/Express backend serves a React frontend. Movies and TV series are stored on local NVMe disk (4TB). All metadata and user data is persisted in SQLite. Server managed by PM2 (fork mode). Accessible via HTTPS at `calilu.mooo.com` (nginx + Let's Encrypt) and LAN at `192.168.1.45:8080`.
 
 ## Commands
 
@@ -143,7 +143,8 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
 - **Series detection**: Regex `S\d{1,2}E\d{1,2}` in filename routes files to `Series/series_name/` subdirectory.
 - **Streaming**: MP4 served directly with range requests. MKV served with `video/x-matroska` mime type. AVI transcoded on-the-fly via FFmpeg. Protected by JWT (token in query string for `<video>` elements).
-- **TV Player iframe architecture**: Parent (`player.js`) handles resume dialog, progress saving (every 10s), key forwarding via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, and sends `timeupdate`/`progress`/`back`/`ended` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
+- **Cache fallback by basename**: `routes/videos.js` falls back to matching by filename without extension when exact match not found. Handles MKV→MP4 conversions where cache key is the old `.mkv` filename. Auto-migrates cache entry to new filename.
+- **TV Player iframe architecture**: Parent (`player.js`) auto-resumes from saved position (no confirmation dialog), saves progress every 10s, forwards keys via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, and sends `timeupdate`/`progress`/`back`/`ended` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
 - **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
@@ -170,7 +171,7 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 | `config.js` | Constants, TMDB image helpers (detect full URLs), key codes |
 | `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography |
 | `login.js` | Login screen for remote (non-LAN) users |
-| `images.js` | Direct image loading with concurrency limit (max 10 concurrent) |
+| `images.js` | Direct image loading with concurrency limit (max 20) + 15s timeout protection |
 | `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
 | `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
 | `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR) |
@@ -188,7 +189,7 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 
 **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 
-**UI Details (v2.7.0)**:
+**UI Details (v2.10.5)**:
 - Loading screen: HD logo (1024x1024 `assets/icon-hd.png`) centered, spinner below, background `#1a1a2e`
 - Nav bar: icon (112px) + logo text (108px) + nav buttons (30px font)
 - Detail view: enlarged meta (23px), genres (20px), overview (24px), buttons (26px), cast photos (105px), cast names (19px)
@@ -201,8 +202,8 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 cd IsiPrime-WebOS-Native && ares-package .
 
 # Install on TVs
-ares-install --device miLGTV com.isiprime.app_2.7.0_all.ipk    # comedor
-ares-install --device nuevaTV com.isiprime.app_2.7.0_all.ipk   # hijo
+ares-install --device miLGTV com.isiprime.app_2.10.3_all.ipk    # comedor
+ares-install --device nuevaTV com.isiprime.app_2.10.3_all.ipk   # hijo
 
 # Debug: close + relaunch + inspect
 ares-launch --device miLGTV --close com.isiprime.app
@@ -213,20 +214,30 @@ ares-inspect --device miLGTV --app com.isiprime.app
 scripts/renew-webos-devmode.sh
 ```
 
-## NAS Migration (LincStation N2)
+## NAS (LincStation N2) — Operational
 
-Target: LincStation N2 (Intel N100, 16GB LPDDR5, 128GB eMMC, Ubuntu 24.04). Movies on WD_Black SN7100 4TB NVMe (NTFS, mounted via ntfs-3g). PM2 in fork mode (SQLite not cluster-safe).
+**Hardware**: LincStation N2 (Intel N100, 16GB LPDDR5, 128GB eMMC, Ubuntu 24.04 Server). IP: `192.168.1.45` (static). Movies on WD_Black SN7100 4TB NVMe (NTFS, mounted via ntfs-3g at `/mnt/peliculas`). PM2 in fork mode (SQLite not cluster-safe).
+
+**Services running**:
+- IsiPrime via PM2 (`pm2-isidro.service`, auto-start on boot)
+- nginx reverse proxy + Let's Encrypt SSL (`calilu.mooo.com`)
+- lincstation-leds daemon (I2C LED control)
+- fail2ban (SSH + nginx jails)
+- UFW firewall (SSH/80/443 open; Samba/8080 LAN-only)
+- certbot auto-renewal (SSL cert expires 2026-05-30)
+- Developer Mode renewal cron (daily 3AM for webOS TVs)
 
 **Migration scripts** (in `scripts/`):
 - `transfer-to-nas.sh` — Run from WSL: rsync code + build + DBs to NAS
 - `migrate-to-nas.sh` — Run on NAS: validates Node.js, FFmpeg, gcc, files, storage path
 - `start-tv-nas.sh` — NAS version of start-tv.sh (no rclone, PM2 support)
+- `setup-nginx-https.sh` — nginx + Let's Encrypt setup
+- `renew-webos-devmode.sh` — cron script for Developer Mode extension
 
 **Config files**:
 - `ecosystem.config.js` — PM2 config (fork mode, 1 instance, logs in `logs/`)
-- `.env.nas` — Template .env for NAS (same JWT_SECRET, no FTP/Radarr)
-
-Only 3 files change: `.env` (LOCAL_VIDEOS_PATH), `storage-settings.json` (localPath), `IsiPrime-WebOS-Native/js/config.js` (SERVER_URL → NAS IP).
+- `.env.nas` — Template .env for NAS
+- `HermesStream.bat` — Simplified launcher (just opens browser to NAS URL)
 
 ## Install Package
 
@@ -243,9 +254,9 @@ cd IsiPrime-WebOS-Redirect && ares-package .
 ares-install --device <TV> com.isiprime.redirect_1.0.0_all.ipk
 ```
 
-## HTTPS / nginx
+## HTTPS / nginx — Active
 
-`scripts/setup-nginx-https.sh` — Run on the NAS to configure nginx reverse proxy + Let's Encrypt SSL. Requires ports 80 and 443 forwarded in the router and DDNS configured for `calilu.mooo.com`.
+`scripts/setup-nginx-https.sh` — nginx reverse proxy + Let's Encrypt SSL. DDNS via No-IP (`calilu.mooo.com`). DMZ active on Livebox 6 pointing to NAS. Certificate auto-renews via certbot systemd timer.
 
 ## Troubleshooting
 

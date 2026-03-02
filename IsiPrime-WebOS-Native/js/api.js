@@ -253,6 +253,16 @@
                 .then(function(r) { return r.json(); });
         },
 
+        // --- Collections/Sagas ---
+
+        getCollections: function() {
+            return this._fetch('/api/collections').then(function(r) { return r.json(); });
+        },
+
+        getCollectionFull: function(id) {
+            return this._fetch('/api/collections/' + id + '/full').then(function(r) { return r.json(); });
+        },
+
         // --- Requests ---
 
         searchTMDB: function(query) {

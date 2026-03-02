@@ -255,6 +255,14 @@
             return;
         }
 
+        if (view === 'sagas') {
+            // Navigate to Sagas via Router so BACK works correctly
+            if (currentState !== 'SAGAS') {
+                App.Router.navigate('SAGAS');
+            }
+            return;
+        }
+
         if (view === 'requests') {
             // Navigate to Requests via Router so BACK works correctly
             if (currentState !== 'REQUESTS') {
@@ -263,8 +271,8 @@
             return;
         }
 
-        // If currently in Search, Requests, Genre or Years, hide it and return to HOME
-        if (currentState === 'SEARCH' || currentState === 'REQUESTS' || currentState === 'GENRE' || currentState === 'YEARS') {
+        // If currently in Search, Requests, Genre, Years or Sagas, hide it and return to HOME
+        if (currentState === 'SEARCH' || currentState === 'REQUESTS' || currentState === 'GENRE' || currentState === 'YEARS' || currentState === 'SAGAS') {
             App.Router.clearStack();
             // Set the desired section BEFORE replacing so Home.show only renders once
             if (view === 'home') {
@@ -304,6 +312,13 @@
         if (App.Router.getCurrentState() === 'YEARS' && App.Years) {
             App.Years._activePanel = 'years';
             App.Years._updateYearFocus(App.Years._yearFocusIndex);
+            return;
+        }
+
+        // Check if Sagas view is active
+        if (App.Router.getCurrentState() === 'SAGAS' && App.Sagas) {
+            App.Sagas._activePanel = 'sagas';
+            App.Sagas._updateSagaFocus(App.Sagas._sagaFocusIndex);
             return;
         }
 

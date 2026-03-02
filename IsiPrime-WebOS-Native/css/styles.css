@@ -2020,6 +2020,94 @@ a {
 
 
 /* =====================================================
+   SAGAS VIEW — unavailable movies (grayscale)
+   ===================================================== */
+.saga-unavailable .poster-wrapper {
+    position: relative;
+}
+
+.saga-unavailable .poster-wrapper .poster-img {
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+
+.saga-unavailable .poster-wrapper .poster-img.loaded {
+    opacity: 0.5;
+}
+
+.saga-unavailable .poster-title {
+    color: #777;
+}
+
+.saga-unavailable.focused .poster-wrapper .poster-img,
+.saga-unavailable.focused .poster-wrapper .poster-img.loaded {
+    opacity: 0.7;
+    filter: grayscale(0.7);
+}
+
+.saga-unavailable.focused .poster-title {
+    color: #bbb;
+}
+
+.saga-unavailable.focused .poster-wrapper {
+    border-color: #f59e0b;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.saga-badge-requested {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(245, 158, 11, 0.9);
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 2;
+}
+
+.saga-year {
+    font-size: 13px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.saga-unavailable .saga-year {
+    color: #666;
+}
+
+.saga-loading {
+    color: #999;
+    font-size: 22px;
+    padding: 60px 0;
+    text-align: center;
+    width: 100%;
+}
+
+.saga-name-tooltip {
+    position: absolute;
+    z-index: 100;
+    background: rgba(20, 20, 32, 0.95);
+    color: #fff;
+    font-size: 40px;
+    font-weight: 700;
+    padding: 16px 28px;
+    border-radius: 12px;
+    border: 2px solid #c4b5fd;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    transform: translateY(-50%);
+    max-width: 700px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
+
+/* =====================================================
    REQUESTS VIEW
    ===================================================== */
 .requests-view {

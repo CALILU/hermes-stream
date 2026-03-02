@@ -52,14 +52,8 @@
                 App.Focus.disable();
             }
 
-            // If there's a saved position > 30s, show resume dialog first
-            if (this._startPosition > 30) {
-                this._buildResumeDialog();
-                this._setupKeyHandler();
-                this._showResumeDialog();
-            } else {
-                this._startPlayback(0);
-            }
+            // Auto-resume from saved position (no confirmation dialog)
+            this._startPlayback(this._startPosition > 30 ? this._startPosition : 0);
         },
 
         /**
@@ -239,9 +233,26 @@
 
             console.log('[Player] iframe URL: ' + iframeUrl);
 
-            // Clear container and create fullscreen iframe
+            // Clear container and create fullscreen iframe with loading overlay
             this._container.innerHTML = '';
             this._container.style.background = '#000';
+
+            // Loading overlay
+            var overlay = document.createElement('div');
+            overlay.id = 'player-loading';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;transition:opacity 0.4s;';
+            var spinner = document.createElement('div');
+            spinner.style.cssText = 'width:80px;height:80px;border:5px solid rgba(196,181,253,0.2);border-top-color:#c4b5fd;border-radius:50%;animation:playerSpin 0.8s linear infinite;';
+            var spinStyle = document.createElement('style');
+            spinStyle.textContent = '@keyframes playerSpin{to{transform:rotate(360deg)}}';
+            overlay.appendChild(spinStyle);
+            overlay.appendChild(spinner);
+            var loadText = document.createElement('div');
+            loadText.style.cssText = 'color:#aaa;font-size:24px;margin-top:24px;font-family:system-ui,sans-serif;';
+            loadText.textContent = 'Cargando pel\u00EDcula...';
+            overlay.appendChild(loadText);
+            this._container.appendChild(overlay);
+            this._loadingOverlay = overlay;
 
             var iframe = document.createElement('iframe');
             iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000;';
@@ -303,6 +314,15 @@
 
                     case 'playing':
                         console.log('[Player] Video is playing');
+                        if (self._loadingOverlay) {
+                            self._loadingOverlay.style.opacity = '0';
+                            setTimeout(function() {
+                                if (self._loadingOverlay && self._loadingOverlay.parentNode) {
+                                    self._loadingOverlay.parentNode.removeChild(self._loadingOverlay);
+                                    self._loadingOverlay = null;
+                                }
+                            }, 400);
+                        }
                         break;
 
                     case 'error':
@@ -492,6 +512,7 @@
             this._resumeDialog = null;
             this._videoUrl = '';
             this._lastProgress = null;
+            this._loadingOverlay = null;
 
             // Refresh data (continue watching may have changed)
             App.refreshData();

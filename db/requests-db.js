@@ -245,6 +245,8 @@ function createMany(items, requestedBy = 'Usuario') {
         )
     `);
 
+    const addedIds = [];
+
     const transaction = db.transaction((movies) => {
         for (const movie of movies) {
             const tmdbId = movie.tmdbId || movie.tmdb_id || movie.id;
@@ -255,7 +257,7 @@ function createMany(items, requestedBy = 'Usuario') {
                 continue;
             }
 
-            insertStmt.run({
+            const info = insertStmt.run({
                 tmdb_id: tmdbId || null,
                 title: movie.title,
                 original_title: movie.originalTitle || movie.original_title || null,
@@ -268,13 +270,14 @@ function createMany(items, requestedBy = 'Usuario') {
                 requested_at: now,
                 updated_at: now
             });
+            addedIds.push({ id: Number(info.lastInsertRowid), tmdbId: tmdbId });
             created++;
         }
     });
 
     transaction(items);
 
-    return { created, duplicates, total: getStats().total };
+    return { created, duplicates, total: getStats().total, added: addedIds };
 }
 
 /**

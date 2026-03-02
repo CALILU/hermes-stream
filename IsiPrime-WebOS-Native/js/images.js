@@ -1,7 +1,11 @@
 /**
  * IsiPrime webOS App - Lazy Image Loader
- * Uses IntersectionObserver with concurrent load limiting.
- * Images use data-src attribute; src is set when visible.
+ * Direct loading with concurrent load limiting and timeout protection.
+ * Images use data-src attribute; src is set when enqueued.
+ *
+ * Timeout guards against stuck loads: if an image is removed from DOM
+ * mid-load (e.g., carousel scroll), the browser may cancel without firing
+ * onload/onerror — the timeout ensures _loading always decrements.
  */
 (function() {
     'use strict';
@@ -14,6 +18,7 @@
         _queue: [],
         _prefetched: {},
         MAX_CONCURRENT: 20,
+        LOAD_TIMEOUT: 15000,
 
         /**
          * Initialize the IntersectionObserver.
@@ -22,7 +27,6 @@
             var self = this;
 
             if (!('IntersectionObserver' in window)) {
-                // Fallback: load all images immediately (shouldn't happen on webOS 6)
                 console.warn('IntersectionObserver not available, loading all images');
                 return;
             }
@@ -83,6 +87,7 @@
 
         /**
          * Load a single image from its data-src.
+         * Includes timeout to prevent stuck counter when DOM elements are removed mid-load.
          */
         _loadImage: function(img) {
             var self = this;
@@ -92,21 +97,24 @@
 
             this._loading++;
 
-            img.onload = function() {
-                img.classList.add('loaded');
+            var done = false;
+            function finish(success) {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                if (success) img.classList.add('loaded');
                 img.onload = null;
                 img.onerror = null;
                 self._loading--;
                 self._processQueue();
-            };
+            }
 
-            img.onerror = function() {
-                // Keep placeholder visible on error
-                img.onload = null;
-                img.onerror = null;
-                self._loading--;
-                self._processQueue();
-            };
+            img.onload = function() { finish(true); };
+            img.onerror = function() { finish(false); };
+
+            // Timeout: if neither onload nor onerror fires (e.g., element removed from DOM),
+            // force-finish to unblock the queue
+            var timer = setTimeout(function() { finish(false); }, this.LOAD_TIMEOUT);
 
             img.src = src;
         },

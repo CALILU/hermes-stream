@@ -230,7 +230,7 @@ app.use('/api/img', require('./routes/poster-cache'));
 app.use('/api/tmdb', require('./routes/tmdb')({ tmdbFetch, TMDB_BASE_URL, TMDB_IMAGE_BASE, TMDB_API_KEY, updateCacheEntry }));
 app.use('/api', require('./routes/videos')({
     storageConfig,
-    readCache, getMovieMetadata,
+    readCache, getMovieMetadata, updateCacheEntry,
     normalizeCacheToAPI,
     VIDEO_EXTENSIONS_REGEX
 }));
@@ -244,7 +244,8 @@ app.use(require('./routes/series')({
 app.use('/api/collections', require('./routes/collections')({
     readCollections, updateCollectionWithMovie,
     readCache, writeCache,
-    tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY
+    tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY,
+    mediaDB
 }));
 app.use('/api', require('./routes/downloads')({
     readDownloadQueue, writeDownloadQueue, launchDownloaderApp,
@@ -319,9 +320,13 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
 
     // Mejora 3: Audio passthrough — check if audio is already AAC (no re-encode needed)
     // If audio is not AAC, re-encode to AAC for MSE compatibility
+    // If AAC but >2 channels (5.1), downmix to stereo (webOS MSE can't handle multichannel)
     const movie = mediaDB.getMovie(filename);
     const audioCodec = movie ? movie.audio_codec : null;
-    const audioOpt = (audioCodec === 'aac') ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '192k'];
+    const audioChannels = movie ? movie.audio_channels : null;
+    const audioOpt = (audioCodec === 'aac' && (!audioChannels || audioChannels <= 2))
+        ? ['-c:a', 'copy']
+        : ['-c:a', 'aac', '-ac', '2', '-b:a', '192k'];
 
     const outputOpts = [
         '-c:v', 'copy',
@@ -445,8 +450,14 @@ video{width:100vw;height:100vh;object-fit:contain}
 #si.v{opacity:1}
 .hid{opacity:0;pointer-events:none}
 #dbg{display:none}
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;transition:opacity 0.4s}
+#loader.gone{opacity:0;pointer-events:none}
+.ld-spinner{width:64px;height:64px;border:5px solid rgba(196,181,253,0.2);border-top-color:#c4b5fd;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-text{color:#aaa;font-size:20px;margin-top:20px;font-family:system-ui,sans-serif}
 </style></head><body>
-<video id="v"></video>
+<video id="v" preload="auto" playsinline></video>
+<div id="loader"><div class="ld-spinner"></div><div class="ld-text">Cargando...</div></div>
 <div id="tb"></div>
 <div id="ctrl">
 <div class="pb-wrap" id="pbw"><div class="pb"><div id="pf"><div id="pd"></div></div></div></div>
@@ -473,14 +484,9 @@ var token=getParam('token');
 var ext=getParam('ext');
 var vcodec=getParam('vcodec');
 var acodec=getParam('acodec');
-// directMode: true if browser can play natively via <video src> (no MSE needed)
-// Conditions: (1) MP4/MOV container, or (2) H.264+AAC in any container, or (3) HEVC with compatible audio (HW decode)
-var directMode=(ext==='mp4'||ext==='mov');
-if(!directMode&&vcodec){
-var directAudio=(acodec==='aac'||acodec==='ac3'||acodec==='eac3'||acodec==='mp3');
-if(vcodec==='h264'&&directAudio)directMode=true;
-if((vcodec==='hevc'||vcodec==='h265')&&directAudio)directMode=true;
-}
+// directMode: disabled — webOS enableVideoHole conflicts with direct v.src in iframe
+// Force MSE/fMP4 mode for all files; falls back to direct if MSE unavailable
+var directMode=false;
 var v=document.getElementById('v');
 var pf=document.getElementById('pf');
 var tc=document.getElementById('tc');
@@ -508,13 +514,8 @@ function xhrGet(url,cb){var x=new XMLHttpRequest();x.open('GET',url);x.onload=fu
 xhrGet(infoUrl,function(err,d){
 if(!err&&d){
 totalDur=d.duration||0;log('Duration: '+totalDur+'s');tt.textContent=fmt(totalDur);
-// If server provides codec info and we don't have it from URL params, update directMode
-if(!vcodec&&d.video_codec){
-vcodec=d.video_codec;acodec=d.audio_codec||'';
-var directAudio=(acodec==='aac'||acodec==='ac3'||acodec==='eac3'||acodec==='mp3');
-if(!directMode&&vcodec==='h264'&&directAudio){directMode=true;log('Switching to direct mode (h264+'+acodec+')');startDirect();}
-if(!directMode&&(vcodec==='hevc'||vcodec==='h265')&&directAudio){directMode=true;log('Switching to direct mode (hevc+'+acodec+')');startDirect();}
-}
+// Codec info from server (for logging only; direct mode disabled for webOS compatibility)
+if(!vcodec&&d.video_codec){vcodec=d.video_codec;acodec=d.audio_codec||'';}
 }else{
 // Fallback: try old endpoint
 xhrGet('/video-duration/'+encodeURIComponent(file)+(token?'?token='+token:''),function(e2,d2){
@@ -586,6 +587,9 @@ function icon(i){si.textContent=i;si.classList.add('v');setTimeout(function(){si
 function showC(){ctrl.classList.remove('hid');tb.classList.remove('hid');if(ht)clearTimeout(ht);if(!v.paused)ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}
 function msg(t,d){d=d||{};d.type=t;d.currentTime=absTime();d.duration=totalDur||0;try{parent.postMessage(d,'*');}catch(e){}}
 
+var loader=document.getElementById('loader');
+function hideLoader(){if(loader&&!loader.classList.contains('gone')){loader.classList.add('gone');setTimeout(function(){loader.style.display='none';},400);}}
+function showLoader(){if(loader){loader.style.display='flex';loader.classList.remove('gone');}}
 log('file: '+file);
 log('pos: '+pos);
 log('MSE supported: '+(typeof MediaSource!=='undefined'));
@@ -620,14 +624,19 @@ if(series)dqs.push('series='+encodeURIComponent(series));
 if(dqs.length>0)directUrl+='?'+dqs.join('&');
 log('Direct stream URL: '+directUrl);
 if(abortCtrl){try{abortCtrl.abort();}catch(e){}}
-v.src=directUrl;
 v.addEventListener('loadedmetadata',function(){
+log('loadedmetadata fired, duration='+v.duration);
 if(!totalDur||totalDur===0)totalDur=Math.floor(v.duration||0);
 tt.textContent=fmt(totalDur);
 if(pos>0)v.currentTime=pos;
 try{v.play().then(function(){log('play() OK');msg('playing');}).catch(function(e){log('play err: '+e.message);});}
 catch(e){v.play();}
 },false);
+v.addEventListener('error',function(){var e=v.error;log('VIDEO ERROR: code='+e.code+' msg='+(e.message||''));},false);
+v.addEventListener('stalled',function(){log('VIDEO STALLED');},false);
+v.addEventListener('canplay',function(){log('canplay fired');},false);
+v.src=directUrl;
+v.load();
 }
 
 if(directMode){
@@ -806,9 +815,10 @@ xhr.send();
 
 v.addEventListener('timeupdate',function(){var at=absTime();var dur=totalDur||0;if(dur>0){pf.style.width=(at/dur*100)+'%';tc.textContent=fmt(at);tt.textContent=fmt(dur);}else{tc.textContent=fmt(at);}});
 v.addEventListener('ended',function(){msg('ended');});
-v.addEventListener('playing',function(){log('playing!');});
-v.addEventListener('error',function(){var e=v.error;var m=e?'code='+e.code:'unknown';log('Video error: '+m);});
-v.addEventListener('waiting',function(){icon('\\u231B');});
+v.addEventListener('playing',function(){log('playing!');hideLoader();msg('playing');});
+v.addEventListener('canplay',function(){hideLoader();});
+v.addEventListener('error',function(){var e=v.error;var m=e?'code='+e.code:'unknown';log('Video error: '+m);hideLoader();});
+v.addEventListener('waiting',function(){icon('\\u231B');showLoader();});
 
 // Save progress to server every 10s
 setInterval(function(){if(!v.paused&&v.duration)msg('progress');},10000);
