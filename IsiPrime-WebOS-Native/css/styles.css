@@ -234,8 +234,10 @@ a {
 .nav-logo {
     display: flex;
     align-items: center;
-    gap: 10px;
     flex-shrink: 0;
+}
+.nav-logo > * + * {
+    margin-left: 10px;
 }
 
 .nav-version {
@@ -264,7 +266,9 @@ a {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+}
+.nav-items > * + * {
+    margin-left: 10px;
 }
 
 .nav-item {
@@ -326,9 +330,11 @@ a {
 }
 .featured-grid {
     display: flex;
-    gap: 14px;
     height: 460px;
     width: 100%;
+}
+.featured-grid > * + * {
+    margin-left: 14px;
 }
 .featured-item {
     position: relative;
@@ -391,11 +397,13 @@ a {
     min-height: 28px;
     display: flex;
     align-items: center;
-    gap: 16px;
     font-size: 20px;
     color: #ddd;
     opacity: 0;
     transition: opacity 0.25s ease;
+}
+.featured-info-bar > * + * {
+    margin-left: 16px;
 }
 .featured-synopsis {
     margin-top: 10px;
@@ -601,16 +609,20 @@ a {
 .detail-meta {
     display: flex;
     align-items: center;
-    gap: 20px;
     margin-bottom: 20px;
     font-size: 23px;
     color: #aaa;
+}
+.detail-meta > * + * {
+    margin-left: 20px;
 }
 
 .detail-meta-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+}
+.detail-meta-item > * + * {
+    margin-left: 4px;
 }
 
 .detail-rating {
@@ -620,9 +632,13 @@ a {
 
 .detail-genres {
     display: flex;
-    gap: 8px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    margin-right: -8px;
+}
+.detail-genres > * {
+    margin-right: 8px;
+    margin-bottom: 8px;
 }
 
 .detail-genre-tag {
@@ -644,19 +660,23 @@ a {
 
 .detail-buttons {
     display: flex;
-    gap: 12px;
     margin-bottom: 32px;
+}
+.detail-buttons > * + * {
+    margin-left: 12px;
 }
 
 .detail-btn {
     display: flex;
     align-items: center;
-    gap: 10px;
     padding: 18px 42px;
     border-radius: 10px;
     font-size: 26px;
     font-weight: 600;
     transition: background 0.2s, transform 0.15s;
+}
+.detail-btn > * + * {
+    margin-left: 10px;
 }
 
 .detail-btn-primary {
@@ -684,10 +704,12 @@ a {
 
 .detail-info-row {
     display: flex;
-    gap: 32px;
     margin-bottom: 20px;
     font-size: 14px;
     color: #888;
+}
+.detail-info-row > * + * {
+    margin-left: 32px;
 }
 
 .detail-info-label {
@@ -711,8 +733,12 @@ a {
 .detail-cast-scroll {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
     padding-bottom: 8px;
+    margin-right: -18px;
+}
+.detail-cast-scroll > * {
+    margin-right: 18px;
+    margin-bottom: 18px;
 }
 
 .cast-item {
@@ -859,13 +885,16 @@ a {
 
 .season-tabs {
     display: flex;
-    gap: 4px;
     padding: 16px 60px;
     background: rgba(15, 15, 15, 0.95);
+    position: -webkit-sticky;
     position: sticky;
     top: 0;
     z-index: 50;
     overflow-x: auto;
+}
+.season-tabs > * + * {
+    margin-left: 4px;
 }
 
 .season-tab {
@@ -894,12 +923,14 @@ a {
 
 .episode-item {
     display: flex;
-    gap: 16px;
     padding: 12px;
     border-radius: 8px;
     margin-bottom: 4px;
     transition: background 0.2s;
     align-items: center;
+}
+.episode-item > * + * {
+    margin-left: 16px;
 }
 
 .episode-item.focused {
@@ -1097,7 +1128,11 @@ a {
 .search-results-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    margin-right: -16px;
+}
+.search-results-grid > * {
+    margin-right: 16px;
+    margin-bottom: 16px;
 }
 
 .search-result-item {
@@ -1116,10 +1151,6 @@ a {
 
 .search-result-item.focused .poster-wrapper {
     box-shadow: 0 0 0 3px #c4b5fd, 0 8px 24px rgba(124, 58, 237, 0.3);
-}
-
-.search-result-item .poster-title {
-    font-size: 16px;
 }
 
 .search-type-badge {
@@ -1174,9 +1205,11 @@ a {
 .actor-header {
     display: flex;
     align-items: center;
-    gap: 28px;
     padding: 48px 60px 24px;
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, transparent 100%);
+}
+.actor-header > * + * {
+    margin-left: 28px;
 }
 
 .actor-header-photo {
@@ -1211,8 +1244,12 @@ a {
 .actor-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
     padding: 28px 60px 60px;
+    margin-right: -24px;
+}
+.actor-grid > * {
+    margin-right: 24px;
+    margin-bottom: 24px;
 }
 
 .actor-grid-item {
@@ -1241,10 +1278,6 @@ a {
 .actor-grid-item .poster-title {
     margin-top: 10px;
     font-size: 14px;
-    color: #ccc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     text-align: center;
 }
 
@@ -1422,8 +1455,12 @@ a {
 .genre-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
     align-content: flex-start;
+    margin-right: -20px;
+}
+.genre-grid > * {
+    margin-right: 20px;
+    margin-bottom: 20px;
 }
 
 .genre-movie-item {
@@ -1433,38 +1470,15 @@ a {
 }
 
 .genre-movie-item .poster-wrapper {
-    position: relative;
     width: 100%;
-    padding-bottom: 150%;
     background: #1a1a2e;
     border-radius: 8px;
-    overflow: hidden;
     border: 3px solid transparent;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.genre-movie-item .poster-wrapper .poster-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.genre-movie-item .poster-wrapper .poster-img.loaded {
-    opacity: 1;
-}
-
 .genre-movie-item .poster-title {
     font-size: 15px;
-    color: #ccc;
-    margin-top: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .genre-movie-item.focused .poster-wrapper {
@@ -1501,9 +1515,7 @@ a {
 /* =====================================================
    SAGAS VIEW — unavailable movies (grayscale)
    ===================================================== */
-.saga-unavailable .poster-wrapper {
-    position: relative;
-}
+/* saga-unavailable poster-wrapper inherits base .poster-wrapper */
 
 .saga-unavailable .poster-wrapper .poster-img {
     filter: grayscale(1);
@@ -1604,9 +1616,11 @@ a {
 
 .requests-tabs {
     display: flex;
-    gap: 8px;
     padding: 12px 40px;
     flex-shrink: 0;
+}
+.requests-tabs > * + * {
+    margin-left: 8px;
 }
 
 .requests-tab {
@@ -1634,7 +1648,9 @@ a {
     flex: 1;
     min-height: 0;
     padding: 0 40px 20px;
-    gap: 30px;
+}
+.requests-search-content > * + * {
+    margin-left: 30px;
 }
 
 .requests-search-left {
@@ -1642,7 +1658,9 @@ a {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+}
+.requests-search-left > * + * {
+    margin-top: 16px;
 }
 
 .requests-search-right {
@@ -1657,9 +1675,13 @@ a {
 .requests-tmdb-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
     padding: 8px 0;
     overflow-y: auto;
+    margin-right: -16px;
+}
+.requests-tmdb-grid > * {
+    margin-right: 16px;
+    margin-bottom: 16px;
 }
 
 .requests-tmdb-item {
@@ -1669,36 +1691,14 @@ a {
 }
 
 .requests-tmdb-item .poster-wrapper {
-    position: relative;
     width: 100%;
-    padding-bottom: 150%;
-    overflow: hidden;
     border-radius: 8px;
     background: #1a1a2e;
-}
-
-.requests-tmdb-item .poster-wrapper .poster-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.requests-tmdb-item .poster-wrapper .poster-img.loaded {
-    opacity: 1;
 }
 
 .requests-tmdb-item .poster-title {
     margin-top: 6px;
     font-size: 15px;
-    color: #ccc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .requests-tmdb-item.focused {
@@ -1806,11 +1806,15 @@ a {
 .requests-rows-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
     padding: 8px 0;
     flex: 1;
     overflow-y: auto;
     align-content: flex-start;
+    margin-right: -16px;
+}
+.requests-rows-container > * {
+    margin-right: 16px;
+    margin-bottom: 16px;
 }
 
 .requests-list-item {
@@ -1820,36 +1824,12 @@ a {
 }
 
 .requests-list-item .poster-wrapper {
-    position: relative;
-    width: 230px;
-    padding-bottom: 150%;
-    overflow: hidden;
     border-radius: 8px;
     background: #1a1a2e;
 }
 
-.requests-list-item .poster-wrapper .poster-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.requests-list-item .poster-wrapper .poster-img.loaded {
-    opacity: 1;
-}
-
 .requests-list-item .poster-title {
     margin-top: 6px;
-    font-size: 16px;
-    color: #ccc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .requests-list-item.focused {
@@ -1907,12 +1887,14 @@ a {
 .requests-status-option {
     display: flex;
     align-items: center;
-    gap: 12px;
     padding: 12px 16px;
     border-radius: 8px;
     font-size: 18px;
     cursor: pointer;
     transition: background 0.15s;
+}
+.requests-status-option > * + * {
+    margin-left: 12px;
 }
 
 .requests-status-option.focused {
@@ -1935,10 +1917,12 @@ a {
 .requests-filters-inline {
     display: flex;
     align-items: center;
-    gap: 6px;
     margin-left: 20px;
     padding-left: 20px;
     border-left: 2px solid rgba(255, 255, 255, 0.15);
+}
+.requests-filters-inline > * + * {
+    margin-left: 6px;
 }
 
 .requests-filter-tab {

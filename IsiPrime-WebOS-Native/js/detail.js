@@ -225,7 +225,7 @@
                     var photo = document.createElement('img');
                     photo.className = 'cast-photo';
                     photo.alt = actor.name || '';
-                    photo.src = App.Config.posterUrl(actor.photo, 'h632');
+                    photo.setAttribute('data-src', App.Config.posterUrl(actor.photo, 'h632'));
 
                     var nameDiv = document.createElement('div');
                     nameDiv.className = 'cast-name';
@@ -240,6 +240,11 @@
                     castItem.appendChild(charDiv);
                     castScroll.appendChild(castItem);
                     this._castItems.push(castItem);
+
+                    // Lazy load cast photo
+                    if (App.Images && App.Images.observe) {
+                        App.Images.observe(photo);
+                    }
 
                     // Hover tooltip (Magic Remote pointer)
                     (function(item, name) {
@@ -384,7 +389,7 @@
                 }
             };
 
-            document.addEventListener('keydown', this._keyHandler);
+            document.addEventListener('keydown', this._keyHandler, true);
         },
 
         /**
@@ -584,7 +589,7 @@
         hide: function() {
             // Remove key handler
             if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler);
+                document.removeEventListener('keydown', this._keyHandler, true);
                 this._keyHandler = null;
             }
 

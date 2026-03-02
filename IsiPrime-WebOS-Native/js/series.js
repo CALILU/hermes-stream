@@ -156,7 +156,7 @@
             var self = this;
 
             if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler);
+                document.removeEventListener('keydown', this._keyHandler, true);
             }
 
             this._keyHandler = function(e) {
@@ -197,7 +197,7 @@
                 }
             };
 
-            document.addEventListener('keydown', this._keyHandler);
+            document.addEventListener('keydown', this._keyHandler, true);
         },
 
         /**
@@ -463,7 +463,7 @@
 
             // Remove custom key handler
             if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler);
+                document.removeEventListener('keydown', this._keyHandler, true);
                 this._keyHandler = null;
             }
 
