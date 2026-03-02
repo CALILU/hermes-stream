@@ -60,10 +60,10 @@ F:\plex\
 ├── scripts/
 │   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite
 │   └── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
-├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.10.5 (compatible webOS 4.0+)
+├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.11.2 (compatible webOS 4.0+)
 │   ├── appinfo.json       # Manifest webOS (com.isiprime.app, accessibleUrl)
-│   ├── index.html         # Entry point (14 scripts sin modules)
-│   ├── css/styles.css     # CSS completo (~1830 líneas)
+│   ├── index.html         # Entry point (15 scripts sin modules)
+│   ├── css/styles.css     # CSS completo (~1920 líneas)
 │   ├── js/                # Vanilla JS, window.App namespace, Chromium ~53 compatible
 │   │   ├── config.js      # Constantes, TMDB helpers (detecta URLs completas), keycodes
 │   │   ├── api.js         # HTTP client con JWT auth + auto-refresh + filmografía
@@ -71,13 +71,14 @@ F:\plex\
 │   │   ├── focus.js       # Motor navegación D-pad
 │   │   ├── carousel.js    # Carrusel virtual horizontal (poster fallback)
 │   │   ├── images.js      # Carga directa con límite concurrencia (max 20) + timeout 15s
-│   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER→ACTOR...)
+│   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR→SAGAS)
 │   │   ├── home.js        # Carruseles por género
-│   │   ├── detail.js      # Detalle película/serie + cast navegable
-│   │   ├── player.js      # Reproductor iframe + auto-resume + key forwarding
+│   │   ├── detail.js      # Detalle película/serie + cast navegable + botón saga
+│   │   ├── player.js      # Reproductor iframe + loading overlay + auto-resume + key forwarding
 │   │   ├── series.js      # Temporadas + episodios
 │   │   ├── search.js      # Teclado en pantalla + búsqueda (columnas dinámicas)
 │   │   ├── actor.js       # Filmografía de actor (solo películas locales)
+│   │   ├── sagas.js       # Navegador de sagas/colecciones (sidebar + grid, B&W no disponibles, toggle peticiones)
 │   │   └── app.js         # Bootstrap (cargado último)
 │   └── assets/            # placeholder.svg, logo.svg, icon-hd.png (1024x1024)
 ├── scripts/
@@ -179,8 +180,9 @@ npm run dev
 - `DELETE /api/newsletter/history/:id` - Eliminar entrada del historial
 
 ### TV Player (webOS) — compatible Chromium ~53+
-- `GET /tv-player` - Página HTML inline para reproducción en iframe (controles, barra de progreso, seek). Usa getParam() regex (no URLSearchParams), XHR (no fetch) para duración. Streaming: MSE+fetch → MSE+XHR → directo v.src
+- `GET /tv-player` - Página HTML inline para reproducción en iframe (controles, barra de progreso, seek, spinner de carga). Usa getParam() regex (no URLSearchParams), XHR (no fetch) para duración. Streaming: MSE+fetch → MSE+XHR (direct mode deshabilitado por enableVideoHole). Audio 5.1 auto-downmix a estéreo
 - `GET /video-duration/:filename` - Duración real del video via FFprobe (necesario porque MSE reporta Infinity)
+- `GET /api/collections/:id/full` - Detalle completo de colección/saga con datos TMDB (cache SQLite 14 días)
 
 ### TVs configuradas (ares-cli)
 | Device | Modelo | webOS | Chromium | IP | Ubicación |
@@ -205,4 +207,4 @@ npm run dev
 
 - Usuario: ISIDRO
 - GitHub: CALILU
-- Última actualización: 02/03/2026
+- Última actualización: 03/03/2026

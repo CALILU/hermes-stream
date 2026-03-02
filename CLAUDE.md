@@ -62,7 +62,7 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 | `series.js` | `/api/series`, `/stream-series/` | TV series listing, episode streaming |
 | `requests.js` | `/api/requests` | User movie requests (CRUD + SSE real-time updates) |
 | `tmdb.js` | `/api/tmdb` | TMDB search, cast lookup, actor filmography |
-| `collections.js` | `/api/collections` | Custom and auto-generated movie collections |
+| `collections.js` | `/api/collections` | Custom and auto-generated movie collections. `/:id/full` returns full TMDB details (cached 14 days in SQLite) |
 | `downloads.js` | `/api/download-queue`, `/api/search-torrents` | Download queue management |
 | `conversion.js` | `/api/convert` | Single video conversion with SSE progress (duplicate protection) |
 | `newsletter.js` | `/api/newsletter` | Newsletter email system (preview, send, test, history) |
@@ -78,7 +78,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 - **tmdb.js** — Rate-limited TMDB client (35 req/10s queue, multi-strategy search with English fallback, backup API key on 429/timeout)
 - **cache.js** — Movie metadata cache (SQLite via `mediaDB`) with TTL expiration
 - **series.js** — Series folder scanning, filename parsing (`S01E01` pattern), series cache (SQLite)
-- **normalizers.js** — Convert cache format to API response format
+- **normalizers.js** — Convert cache format to API response format. `normalizeCast()` converts legacy TMDB photo URLs to proxy format via `ensureFullPosterURL()`
 - **utils.js** — Title normalization, similarity scoring, video extension regex, constants
 - **collections.js** — Collection CRUD (SQLite), auto-generation by genre/year/decade
 - **requests-helpers.js** — Request operations (SQLite), auto-detect from filenames
@@ -90,7 +90,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 ### Database (`db/`)
 All data persisted in SQLite via `better-sqlite3` (WAL mode):
 
-- **`db/media-db.js`** → `isiprime.db` — 5 tables: `movies_cache`, `series_cache`, `series_episodes`, `collections`, `download_queue`. 30+ exported functions.
+- **`db/media-db.js`** → `isiprime.db` — 6 tables: `movies_cache`, `series_cache`, `series_episodes`, `collections`, `collection_details_cache`, `download_queue`. 30+ exported functions. `collection_details_cache` stores TMDB collection movie details with 14-day TTL.
 - **`db/users-db.js`** → `isiprime.db` — 7 tables: `users` (+ `email`, `email_notifications` columns), `sessions`, `user_progress`, `user_favorites`, `invitations`, `newsletter_logs`, `newsletter_movies`. 36+ exported functions. Seeds admin user on first init.
 - **`db/requests-db.js`** → `requests.db` — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`.
 
@@ -142,9 +142,9 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **Per-user data**: Video progress and favorites synced to server (SQLite), with localStorage as fallback cache. Server has authoritative data.
 - **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
 - **Series detection**: Regex `S\d{1,2}E\d{1,2}` in filename routes files to `Series/series_name/` subdirectory.
-- **Streaming**: MP4 served directly with range requests. MKV served with `video/x-matroska` mime type. AVI transcoded on-the-fly via FFmpeg. Protected by JWT (token in query string for `<video>` elements).
+- **Streaming**: MP4/MKV served via MSE/fMP4 (FFmpeg remux). Direct mode (`v.src`) disabled — webOS `enableVideoHole: true` causes `MEDIA_ELEMENT_ERROR` in iframes. AAC 5.1+ audio auto-downmixed to stereo (`-ac 2`) for MSE compatibility. AVI transcoded on-the-fly. Protected by JWT (token in query string).
 - **Cache fallback by basename**: `routes/videos.js` falls back to matching by filename without extension when exact match not found. Handles MKV→MP4 conversions where cache key is the old `.mkv` filename. Auto-migrates cache entry to new filename.
-- **TV Player iframe architecture**: Parent (`player.js`) auto-resumes from saved position (no confirmation dialog), saves progress every 10s, forwards keys via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, and sends `timeupdate`/`progress`/`back`/`ended` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
+- **TV Player iframe architecture**: Parent (`player.js`) shows loading overlay, auto-resumes from saved position (no confirmation dialog), saves progress every 10s, forwards keys via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, loading spinner, and sends `timeupdate`/`progress`/`back`/`ended`/`playing` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
 - **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
@@ -165,7 +165,7 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 - `appinfo.json` must include `accessibleUrl: "http://*:*;https://*:*"` for external HTTP requests
 - Uses `window.App` namespace pattern
 
-**Architecture** (14 JS modules loaded via `<script>` tags in dependency order):
+**Architecture** (15 JS modules loaded via `<script>` tags in dependency order):
 | Module | Purpose |
 |--------|---------|
 | `config.js` | Constants, TMDB image helpers (detect full URLs), key codes |
@@ -174,27 +174,29 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 | `images.js` | Direct image loading with concurrency limit (max 20) + 15s timeout protection |
 | `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
 | `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
-| `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR) |
+| `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR→SAGAS) |
 | `home.js` | Genre carousels, continue-watching, series, favorites sections |
-| `detail.js` | Movie/series detail overlay with backdrop, cast grid (D-pad + click navigation), play/favorite buttons |
-| `player.js` | Video player: iframe to `/tv-player`, resume dialog, progress save, key forwarding |
+| `detail.js` | Movie/series detail overlay with backdrop, cast grid (D-pad + click navigation), play/favorite/saga buttons |
+| `player.js` | Video player: iframe to `/tv-player`, loading overlay, auto-resume, progress save, key forwarding |
 | `series.js` | Series detail with season tabs + episode list |
 | `search.js` | On-screen keyboard + local search results (dynamic column detection) |
 | `actor.js` | Actor filmography grid — shows only locally available movies, TMDB data via `/api/tmdb/actor` |
+| `sagas.js` | Collection/saga browser — sidebar list + movie grid, unavailable movies in B&W with request toggle |
 | `app.js` | Bootstrap, data loading, nav bar setup (loaded last) |
 
 **Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
 
-**TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Uses Chromium ~53 compatible JS (regex params, XHR for duration). Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, and time display. Streaming strategy: MSE/fMP4 with fetch (webOS 6.0), MSE/fMP4 with XHR fallback, or direct stream (`v.src=/stream/`) as last resort. Duration fetched via FFprobe (`/video-duration/:filename`) using XHR. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
+**TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Uses Chromium ~53 compatible JS (regex params, XHR for duration). Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, time display, and **loading spinner** (shown during buffering, hidden on `canplay`/`playing`). Streaming strategy: MSE/fMP4 forced (direct mode disabled for webOS `enableVideoHole` compatibility), with XHR fallback for older browsers. Duration fetched via FFprobe (`/video-duration/:filename`) using XHR. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
 
 **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 
-**UI Details (v2.10.5)**:
+**UI Details (v2.11.2)**:
 - Loading screen: HD logo (1024x1024 `assets/icon-hd.png`) centered, spinner below, background `#1a1a2e`
 - Nav bar: icon (112px) + logo text (108px) + nav buttons (30px font)
 - Detail view: enlarged meta (23px), genres (20px), overview (24px), buttons (26px), cast photos (105px), cast names (19px)
 - Cast grid: flex-wrap with D-pad vertical navigation between rows (calculates columns per row dynamically)
 - Hover tooltip: Magic Remote pointer shows movie/actor name on mouseenter (carousel, featured, cast items, actor grid, search results)
+- Loading spinner: purple spinner with "Cargando película..." in player.js overlay + "Cargando..." in tv-player iframe, fades out on playback start, reappears during buffering
 
 **Commands**:
 ```bash
@@ -202,8 +204,8 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 cd IsiPrime-WebOS-Native && ares-package .
 
 # Install on TVs
-ares-install --device miLGTV com.isiprime.app_2.10.3_all.ipk    # comedor
-ares-install --device nuevaTV com.isiprime.app_2.10.3_all.ipk   # hijo
+ares-install --device miLGTV com.isiprime.app_2.11.2_all.ipk    # comedor
+ares-install --device nuevaTV com.isiprime.app_2.11.2_all.ipk   # hijo
 
 # Debug: close + relaunch + inspect
 ares-launch --device miLGTV --close com.isiprime.app
@@ -264,3 +266,9 @@ ares-install --device <TV> com.isiprime.redirect_1.0.0_all.ipk
 - **SQLite "invalid ELF header"**: Native module compiled for wrong architecture. Run `npm rebuild better-sqlite3` on the target machine.
 - **Auth not working**: Ensure `JWT_SECRET` is set consistently (if server restarts with auto-generated secret, existing tokens become invalid).
 - **DLNA not starting**: Set `DLNA_ENABLED=true` in `.env` and restart the server.
+- **Video won't play on webOS (Format error code 4)**: Direct mode conflicts with `enableVideoHole`. Ensure `directMode=false` in tv-player. All streaming must go through MSE/fMP4.
+- **5.1 audio doesn't play on webOS**: MSE on webOS can't handle multichannel AAC. The fMP4 route auto-downmixes to stereo when `audio_channels > 2`.
+
+## Docker
+
+A `Dockerfile` and `.dockerignore` are included for containerized deployment. The image builds on `node:20-slim` with FFmpeg installed.
