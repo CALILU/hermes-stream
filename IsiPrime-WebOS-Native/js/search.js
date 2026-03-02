@@ -11,11 +11,6 @@
 
     window.App = window.App || {};
 
-    var KEYBOARD_COLS = 6;
-
-    // Keyboard layout: letters, numbers, then action keys
-    var KEYS_LAYOUT = 'ABCDEFGHIJKLMN\u00d1OPQRSTUVWXYZ0123456789'.split('');
-    var RESULTS_COLS = 5;
     var MAX_RESULTS = 20;
 
     function stripAccents(str) {
@@ -84,54 +79,7 @@
             gridEl.className = 'keyboard-grid';
             gridEl.id = 'keyboard-grid';
 
-            this._keyElements = [];
-
-            // Letter and number keys
-            for (var i = 0; i < KEYS_LAYOUT.length; i++) {
-                var keyChar = KEYS_LAYOUT[i];
-                var keyEl = document.createElement('div');
-                keyEl.className = 'keyboard-key focusable';
-                keyEl.textContent = keyChar;
-                keyEl.setAttribute('data-key', keyChar);
-                gridEl.appendChild(keyEl);
-                this._keyElements.push(keyEl);
-            }
-
-            // Space key (full width)
-            var spaceEl = document.createElement('div');
-            spaceEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
-            spaceEl.textContent = 'ESPACIO';
-            spaceEl.setAttribute('data-key', ' ');
-            gridEl.appendChild(spaceEl);
-            this._keyElements.push(spaceEl);
-
-            // Delete key (full width)
-            var delEl = document.createElement('div');
-            delEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
-            delEl.textContent = 'BORRAR';
-            delEl.setAttribute('data-key', 'DEL');
-            gridEl.appendChild(delEl);
-            this._keyElements.push(delEl);
-
-            // Click + hover for Magic Remote on all keys
-            for (var ki = 0; ki < this._keyElements.length; ki++) {
-                (function(keyIndex, keyElement) {
-                    keyElement.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self._activePanel = 'keyboard';
-                        self._updateKeyboardFocus(keyIndex);
-                        self._onKeyPress(keyElement);
-                    });
-                    keyElement.addEventListener('mouseenter', function() {
-                        if (self._activePanel !== 'keyboard') {
-                            self._clearResultsFocus();
-                        }
-                        self._activePanel = 'keyboard';
-                        self._updateKeyboardFocus(keyIndex);
-                    });
-                })(ki, this._keyElements[ki]);
-            }
+            App.Keyboard.buildKeys(this, gridEl);
 
             leftPanel.appendChild(gridEl);
             this._container.appendChild(leftPanel);
@@ -215,72 +163,10 @@
          * Handle D-pad navigation within the keyboard grid.
          */
         _handleKeyboardNav: function(key) {
-            var idx = this._keyboardFocusIndex;
-            var regularCount = KEYS_LAYOUT.length; // 37 (A-Z + Ñ + 0-9)
-            var SPACE_IDX = regularCount;      // 37
-            var DEL_IDX = regularCount + 1;    // 38
-            var isOnAction = idx >= regularCount;
-
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (!isOnAction) {
-                        var col = idx % KEYBOARD_COLS;
-                        if (col > 0) {
-                            this._updateKeyboardFocus(idx - 1);
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.RIGHT:
-                    if (isOnAction) {
-                        this._switchToResults();
-                    } else {
-                        var colR = idx % KEYBOARD_COLS;
-                        if (colR < KEYBOARD_COLS - 1 && idx + 1 < regularCount) {
-                            this._updateKeyboardFocus(idx + 1);
-                        } else {
-                            this._switchToResults();
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.UP:
-                    if (idx === DEL_IDX) {
-                        this._updateKeyboardFocus(SPACE_IDX);
-                    } else if (idx === SPACE_IDX) {
-                        var lastRow = Math.floor((regularCount - 1) / KEYBOARD_COLS);
-                        var target = lastRow * KEYBOARD_COLS + 2;
-                        if (target >= regularCount) target = regularCount - 1;
-                        this._updateKeyboardFocus(target);
-                    } else {
-                        var rowU = Math.floor(idx / KEYBOARD_COLS);
-                        if (rowU > 0) {
-                            this._updateKeyboardFocus(idx - KEYBOARD_COLS);
-                        } else {
-                            this._switchToNav();
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.DOWN:
-                    if (idx === DEL_IDX) {
-                        // Already at bottom
-                    } else if (idx === SPACE_IDX) {
-                        this._updateKeyboardFocus(DEL_IDX);
-                    } else {
-                        var nextIdx = idx + KEYBOARD_COLS;
-                        if (nextIdx < regularCount) {
-                            this._updateKeyboardFocus(nextIdx);
-                        } else {
-                            this._updateKeyboardFocus(SPACE_IDX);
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.OK:
-                    this._onKeyPress(this._keyElements[idx]);
-                    break;
-            }
+            var self = this;
+            App.Keyboard.handleNav(this, key, {
+                onUp: function() { self._switchToNav(); }
+            });
         },
 
         /**
@@ -394,32 +280,12 @@
             });
         },
 
-        /**
-         * Update keyboard focus visual.
-         */
         _updateKeyboardFocus: function(index) {
-            // Clamp index
-            if (index < 0) index = 0;
-            if (index >= this._keyElements.length) index = this._keyElements.length - 1;
-
-            this._keyboardFocusIndex = index;
-
-            // Remove all keyboard focus
-            for (var i = 0; i < this._keyElements.length; i++) {
-                this._keyElements[i].classList.remove('focused');
-            }
-
-            // Add focus to current
-            this._keyElements[index].classList.add('focused');
+            App.Keyboard.updateFocus(this, index);
         },
 
-        /**
-         * Clear keyboard focus visual.
-         */
         _clearKeyboardFocus: function() {
-            for (var i = 0; i < this._keyElements.length; i++) {
-                this._keyElements[i].classList.remove('focused');
-            }
+            App.Keyboard.clearFocus(this);
         },
 
         /**
@@ -457,21 +323,8 @@
             }
         },
 
-        /**
-         * Handle pressing OK on a keyboard key.
-         */
         _onKeyPress: function(el) {
-            if (!el) return;
-
-            var keyVal = el.getAttribute('data-key');
-            if (keyVal === 'DEL') {
-                this._searchText = this._searchText.slice(0, -1);
-            } else {
-                this._searchText += keyVal.toLowerCase();
-            }
-
-            this._updateDisplay();
-            this._doSearch();
+            App.Keyboard.onKeyPress(this, el);
         },
 
         /**
