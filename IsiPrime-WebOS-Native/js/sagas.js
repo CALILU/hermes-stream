@@ -123,20 +123,7 @@
         },
 
         hide: function() {
-            if (this._container) {
-                this._container.style.display = 'none';
-                this._container.innerHTML = '';
-            }
-            if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler, true);
-                this._keyHandler = null;
-            }
-            if (App.Focus && App.Focus.enable) {
-                App.Focus.enable();
-            }
-            if (App.Images && App.Images.clearQueue) {
-                App.Images.clearQueue();
-            }
+            App.SidebarGridView.hide(this);
             this._sagaElements = [];
             this._movieElements = [];
             this._movieData = [];
@@ -151,10 +138,6 @@
             if (this._sagaTooltipTimer) {
                 clearTimeout(this._sagaTooltipTimer);
                 this._sagaTooltipTimer = null;
-            }
-            if (this._autoSelectTimer) {
-                clearTimeout(this._autoSelectTimer);
-                this._autoSelectTimer = null;
             }
             if (this._toastTimer) {
                 clearTimeout(this._toastTimer);
@@ -172,36 +155,14 @@
         // =============================================
 
         _buildUI: function() {
-            // Sidebar
-            this._sidebarEl = document.createElement('div');
-            this._sidebarEl.className = 'genre-sidebar';
+            var layout = App.SidebarGridView.buildLayout(this._container, 'Sagas');
+            this._sidebarEl = layout.sidebarEl;
+            this._sagaListEl = layout.listEl;
+            this._contentEl = layout.contentEl;
+            this._contentTitleEl = layout.contentTitleEl;
+            this._gridEl = layout.gridEl;
 
-            var sidebarTitle = document.createElement('div');
-            sidebarTitle.className = 'genre-sidebar-title';
-            sidebarTitle.textContent = 'Sagas';
-            this._sidebarEl.appendChild(sidebarTitle);
-
-            this._sagaListEl = document.createElement('div');
-            this._sagaListEl.className = 'genre-list';
-            this._sidebarEl.appendChild(this._sagaListEl);
-
-            // Right panel
-            this._contentEl = document.createElement('div');
-            this._contentEl.className = 'genre-content';
-
-            this._contentTitleEl = document.createElement('div');
-            this._contentTitleEl.className = 'genre-content-title';
-            this._contentTitleEl.textContent = '';
-            this._contentEl.appendChild(this._contentTitleEl);
-
-            this._gridEl = document.createElement('div');
-            this._gridEl.className = 'genre-grid';
-            this._contentEl.appendChild(this._gridEl);
-
-            this._container.appendChild(this._sidebarEl);
-            this._container.appendChild(this._contentEl);
-
-            // Saga name tooltip (large floating label)
+            // Saga-specific: name tooltip (large floating label)
             this._sagaTooltipEl = document.createElement('div');
             this._sagaTooltipEl.className = 'saga-name-tooltip';
             this._sagaTooltipEl.style.display = 'none';
@@ -537,68 +498,32 @@
         },
 
         // =============================================
-        //  GRID COLUMNS
-        // =============================================
-
-        _getGridCols: function() {
-            if (this._movieElements.length < 2) return 1;
-            var firstTop = this._movieElements[0].offsetTop;
-            for (var c = 1; c < this._movieElements.length; c++) {
-                if (this._movieElements[c].offsetTop > firstTop + 5) {
-                    return c;
-                }
-            }
-            return this._movieElements.length;
-        },
-
-        // =============================================
-        //  FOCUS MANAGEMENT
+        //  FOCUS MANAGEMENT (delegates to SidebarGridView)
         // =============================================
 
         _updateSagaFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._sagaElements.length) index = this._sagaElements.length - 1;
-            this._sagaFocusIndex = index;
-
-            for (var i = 0; i < this._sagaElements.length; i++) {
-                this._sagaElements[i].classList.remove('focused');
-            }
-            if (this._sagaElements[index]) {
-                this._sagaElements[index].classList.add('focused');
-                this._ensureVisible(this._sagaElements[index], this._sidebarEl);
-                // Show large tooltip with saga name
-                if (this._allSagas[index]) {
-                    this._showSagaTooltip(this._allSagas[index].name, this._sagaElements[index]);
-                }
+            this._sagaFocusIndex = App.SidebarGridView.updateFocus(
+                this._sagaElements, index, this._sidebarEl);
+            // Saga-specific: show large tooltip with saga name
+            if (this._allSagas[this._sagaFocusIndex]) {
+                this._showSagaTooltip(
+                    this._allSagas[this._sagaFocusIndex].name,
+                    this._sagaElements[this._sagaFocusIndex]);
             }
         },
 
         _clearSagaFocus: function() {
-            for (var i = 0; i < this._sagaElements.length; i++) {
-                this._sagaElements[i].classList.remove('focused');
-            }
+            App.SidebarGridView.clearFocus(this._sagaElements);
             this._hideSagaTooltip();
         },
 
         _updateGridFocus: function(index) {
-            if (this._movieElements.length === 0) return;
-            if (index < 0) index = 0;
-            if (index >= this._movieElements.length) index = this._movieElements.length - 1;
-            this._gridFocusIndex = index;
-
-            for (var i = 0; i < this._movieElements.length; i++) {
-                this._movieElements[i].classList.remove('focused');
-            }
-            if (this._movieElements[index]) {
-                this._movieElements[index].classList.add('focused');
-                this._ensureVisible(this._movieElements[index], this._contentEl);
-            }
+            this._gridFocusIndex = App.SidebarGridView.updateFocus(
+                this._movieElements, index, this._contentEl);
         },
 
         _clearGridFocus: function() {
-            for (var i = 0; i < this._movieElements.length; i++) {
-                this._movieElements[i].classList.remove('focused');
-            }
+            App.SidebarGridView.clearFocus(this._movieElements);
         },
 
         _clearAllFocus: function() {
@@ -636,41 +561,11 @@
 
         _setupKeyHandler: function() {
             var self = this;
-
-            if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler, true);
-            }
-
-            if (App.Focus && App.Focus.disable) {
-                App.Focus.disable();
-            }
-
-            this._keyHandler = function(e) {
-                if (!self._container || self._container.style.display === 'none') return;
-
-                var key = e.keyCode;
-
-                if (key === App.Config.KEYS.BACK) {
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopImmediatePropagation();
-
-                switch (self._activePanel) {
-                    case 'nav':
-                        self._handleNavNav(key);
-                        break;
-                    case 'sagas':
-                        self._handleSagasNav(key);
-                        break;
-                    case 'grid':
-                        self._handleGridNav(key);
-                        break;
-                }
-            };
-
-            document.addEventListener('keydown', this._keyHandler, true);
+            App.SidebarGridView.setupKeyHandler(this, {
+                nav: function(key) { self._handleNavNav(key); },
+                sagas: function(key) { self._handleSagasNav(key); },
+                grid: function(key) { self._handleGridNav(key); }
+            });
         },
 
         // =============================================
@@ -717,13 +612,10 @@
 
                 case App.Config.KEYS.RIGHT:
                 case App.Config.KEYS.OK:
-                    // Select the saga and load its movies
                     var saga = this._allSagas[idx];
                     if (saga) {
                         var sameSaga = (saga.id === this._selectedSagaId);
-                        if (!sameSaga) {
-                            this._selectSaga(saga.id);
-                        }
+                        if (!sameSaga) this._selectSaga(saga.id);
                         if (this._movieElements.length > 0) {
                             this._activePanel = 'grid';
                             this._clearSagaFocus();
@@ -739,82 +631,15 @@
         // =============================================
 
         _handleGridNav: function(key) {
-            var idx = this._gridFocusIndex;
-            var total = this._movieElements.length;
-
-            if (total === 0) {
-                if (key === App.Config.KEYS.LEFT || key === App.Config.KEYS.UP) {
-                    this._activePanel = 'sagas';
-                    this._updateSagaFocus(this._sagaFocusIndex);
+            var self = this;
+            App.SidebarGridView.handleGridNav(this, key, {
+                sidebarPanel: 'sagas',
+                onSidebarRestore: function() { self._updateSagaFocus(self._sagaFocusIndex); },
+                onNav: function() { self._switchToNav(); },
+                onOK: function(idx) {
+                    if (self._movieData[idx]) self._onMovieSelect(idx, self._movieData[idx]);
                 }
-                return;
-            }
-
-            var cols = this._getGridCols();
-            var col = idx % cols;
-
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (col > 0) {
-                        this._updateGridFocus(idx - 1);
-                    } else {
-                        this._clearGridFocus();
-                        this._activePanel = 'sagas';
-                        this._updateSagaFocus(this._sagaFocusIndex);
-                    }
-                    break;
-
-                case App.Config.KEYS.RIGHT:
-                    if (col < cols - 1 && idx + 1 < total) {
-                        this._updateGridFocus(idx + 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.UP:
-                    if (idx - cols >= 0) {
-                        this._updateGridFocus(idx - cols);
-                    } else {
-                        this._clearGridFocus();
-                        this._switchToNav();
-                    }
-                    break;
-
-                case App.Config.KEYS.DOWN:
-                    if (idx + cols < total) {
-                        this._updateGridFocus(idx + cols);
-                    } else if (idx < total - 1) {
-                        this._updateGridFocus(total - 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.OK:
-                    if (this._movieData[idx]) {
-                        this._onMovieSelect(idx, this._movieData[idx]);
-                    }
-                    break;
-            }
-        },
-
-        // =============================================
-        //  SCROLL HELPERS
-        // =============================================
-
-        _ensureVisible: function(el, container) {
-            if (!el || !container) return;
-
-            var elRect = el.getBoundingClientRect();
-            var containerRect = container.getBoundingClientRect();
-            var margin = 40;
-
-            if (elRect.top < containerRect.top + margin) {
-                var scrollUp = containerRect.top + margin - elRect.top;
-                container.scrollTop = Math.max(0, container.scrollTop - scrollUp);
-            }
-
-            if (elRect.bottom > containerRect.bottom - margin) {
-                var scrollDown = elRect.bottom - containerRect.bottom + margin;
-                container.scrollTop += scrollDown;
-            }
+            });
         }
     };
 })();
