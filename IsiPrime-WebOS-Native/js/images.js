@@ -21,26 +21,9 @@
         LOAD_TIMEOUT: 15000,
 
         /**
-         * Initialize the IntersectionObserver.
+         * Initialize the image loader (no-op, kept for API compatibility).
          */
-        init: function() {
-            var self = this;
-
-            if (!('IntersectionObserver' in window)) {
-                console.warn('IntersectionObserver not available, loading all images');
-                return;
-            }
-
-            this._observer = new IntersectionObserver(
-                function(entries) {
-                    self._onIntersect(entries);
-                },
-                {
-                    rootMargin: '800px',
-                    threshold: 0
-                }
-            );
-        },
+        init: function() {},
 
         /**
          * Start observing an image element.
@@ -53,26 +36,9 @@
         },
 
         /**
-         * Stop observing an image element.
+         * Stop observing an image element (no-op, kept for API compatibility).
          */
-        unobserve: function(img) {
-            if (this._observer && img) {
-                this._observer.unobserve(img);
-            }
-        },
-
-        /**
-         * Handle intersection entries.
-         */
-        _onIntersect: function(entries) {
-            var self = this;
-            entries.forEach(function(entry) {
-                if (entry.isIntersecting) {
-                    self._enqueueImage(entry.target);
-                    self._observer.unobserve(entry.target);
-                }
-            });
-        },
+        unobserve: function() {},
 
         /**
          * Add image to load queue or load immediately if under limit.
@@ -153,12 +119,9 @@
          * Destroy observer.
          */
         destroy: function() {
-            if (this._observer) {
-                this._observer.disconnect();
-                this._observer = null;
-            }
             this._queue = [];
             this._loading = 0;
+            this._prefetched = {};
         }
     };
 })();

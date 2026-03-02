@@ -99,6 +99,11 @@
         _globalListenerInstalled = true;
         document.addEventListener('mousemove', _onGlobalMouseMove);
     }
+    function _removeGlobalListener() {
+        if (!_globalListenerInstalled) return;
+        document.removeEventListener('mousemove', _onGlobalMouseMove);
+        _globalListenerInstalled = false;
+    }
 
     // ── Carousel factory ──
     App.Carousel = {
@@ -373,31 +378,6 @@
                     return elements.map(function(e) { return e.el; });
                 },
 
-                getItems: function() {
-                    return this._items;
-                },
-
-                getFocusIndex: function() {
-                    return this._focusIndex;
-                },
-
-                updateItems: function(newItems) {
-                    for (var key in this._rendered) {
-                        if (this._rendered.hasOwnProperty(key)) {
-                            this._removeItem(parseInt(key, 10));
-                        }
-                    }
-
-                    this._items = newItems;
-                    this._track.style.width = (newItems.length * this._totalItemWidth) + 'px';
-                    this._focusIndex = 0;
-                    this._currentOffset = 0;
-                    this._track.style.transform = 'translate3d(0, 0, 0)';
-
-                    this._updateVisibleItems();
-                    this._updateFocusElements();
-                },
-
                 destroy: function() {
                     this._destroyed = true;
 
@@ -409,6 +389,7 @@
                     // Remove from global list
                     var idx = _allCarousels.indexOf(this);
                     if (idx !== -1) _allCarousels.splice(idx, 1);
+                    if (_allCarousels.length === 0) _removeGlobalListener();
 
                     if (this._opts.groupId) {
                         App.Focus.unregisterGroup(this._opts.groupId);

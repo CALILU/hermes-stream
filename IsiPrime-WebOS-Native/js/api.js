@@ -33,13 +33,6 @@
         },
 
         /**
-         * Check if user is authenticated (locally or via token).
-         */
-        isAuthenticated: function() {
-            return this._isLocal || !!this._accessToken;
-        },
-
-        /**
          * Check if user has a stored refresh token (can attempt restore).
          */
         hasStoredSession: function() {

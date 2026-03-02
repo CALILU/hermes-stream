@@ -21,10 +21,6 @@
         _videoUrl: '',
         _startPosition: 0,
         _keyHandler: null,
-        _resumeDialog: null,
-        _resumeFocusIndex: 0,
-        _resumeButtons: [],
-        _isInResumeDialog: false,
         _destroyed: false,
         _lastProgress: null,
         _messageHandler: null,
@@ -54,87 +50,6 @@
 
             // Auto-resume from saved position (no confirmation dialog)
             this._startPlayback(this._startPosition > 30 ? this._startPosition : 0);
-        },
-
-        /**
-         * Build the resume dialog DOM.
-         */
-        _buildResumeDialog: function() {
-            var resumeDialog = document.createElement('div');
-            resumeDialog.className = 'resume-dialog';
-            resumeDialog.style.display = 'none';
-            this._container.appendChild(resumeDialog);
-            this._resumeDialog = resumeDialog;
-
-            // Dark background
-            this._container.style.background = '#000';
-        },
-
-        /**
-         * Show the resume position dialog.
-         */
-        _showResumeDialog: function() {
-            var dialog = this._resumeDialog;
-            dialog.style.display = 'flex';
-            dialog.innerHTML = '';
-
-            var posText = this._formatTime(this._startPosition);
-
-            var message = document.createElement('div');
-            message.className = 'resume-dialog-text';
-            message.textContent = '\u00BFContinuar desde ' + posText + '?';
-            dialog.appendChild(message);
-
-            var btnContainer = document.createElement('div');
-            btnContainer.className = 'resume-dialog-buttons';
-
-            var continueBtn = document.createElement('button');
-            continueBtn.className = 'resume-dialog-btn focused';
-            continueBtn.textContent = 'Continuar';
-            continueBtn.setAttribute('data-action', 'resume');
-            btnContainer.appendChild(continueBtn);
-
-            var restartBtn = document.createElement('button');
-            restartBtn.className = 'resume-dialog-btn';
-            restartBtn.textContent = 'Desde el inicio';
-            restartBtn.setAttribute('data-action', 'restart');
-            btnContainer.appendChild(restartBtn);
-
-            dialog.appendChild(btnContainer);
-
-            this._resumeButtons = [continueBtn, restartBtn];
-            this._resumeFocusIndex = 0;
-            this._isInResumeDialog = true;
-        },
-
-        /**
-         * Handle resume dialog button focus.
-         */
-        _setResumeFocus: function(index) {
-            if (index < 0 || index >= this._resumeButtons.length) return;
-            for (var i = 0; i < this._resumeButtons.length; i++) {
-                this._resumeButtons[i].classList.remove('focused');
-            }
-            this._resumeFocusIndex = index;
-            this._resumeButtons[index].classList.add('focused');
-        },
-
-        /**
-         * Handle resume dialog selection.
-         */
-        _onResumeSelect: function() {
-            var btn = this._resumeButtons[this._resumeFocusIndex];
-            if (!btn) return;
-
-            var action = btn.getAttribute('data-action');
-            this._resumeDialog.style.display = 'none';
-            this._isInResumeDialog = false;
-
-            if (action === 'resume') {
-                this._startPlayback(this._startPosition);
-            } else {
-                this._startPlayback(0);
-            }
         },
 
         /**
@@ -369,8 +284,7 @@
 
         /**
          * Setup keyboard handler.
-         * During resume dialog: handles LEFT/RIGHT/OK/BACK.
-         * During playback: forwards media keys to iframe (fallback if parent has focus).
+         * Forwards media keys to iframe (fallback if parent has focus).
          */
         _setupKeyHandler: function() {
             var self = this;
@@ -378,32 +292,6 @@
             this._keyHandler = function(e) {
                 if (!self._container || self._container.style.display === 'none') return;
 
-                // Resume dialog mode
-                if (self._isInResumeDialog) {
-                    var key = e.keyCode;
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-
-                    switch (key) {
-                        case App.Config.KEYS.LEFT:
-                            self._setResumeFocus(0);
-                            break;
-                        case App.Config.KEYS.RIGHT:
-                            self._setResumeFocus(1);
-                            break;
-                        case App.Config.KEYS.OK:
-                            self._onResumeSelect();
-                            break;
-                        case App.Config.KEYS.BACK:
-                            self._resumeDialog.style.display = 'none';
-                            self._isInResumeDialog = false;
-                            self._goBack();
-                            break;
-                    }
-                    return;
-                }
-
-                // Playback mode — forward keys to iframe (in case parent has focus)
                 var key = e.keyCode;
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -509,9 +397,6 @@
             }
 
             // Reset state
-            this._isInResumeDialog = false;
-            this._resumeButtons = [];
-            this._resumeDialog = null;
             this._videoUrl = '';
             this._lastProgress = null;
             this._loadingOverlay = null;

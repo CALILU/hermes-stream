@@ -29,20 +29,6 @@
         REQUESTS: 'REQUESTS'
     };
 
-    // Map states to view modules
-    var VIEW_MAP = {
-        HOME: 'Home',
-        GENRE: 'Genre',
-        YEARS: 'Years',
-        SAGAS: 'Sagas',
-        DETAIL: 'Detail',
-        PLAYER: 'Player',
-        SERIES: 'Series',
-        SEARCH: 'Search',
-        ACTOR: 'Actor',
-        REQUESTS: 'Requests'
-    };
-
     App.Router = {
         STATES: STATES,
 
@@ -112,13 +98,6 @@
          */
         getCurrentState: function() {
             return this._current;
-        },
-
-        /**
-         * Get current state data.
-         */
-        getCurrentData: function() {
-            return this._currentData;
         },
 
         /**

@@ -160,6 +160,14 @@
                 clearTimeout(this._autoSelectTimer);
                 this._autoSelectTimer = null;
             }
+            if (this._toastTimer) {
+                clearTimeout(this._toastTimer);
+                this._toastTimer = null;
+            }
+            var existingToast = document.querySelector('.toast');
+            if (existingToast && existingToast.parentNode) {
+                existingToast.parentNode.removeChild(existingToast);
+            }
             this._sagaTooltipEl = null;
         },
 

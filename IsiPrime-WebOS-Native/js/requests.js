@@ -13,7 +13,6 @@
 
     var KEYBOARD_COLS = 6;
     var KEYS_LAYOUT = 'ABCDEFGHIJKLMN\u00d1OPQRSTUVWXYZ0123456789'.split('');
-    var RESULTS_COLS = 4;
     var MAX_RESULTS = 20;
 
     var STATUS_MAP = {
