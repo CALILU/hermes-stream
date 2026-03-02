@@ -1,59 +1,51 @@
-# Contexto del Proyecto - Ultima Actualizacion: 2026-02-22
+# Contexto del Proyecto - Ultima Actualizacion: 2026-03-02
 
 ## En que estabamos trabajando?
-**Revision y correccion de la documentacion de arquitectura** para la migracion de IsiPrime a un LincStation N2 NAS. Se generaron 6 documentos en `docs/nas-migration/` (README, architecture, authentication, streaming, networking, migration-plan) y se identificaron y corrigieron 11 inconsistencias cruzadas entre documentos.
+**Mejoras de UI en React + correcciones de auth remoto + monitoreo de normalizacion de audio**. Se elimino el boton "Sorprendeme", se implemento galeria de sagas con peliculas no-catalogo en B&N (toggle peticiones), se corrigieron 401 en busqueda TMDB por uso de `fetch` sin auth, y se desplego al NAS via `calilu.mooo.com`.
 
 ## Estado Actual
-- Completado: 6 documentos de arquitectura generados (~6200 lineas total)
-- Completado: 11 inconsistencias identificadas y corregidas entre documentos
-- Completado: Hardware specs unificados (LPDDR5, 10GbE+2.5GbE, 2x SATA)
-- Completado: Roles unificados ('admin','viewer') en todos los docs
-- Completado: Rutas de almacenamiento corregidas (/media/movies, /media/series)
-- Completado: DDNS corregido de NoIP a FreeDNS (afraid.org)
-- Pendiente: Desarrollo del codigo de migracion (backend, auth, SQLite, nginx)
-- Pendiente: Configurar Agent Teams para desarrollo paralelo
+- Completado: Boton "Sorprendeme" eliminado (import, estado, botones mobile/desktop, RandomPickerModal)
+- Completado: Boton "Peticiones" visible para todos los usuarios junto a "Pedir Pelicula"
+- Completado: Galeria de sagas muestra peliculas no-catalogo en B&N con badge "No disponible"
+- Completado: Click en pelicula no-catalogo crea/cancela peticion (toggle) con badge "Pedida"
+- Completado: Sincronizacion de badges al borrar desde modal de Peticiones
+- Completado: Fix 401 en busqueda TMDB remota (3x `fetch` → `authFetch`)
+- Completado: Deploy al NAS via SSH `calilu.mooo.com` (WSL en subred diferente al NAS)
+- En progreso: Normalizacion de audio en NAS — 169/576 (~29%), 0 errores, PID 49126
+- Pendiente: Monitorear normalizacion hasta completar (~17h restantes)
 
 ## Archivos Clave Modificados
-- `docs/nas-migration/architecture.md`: Fix SATA bays (6→2), roles (user,readonly→viewer)
-- `docs/nas-migration/migration-plan.md`: DDR4→LPDDR5, red, refresh token 7d→30d, nginx static files, PM2 cluster, bug cols
-- `docs/nas-migration/streaming.md`: Rutas /volume1/ → /media/
-- `docs/nas-migration/networking.md`: NoIP → FreeDNS (afraid.org)
-
-## Documentacion de Migracion
-```
-docs/nas-migration/
-├── README.md              # Vision general del proyecto
-├── architecture.md        # Arquitectura tecnica completa (~908 lineas)
-├── authentication.md      # Sistema multi-usuario y seguridad (~1101 lineas)
-├── streaming.md           # Estrategia de streaming y transcoding (~993 lineas)
-├── networking.md          # Red, acceso remoto, HTTPS, DDNS (~907 lineas)
-└── migration-plan.md      # Plan paso a paso en 7 fases (~2197 lineas)
-```
+- `my-ui/src/App.js`: Eliminar Sorprendeme, boton Peticiones para todos, galeria sagas B&N + toggle
+- `my-ui/src/hooks/useVideos.js`: Estado `collectionFullParts`, fetch full parts, merge no-catalogo, fix `authFetch`
+- `my-ui/src/hooks/useRequests.js`: `toggleSagaRequest()`, fix `authFetch` en TMDB search/actor, fix `deleteRequest` sync
+- `my-ui/src/components/RandomPickerModal.js`: Ya no se importa (archivo conservado en disco)
 
 ## Comandos Rapidos para Empezar
 ```bash
-# Iniciar servidor actual
+# Iniciar servidor local
 cd /mnt/f/plex && node server.js
 
 # Compilar frontend
 cd /mnt/f/plex/my-ui && npm run build
 
-# Ver documentacion de migracion
-ls -la docs/nas-migration/
+# Deploy al NAS (usar calilu.mooo.com, no IP directa desde WSL)
+ssh isidro@calilu.mooo.com "rm -f ~/isiprime/my-ui/build/static/js/main.*.js ~/isiprime/my-ui/build/static/css/main.*.css"
+scp -r my-ui/build/ isidro@calilu.mooo.com:~/isiprime/my-ui/
+ssh isidro@calilu.mooo.com "cd ~/isiprime && pm2 restart isiprime"
+
+# Monitorear normalizacion de audio
+ssh isidro@calilu.mooo.com "tail -20 ~/isiprime/logs/normalize-audio.log"
+ssh isidro@calilu.mooo.com "grep -c '✅' ~/isiprime/logs/normalize-audio.log"
 ```
 
 ## Problemas Conocidos
-- **Puerto 8080 LAN**: Sigue inaccesible desde otros dispositivos (filtros WFP residuales de Kaspersky)
-- **TV LG DLNA**: Error 716, probable actualizacion firmware webOS que deshabilito DMR
-- **Firewall Windows**: Quedo DESACTIVADO en sesion anterior, reactivar
-
-## Proximos Pasos (Migracion NAS)
-1. Configurar Agent Teams para desarrollo paralelo (Backend, Frontend, Database, Reviewer)
-2. Fase 4 del plan: Adaptar backend (eliminar FTP, acceso directo disco, SQLite)
-3. Fase 5: Sistema de usuarios (JWT, perfiles, progreso individual)
-4. Fase 6: Configurar red (DDNS, nginx, SSL, port forwarding)
+- **WSL en subred diferente**: WSL usa 192.168.0.x, NAS esta en 192.168.1.45. SSH solo funciona via `calilu.mooo.com`
+- **Normalizacion audio**: 576 archivos, ~2.5 min/archivo, proceso corriendo (PID 49126)
+- **RandomPickerModal.js**: Archivo aun existe en disco pero ya no se importa (limpieza pendiente)
 
 ## Documentacion Detallada
-- [Sesion actual](./sessions/session-20260222-1900.md)
-- [Sesion anterior](./sessions/session-20260222-1157.md)
+- [Ultima sesion](./sessions/session-20260302-1818.md)
+- [Frontend](./categories/frontend.md)
+- [Backend](./categories/backend.md)
+- [Bugs](./categories/bugs.md)
 - [Infrastructure](./categories/infrastructure.md)

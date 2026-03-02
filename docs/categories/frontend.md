@@ -2,6 +2,73 @@
 
 ---
 
+## Sesion: 2026-03-02 18:18
+
+### Cambios Realizados
+- Eliminacion completa del boton "Sorprendeme" (import Shuffle, import RandomPickerModal, estado showRandomModal, boton mobile, boton desktop, componente RandomPickerModal)
+- Boton "Peticiones" (📋) cambiado de icono admin-only a boton texto visible para todos los usuarios
+- Galeria de sagas: peliculas no-catalogo en B&N (grayscale + opacity 50%) con badge "No disponible"
+- Toggle de peticiones desde galeria de sagas: click en pelicula no-catalogo crea/cancela peticion con badge ambar "Pedida"
+- Sincronizacion de badges: borrar desde modal Peticiones actualiza badge en galeria de sagas instantaneamente
+- Fix 401 en busqueda TMDB: 3 endpoints cambiados de `fetch` a `authFetch` (useRequests x2, useVideos x1)
+
+### Archivos Afectados
+- `my-ui/src/App.js`: Eliminar Sorprendeme, boton Peticiones para todos, rendering condicional B&N + badges
+- `my-ui/src/hooks/useVideos.js`: Estado `collectionFullParts`, useEffect fetch full parts, merge no-catalogo en filteredVideos, fix authFetch
+- `my-ui/src/hooks/useRequests.js`: Nueva funcion `toggleSagaRequest()`, fix authFetch en TMDB search/actor, fix deleteRequest sync
+
+### Codigo Relevante
+
+**useVideos.js - Merge peliculas catalogo + no-catalogo en saga:**
+```javascript
+if (collectionFullParts) {
+  const localByTmdb = {};
+  result.forEach(v => { if (v.tmdbId) localByTmdb[v.tmdbId] = v; });
+  result = collectionFullParts.map(part => {
+    if (part.inCatalog && localByTmdb[part.tmdbId]) return localByTmdb[part.tmdbId];
+    return {
+      filename: `_saga_${part.tmdbId}`, title: part.title,
+      poster: part.poster, tmdbId: part.tmdbId, _notInCatalog: true,
+    };
+  });
+}
+```
+
+**useRequests.js - Toggle peticion desde saga:**
+```javascript
+const toggleSagaRequest = async (movie) => {
+  const existing = existingRequests.find(r =>
+    Number(r.tmdbId) === Number(movie.tmdbId) && r.status !== 'server'
+  );
+  if (existing) {
+    await authFetch(`${API_BASE}/api/requests/${existing.id}`, { method: 'DELETE' });
+    setExistingRequests(prev => prev.filter(r => r.id !== existing.id));
+    setAllRequests(prev => prev.filter(r => r.id !== existing.id));
+  } else {
+    await authFetch(`${API_BASE}/api/requests`, { method: 'POST', ... });
+    // Reload from server to get correct IDs
+  }
+};
+```
+
+**App.js - Rendering condicional B&N + badge:**
+```jsx
+<img className={`... ${video._notInCatalog ? 'grayscale opacity-50' : ''}`} />
+{video._notInCatalog && (
+  isMovieRequested(video.tmdbId)
+    ? <div className="bg-amber-500/90 ...">Pedida</div>
+    : <div className="bg-black/70 ...">No disponible</div>
+)}
+```
+
+### Notas
+- `RandomPickerModal.js` sigue en disco pero ya no se importa (limpieza pendiente)
+- POST `/api/requests` devuelve `{success, created, duplicates, total, added}` — NO `data.requests`
+- `deleteRequest` usa actualizaciones directas de estado en vez de `loadAllRequests()` para reactividad instantanea
+- Build files: `main.fcefc682.js`, `main.762507e7.css`
+
+---
+
 ## Sesion: 2026-02-22 11:57
 
 ### Cambios Realizados

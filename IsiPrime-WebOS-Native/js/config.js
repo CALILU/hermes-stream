@@ -9,6 +9,7 @@
 
     App.Config = {
         SERVER_URL: localStorage.getItem('isiprime_server_url') || 'http://192.168.1.45:8080',
+        APP_VERSION: '2.11.2',
 
         KEYS: {
             LEFT: 37,

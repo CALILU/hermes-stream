@@ -36,6 +36,7 @@ F:\plex\
 │   ├── download-helpers.js # Cola de descargas (SQLite)
 │   ├── tmdb.js            # Cliente TMDB rate-limited
 │   ├── normalizers.js     # Normalización cache → API
+│   ├── probe.js           # FFprobe wrapper (codec, channels, sample rate, dimensions)
 │   ├── utils.js           # Utilidades compartidas
 │   ├── requests-helpers.js # Helpers de peticiones
 │   ├── dlna.js            # DLNA/UPnP + LG webOS SSAP (Cast a TV)
@@ -57,15 +58,22 @@ F:\plex\
 │   ├── dlna.js            # DLNA/Cast a TV
 │   ├── tmdb.js            # Búsqueda TMDB
 │   └── misc.js            # Endpoints utilitarios
+├── tv-app/                # JS/CSS servidos remotamente a TVs (auto-update)
+│   ├── js/                # 17 módulos (copia de IsiPrime-WebOS-Native/js/ sin config.js)
+│   ├── css/styles.css     # Copia de IsiPrime-WebOS-Native/css/styles.css
+│   └── version.json       # {"version": "2.11.2"}
 ├── scripts/
 │   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite
-│   └── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
+│   ├── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
+│   ├── sync-tv-app.sh            # Copia JS/CSS a tv-app/ + scp al NAS
+│   ├── check-audio.js            # Analizar audio de todos los MP4
+│   └── normalize-audio.js        # Normalizar audio a AAC estéreo 48kHz
 ├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.11.2 (compatible webOS 4.0+)
 │   ├── appinfo.json       # Manifest webOS (com.isiprime.app, accessibleUrl)
-│   ├── index.html         # Entry point (15 scripts sin modules)
+│   ├── index.html         # Entry point (dynamic loader, 17 scripts remotos + fallback local)
 │   ├── css/styles.css     # CSS completo (~1920 líneas)
 │   ├── js/                # Vanilla JS, window.App namespace, Chromium ~53 compatible
-│   │   ├── config.js      # Constantes, TMDB helpers (detecta URLs completas), keycodes
+│   │   ├── config.js      # Constantes, TMDB helpers, keycodes, APP_VERSION (siempre local en IPK)
 │   │   ├── api.js         # HTTP client con JWT auth + auto-refresh + filmografía
 │   │   ├── login.js       # Login para usuarios remotos
 │   │   ├── focus.js       # Motor navegación D-pad
@@ -79,7 +87,7 @@ F:\plex\
 │   │   ├── search.js      # Teclado en pantalla + búsqueda (columnas dinámicas)
 │   │   ├── actor.js       # Filmografía de actor (solo películas locales)
 │   │   ├── sagas.js       # Navegador de sagas/colecciones (sidebar + grid, B&W no disponibles, toggle peticiones)
-│   │   └── app.js         # Bootstrap (cargado último)
+│   │   └── app.js         # Bootstrap, versión en nav bar (cargado último)
 │   └── assets/            # placeholder.svg, logo.svg, icon-hd.png (1024x1024)
 ├── scripts/
 │   ├── migrate-json-to-sqlite.js  # Migración JSON → SQLite

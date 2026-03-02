@@ -160,6 +160,12 @@ function init() {
         console.log('🗄️  Columnas codec info añadidas a movies_cache');
     }
 
+    // Migración: añadir audio_sample_rate si no existe
+    if (!movieCols.includes('audio_sample_rate')) {
+        db.exec(`ALTER TABLE movies_cache ADD COLUMN audio_sample_rate INTEGER;`);
+        console.log('🗄️  Columna audio_sample_rate añadida a movies_cache');
+    }
+
     console.log('🗄️  Tablas media SQLite creadas/verificadas');
 
     const movieCount = db.prepare('SELECT COUNT(*) as count FROM movies_cache').get().count;
@@ -407,7 +413,7 @@ function cleanupMovies(existingFilenames) {
 /**
  * Actualiza la info de codec de una película
  * @param {string} filename
- * @param {Object} codecInfo - { video_codec, audio_codec, audio_channels, bitrate, width, height, duration_seconds }
+ * @param {Object} codecInfo - { video_codec, audio_codec, audio_channels, audio_sample_rate, bitrate, width, height, duration_seconds }
  */
 function updateMovieCodecInfo(filename, codecInfo) {
     init();
@@ -416,6 +422,7 @@ function updateMovieCodecInfo(filename, codecInfo) {
             video_codec = @video_codec,
             audio_codec = @audio_codec,
             audio_channels = @audio_channels,
+            audio_sample_rate = @audio_sample_rate,
             bitrate = @bitrate,
             width = @width,
             height = @height,
@@ -427,6 +434,7 @@ function updateMovieCodecInfo(filename, codecInfo) {
         video_codec: codecInfo.video_codec || null,
         audio_codec: codecInfo.audio_codec || null,
         audio_channels: codecInfo.audio_channels || null,
+        audio_sample_rate: codecInfo.audio_sample_rate || null,
         bitrate: codecInfo.bitrate || null,
         width: codecInfo.width || null,
         height: codecInfo.height || null,
@@ -445,6 +453,7 @@ function updateMovieCodecInfoBatch(entries) {
             video_codec = @video_codec,
             audio_codec = @audio_codec,
             audio_channels = @audio_channels,
+            audio_sample_rate = @audio_sample_rate,
             bitrate = @bitrate,
             width = @width,
             height = @height,
@@ -458,6 +467,7 @@ function updateMovieCodecInfoBatch(entries) {
                 video_codec: item.video_codec || null,
                 audio_codec: item.audio_codec || null,
                 audio_channels: item.audio_channels || null,
+                audio_sample_rate: item.audio_sample_rate || null,
                 bitrate: item.bitrate || null,
                 width: item.width || null,
                 height: item.height || null,
@@ -474,7 +484,7 @@ function updateMovieCodecInfoBatch(entries) {
  */
 function getMoviesWithoutCodecInfo() {
     init();
-    return db.prepare('SELECT filename FROM movies_cache WHERE video_codec IS NULL').all().map(r => r.filename);
+    return db.prepare('SELECT filename FROM movies_cache WHERE video_codec IS NULL OR audio_sample_rate IS NULL').all().map(r => r.filename);
 }
 
 // ============================================================

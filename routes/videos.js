@@ -35,7 +35,7 @@ module.exports = function createVideosRoutes(deps) {
 
             const files = fsSync.readdirSync(storageConfig.localPath);
             videoFiles = files
-                .filter(name => VIDEO_EXTENSIONS_REGEX.test(name))
+                .filter(name => VIDEO_EXTENSIONS_REGEX.test(name) && !name.includes('.tmp_normalize'))
                 .map(name => {
                     try {
                         const fullPath = path.join(storageConfig.localPath, name);

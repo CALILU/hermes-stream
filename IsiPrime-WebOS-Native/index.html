@@ -5,7 +5,17 @@
     <meta name="viewport" content="width=1920, height=1080, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; media-src * data: blob:; img-src * data: blob:; connect-src * data: blob:;">
     <title>IsiPrime</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link id="app-css" rel="stylesheet" href="css/styles.css">
+    <script>
+    (function() {
+        var url = (localStorage.getItem('isiprime_server_url') || 'http://192.168.1.45:8080');
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = url + '/tv-app/css/styles.css?v=' + Date.now();
+        link.onload = function() { document.getElementById('app-css').disabled = true; };
+        document.head.appendChild(link);
+    })();
+    </script>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -42,6 +52,7 @@
             <div class="nav-logo">
                 <img class="nav-logo-icon" src="icon.png" alt="">
                 <img class="nav-logo-img" src="assets/logo.svg" alt="IsiPrime">
+                <span id="nav-version" class="nav-version"></span>
             </div>
             <div class="nav-items">
                 <div class="nav-item focusable active" data-view="home">Películas</div>
@@ -87,24 +98,38 @@
     })();
     </script>
 
-    <!-- Scripts in dependency order -->
+    <!-- Config always local (contains SERVER_URL) -->
     <script src="js/config.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/login.js"></script>
-    <script src="js/images.js"></script>
-    <script src="js/focus.js"></script>
-    <script src="js/carousel.js"></script>
-    <script src="js/router.js"></script>
-    <script src="js/home.js"></script>
-    <script src="js/genre.js"></script>
-    <script src="js/years.js"></script>
-    <script src="js/sagas.js"></script>
-    <script src="js/detail.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/series.js"></script>
-    <script src="js/search.js"></script>
-    <script src="js/requests.js"></script>
-    <script src="js/actor.js"></script>
-    <script src="js/app.js"></script>
+
+    <!-- Dynamic loader: loads JS from server, falls back to local -->
+    <script>
+    (function() {
+        var modules = [
+            'api', 'login', 'images', 'focus', 'carousel', 'router',
+            'home', 'genre', 'years', 'sagas', 'detail', 'player',
+            'series', 'search', 'requests', 'actor', 'app'
+        ];
+        var base = App.Config.SERVER_URL + '/tv-app/js/';
+        var v = Date.now();
+        var i = 0;
+
+        function next() {
+            if (i >= modules.length) return;
+            var name = modules[i];
+            var s = document.createElement('script');
+            s.src = base + name + '.js?v=' + v;
+            s.onload = function() { i++; next(); };
+            s.onerror = function() {
+                var local = document.createElement('script');
+                local.src = 'js/' + name + '.js';
+                local.onload = function() { i++; next(); };
+                local.onerror = function() { console.error('Failed to load: ' + name); i++; next(); };
+                document.body.appendChild(local);
+            };
+            document.body.appendChild(s);
+        }
+        next();
+    })();
+    </script>
 </body>
 </html>

@@ -79,6 +79,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 - **cache.js** — Movie metadata cache (SQLite via `mediaDB`) with TTL expiration
 - **series.js** — Series folder scanning, filename parsing (`S01E01` pattern), series cache (SQLite)
 - **normalizers.js** — Convert cache format to API response format. `normalizeCast()` converts legacy TMDB photo URLs to proxy format via `ensureFullPosterURL()`
+- **probe.js** — FFprobe wrapper: extracts video_codec, audio_codec, audio_channels, audio_sample_rate, bitrate, dimensions, duration
 - **utils.js** — Title normalization, similarity scoring, video extension regex, constants
 - **collections.js** — Collection CRUD (SQLite), auto-generation by genre/year/decade
 - **requests-helpers.js** — Request operations (SQLite), auto-detect from filenames
@@ -90,7 +91,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 ### Database (`db/`)
 All data persisted in SQLite via `better-sqlite3` (WAL mode):
 
-- **`db/media-db.js`** → `isiprime.db` — 6 tables: `movies_cache`, `series_cache`, `series_episodes`, `collections`, `collection_details_cache`, `download_queue`. 30+ exported functions. `collection_details_cache` stores TMDB collection movie details with 14-day TTL.
+- **`db/media-db.js`** → `isiprime.db` — 6 tables: `movies_cache` (+ `audio_sample_rate` column), `series_cache`, `series_episodes`, `collections`, `collection_details_cache`, `download_queue`. 30+ exported functions. `collection_details_cache` stores TMDB collection movie details with 14-day TTL.
 - **`db/users-db.js`** → `isiprime.db` — 7 tables: `users` (+ `email`, `email_notifications` columns), `sessions`, `user_progress`, `user_favorites`, `invitations`, `newsletter_logs`, `newsletter_movies`. 36+ exported functions. Seeds admin user on first init.
 - **`db/requests-db.js`** → `requests.db` — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`.
 
@@ -142,15 +143,16 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **Per-user data**: Video progress and favorites synced to server (SQLite), with localStorage as fallback cache. Server has authoritative data.
 - **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
 - **Series detection**: Regex `S\d{1,2}E\d{1,2}` in filename routes files to `Series/series_name/` subdirectory.
-- **Streaming**: MP4/MKV served via MSE/fMP4 (FFmpeg remux). Direct mode (`v.src`) disabled — webOS `enableVideoHole: true` causes `MEDIA_ELEMENT_ERROR` in iframes. AAC 5.1+ audio auto-downmixed to stereo (`-ac 2`) for MSE compatibility. AVI transcoded on-the-fly. Protected by JWT (token in query string).
+- **Streaming**: MP4/MKV served via MSE/fMP4 (FFmpeg remux). Direct mode (`v.src`) disabled — webOS `enableVideoHole: true` causes `MEDIA_ELEMENT_ERROR` in iframes. Audio passthrough when AAC stereo ≤48kHz; otherwise re-encode to AAC stereo 48kHz 192kbps (`-ar 48000 -ac 2 -b:a 192k`). AVI transcoded on-the-fly. Protected by JWT (token in query string).
 - **Cache fallback by basename**: `routes/videos.js` falls back to matching by filename without extension when exact match not found. Handles MKV→MP4 conversions where cache key is the old `.mkv` filename. Auto-migrates cache entry to new filename.
 - **TV Player iframe architecture**: Parent (`player.js`) shows loading overlay, auto-resumes from saved position (no confirmation dialog), saves progress every 10s, forwards keys via `postMessage`. Iframe (`/tv-player`) handles video element, controls UI, loading spinner, and sends `timeupdate`/`progress`/`back`/`ended`/`playing` messages to parent. Controls cannot overlay iframe on webOS Chromium 87, so all UI is inside the iframe.
 - **MSE duration workaround**: fMP4 streaming with `empty_moov` reports `v.duration = Infinity`. Real duration fetched from `/video-duration/:filename` (FFprobe). Absolute position calculated as `seekStartPos + v.currentTime` since FFmpeg `-ss` resets timestamps to 0.
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
+- **TV App auto-update**: IPK is a minimal bootstrap (`config.js` local + dynamic loader). 17 JS modules + CSS loaded from `SERVER_URL/tv-app/` with `?v=timestamp` cache-bust. Fallback to local IPK copy on server failure. Update flow: edit in `IsiPrime-WebOS-Native/` → `bash scripts/sync-tv-app.sh` → TVs load new version on next app open. `tv-app/` served via `express.static` with `maxAge:0, etag:true`.
 
 ### webOS Native TV App (`IsiPrime-WebOS-Native/`)
-Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API. Compatible with webOS 4.0+ (Chromium ~53+).
+Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API. Compatible with webOS 4.0+ (Chromium ~53+). **Auto-update**: IPK is a minimal bootstrap; 17 JS modules + CSS loaded dynamically from server (`/tv-app/`) with local fallback. Only `config.js` stays local in IPK.
 
 **Target TVs**:
 | Device | Model | webOS | Chromium | IP | Connection |
@@ -160,15 +162,15 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 
 **Technical constraints** (lowest common denominator — webOS 4.0/Chromium ~53):
 - No `URLSearchParams`, `fetch`, `AbortController`, `ReadableStream` (use XHR/regex)
-- No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `?.`, no `??`, no `replaceAll()`
+- No `aspect-ratio` CSS (uses `padding-bottom: 150%`), no `display:grid` (use flexbox), no `?.`, no `??`, no `replaceAll()`
 - `IntersectionObserver` exists but is unreliable on webOS 4.0 — images loaded directly with concurrency limit
 - `appinfo.json` must include `accessibleUrl: "http://*:*;https://*:*"` for external HTTP requests
 - Uses `window.App` namespace pattern
 
-**Architecture** (15 JS modules loaded via `<script>` tags in dependency order):
+**Architecture** (17 JS modules loaded dynamically from server, fallback to local):
 | Module | Purpose |
 |--------|---------|
-| `config.js` | Constants, TMDB image helpers (detect full URLs), key codes |
+| `config.js` | Constants, TMDB image helpers (detect full URLs), key codes, APP_VERSION (always local in IPK) |
 | `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography |
 | `login.js` | Login screen for remote (non-LAN) users |
 | `images.js` | Direct image loading with concurrency limit (max 20) + 15s timeout protection |
@@ -182,7 +184,7 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 | `search.js` | On-screen keyboard + local search results (dynamic column detection) |
 | `actor.js` | Actor filmography grid — shows only locally available movies, TMDB data via `/api/tmdb/actor` |
 | `sagas.js` | Collection/saga browser — sidebar list + movie grid, unavailable movies in B&W with request toggle |
-| `app.js` | Bootstrap, data loading, nav bar setup (loaded last) |
+| `app.js` | Bootstrap, data loading, nav bar setup, version label (loaded last) |
 
 **Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
 
@@ -192,7 +194,7 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 
 **UI Details (v2.11.2)**:
 - Loading screen: HD logo (1024x1024 `assets/icon-hd.png`) centered, spinner below, background `#1a1a2e`
-- Nav bar: icon (112px) + logo text (108px) + nav buttons (30px font)
+- Nav bar: icon (112px) + logo text (108px) + version label (`v2.11.2`, 18px, white 85%) + nav buttons (30px font)
 - Detail view: enlarged meta (23px), genres (20px), overview (24px), buttons (26px), cast photos (105px), cast names (19px)
 - Cast grid: flex-wrap with D-pad vertical navigation between rows (calculates columns per row dynamically)
 - Hover tooltip: Magic Remote pointer shows movie/actor name on mouseenter (carousel, featured, cast items, actor grid, search results)
@@ -206,6 +208,9 @@ cd IsiPrime-WebOS-Native && ares-package .
 # Install on TVs
 ares-install --device miLGTV com.isiprime.app_2.11.2_all.ipk    # comedor
 ares-install --device nuevaTV com.isiprime.app_2.11.2_all.ipk   # hijo
+
+# Update TV app WITHOUT reinstalling IPK (auto-update system)
+bash scripts/sync-tv-app.sh    # copies JS/CSS to tv-app/ + scp to NAS
 
 # Debug: close + relaunch + inspect
 ares-launch --device miLGTV --close com.isiprime.app
@@ -235,6 +240,9 @@ scripts/renew-webos-devmode.sh
 - `start-tv-nas.sh` — NAS version of start-tv.sh (no rclone, PM2 support)
 - `setup-nginx-https.sh` — nginx + Let's Encrypt setup
 - `renew-webos-devmode.sh` — cron script for Developer Mode extension
+- `sync-tv-app.sh` — Copies JS/CSS from `IsiPrime-WebOS-Native/` to `tv-app/` + scp to NAS
+- `check-audio.js` — Analyzes all MP4 files for non-standard audio (codec, channels, sample rate)
+- `normalize-audio.js` — Re-encodes audio to AAC stereo 48kHz 192kbps (FFmpeg remux)
 
 **Config files**:
 - `ecosystem.config.js` — PM2 config (fork mode, 1 instance, logs in `logs/`)
@@ -268,6 +276,9 @@ ares-install --device <TV> com.isiprime.redirect_1.0.0_all.ipk
 - **DLNA not starting**: Set `DLNA_ENABLED=true` in `.env` and restart the server.
 - **Video won't play on webOS (Format error code 4)**: Direct mode conflicts with `enableVideoHole`. Ensure `directMode=false` in tv-player. All streaming must go through MSE/fMP4.
 - **5.1 audio doesn't play on webOS**: MSE on webOS can't handle multichannel AAC. The fMP4 route auto-downmixes to stereo when `audio_channels > 2`.
+- **96kHz audio stutters on webOS**: MSE decoders don't support high sample rates. The fMP4 route re-encodes to 48kHz when `audio_sample_rate > 48000`. Run `scripts/normalize-audio.js` on NAS to permanently fix source files.
+- **TV app not updating**: If `scripts/sync-tv-app.sh` was run but TV still shows old code, close and reopen the app (scripts are loaded with `?v=timestamp` cache-bust). If the IPK itself is too old (before dynamic loader), reinstall the IPK.
+- **TV app stuck on loading screen**: Dynamic script loading means `DOMContentLoaded` fires before scripts finish. `app.js` uses `document.readyState` check instead of the event. If stuck, the loader or a module failed to load — check console via `ares-inspect`.
 
 ## Docker
 

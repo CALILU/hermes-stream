@@ -56,9 +56,10 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// RUTAS DE AUTENTICACIÓN (JWT)
+// RUTAS PÚBLICAS (sin auth) — montadas ANTES del middleware JWT
 // ============================================
 app.use('/api/auth', require('./routes/auth')({ usersDB, auth }));
+app.use('/api/img', require('./routes/poster-cache'));
 
 // Endpoint de test (público)
 app.get('/api/test', (req, res) => {
@@ -226,7 +227,6 @@ const PORT = process.env.PORT || 3002;
 
 // ========== MONTAR RUTAS ==========
 app.use('/api/storage', require('./routes/storage')({ storageConfig, saveStorageSettings }));
-app.use('/api/img', require('./routes/poster-cache'));
 app.use('/api/tmdb', require('./routes/tmdb')({ tmdbFetch, TMDB_BASE_URL, TMDB_IMAGE_BASE, TMDB_API_KEY, updateCacheEntry }));
 app.use('/api', require('./routes/videos')({
     storageConfig,
@@ -311,9 +311,9 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
 
     const cmd = ffmpeg(localPath);
     // Rate-limit input reading to prevent overwhelming the TV's limited RAM.
-    // -readrate 1.5: read at 1.5x real-time (slight buffer ahead)
-    // -readrate_initial_burst 10: burst first 10s instantly for quick start (Mejora 6)
-    cmd.inputOptions(['-readrate', '1.5', '-readrate_initial_burst', '10']);
+    // -readrate 1.8: read at 1.8x real-time (slightly faster than before for WiFi)
+    // -readrate_initial_burst 15: burst first 15s instantly for quick start
+    cmd.inputOptions(['-readrate', '1.8', '-readrate_initial_burst', '15']);
     if (startTime > 0) {
         cmd.seekInput(startTime);
     }
@@ -321,12 +321,17 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
     // Mejora 3: Audio passthrough — check if audio is already AAC (no re-encode needed)
     // If audio is not AAC, re-encode to AAC for MSE compatibility
     // If AAC but >2 channels (5.1), downmix to stereo (webOS MSE can't handle multichannel)
+    // If sample rate > 48000 Hz (e.g. 96kHz), re-encode — MSE decoders don't support high sample rates
     const movie = mediaDB.getMovie(filename);
     const audioCodec = movie ? movie.audio_codec : null;
     const audioChannels = movie ? movie.audio_channels : null;
-    const audioOpt = (audioCodec === 'aac' && (!audioChannels || audioChannels <= 2))
+    const audioSampleRate = movie ? movie.audio_sample_rate : null;
+    const canCopyAudio = audioCodec === 'aac'
+        && (!audioChannels || audioChannels <= 2)
+        && (!audioSampleRate || audioSampleRate <= 48000);
+    const audioOpt = canCopyAudio
         ? ['-c:a', 'copy']
-        : ['-c:a', 'aac', '-ac', '2', '-b:a', '192k'];
+        : ['-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '192k'];
 
     const outputOpts = [
         '-c:v', 'copy',
@@ -450,11 +455,11 @@ video{width:100vw;height:100vh;object-fit:contain}
 #si.v{opacity:1}
 .hid{opacity:0;pointer-events:none}
 #dbg{display:none}
-#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;transition:opacity 0.4s}
+#loader{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:30;transition:opacity 0.4s}
 #loader.gone{opacity:0;pointer-events:none}
 .ld-spinner{width:64px;height:64px;border:5px solid rgba(196,181,253,0.2);border-top-color:#c4b5fd;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ld-text{color:#aaa;font-size:20px;margin-top:20px;font-family:system-ui,sans-serif}
+.ld-text{color:#ccc;font-size:20px;margin-top:20px;font-family:system-ui,sans-serif}
 </style></head><body>
 <video id="v" preload="auto" playsinline></video>
 <div id="loader"><div class="ld-spinner"></div><div class="ld-text">Cargando...</div></div>
@@ -575,11 +580,11 @@ ctrl.addEventListener('mouseenter',function(){if(ht){clearTimeout(ht);ht=null;}}
 ctrl.addEventListener('mouseleave',function(){if(!v.paused){ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}});
 
 // Buffer limits — TV has ~1.5GB RAM shared with OS
-// Mejora 6: Increased buffers (images now served locally, less memory pressure)
-var MAX_QUEUE_BYTES=4*1024*1024;   // 4MB max pending in JS queue (was 3MB)
-var MAX_BUFFER_AHEAD=20;           // 20s ahead before pausing fetch (was 15s)
-var RESUME_BUFFER=12;              // resume fetching when only 12s buffered ahead (was 8s)
-var CLEAN_BEHIND=5;                // keep only 5s behind, aggressively remove old data
+// Tuned for WiFi stability (nuevaTV uses WiFi via Archer router)
+var MAX_QUEUE_BYTES=5*1024*1024;   // 5MB max pending in JS queue
+var MAX_BUFFER_AHEAD=30;           // 30s ahead before pausing fetch
+var RESUME_BUFFER=15;              // resume fetching when only 15s buffered ahead
+var CLEAN_BEHIND=10;               // keep 10s behind
 
 function log(m){console.log('[TVPlayer] '+m);if(dbg)dbg.textContent+=m+'\\n';}
 function fmt(s){if(!s||isNaN(s))return'0:00';s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;if(h>0)return h+':'+(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;return m+':'+(sc<10?'0':'')+sc;}
@@ -779,36 +784,37 @@ pump();
 },3000);
 
 log('Fetching fMP4...');
-if(typeof fetch==='function'&&typeof AbortController==='function'){
-abortCtrl=new AbortController();
-fetch(fmp4Url,{signal:abortCtrl.signal}).then(function(response){
+if(typeof fetch==='function'){
+var fetchOpts={};
+if(typeof AbortController==='function'){abortCtrl=new AbortController();fetchOpts.signal=abortCtrl.signal;}
+fetch(fmp4Url,fetchOpts).then(function(response){
 log('fMP4: '+response.status);
 if(!response.ok){log('ERROR: HTTP '+response.status);return;}
+if(response.body&&response.body.getReader){
 reader=response.body.getReader();
 pump();
-}).catch(function(e){
-if(e.name!=='AbortError')log('Fetch error: '+e.message);
-});
 }else{
-// Old browser: XHR progressive via overrideMimeType
-var xhr=new XMLHttpRequest();
-xhr.open('GET',fmp4Url);
-xhr.responseType='arraybuffer';
-abortCtrl={abort:function(){try{xhr.abort();}catch(e){}}};
-xhr.onload=function(){
-if(xhr.status>=200&&xhr.status<300){
-var buf=new Uint8Array(xhr.response);
-log('fMP4 XHR received: '+Math.round(buf.byteLength/1024/1024)+'MB');
+// fetch works but no ReadableStream body — read as arrayBuffer
+log('No ReadableStream body, reading as arrayBuffer');
+return response.arrayBuffer().then(function(ab){
+var buf=new Uint8Array(ab);
+log('fMP4 arrayBuffer: '+Math.round(buf.byteLength/1024/1024)+'MB');
 totalBytes=buf.byteLength;
 queue.push(buf);queueBytes+=buf.byteLength;feedNext();
-sb.addEventListener('updateend',function onue(){
-if(queue.length>0){feedNext();}
-else if(!streamDone){streamDone=true;try{if(ms.readyState==='open')ms.endOfStream();}catch(e){}}
+streamDone=true;
 });
-}else{log('XHR error: HTTP '+xhr.status);}
-};
-xhr.onerror=function(){log('XHR network error');};
-xhr.send();
+}
+}).catch(function(e){
+if(e.name!=='AbortError'){
+log('Fetch error: '+e.message+', falling back to direct');
+directMode=true;startDirect();
+}
+});
+}else{
+// No fetch API at all — fall back to direct streaming
+log('No fetch API, falling back to direct stream');
+directMode=true;
+startDirect();
 }
 });
 }
@@ -881,6 +887,12 @@ app.use('/api', require('./routes/misc')({
     readCache, writeCache, getMovieMetadata, cleanupCache,
     VIDEO_EXTENSIONS_REGEX,
     PORT
+}));
+
+// ========== TV APP (auto-update remoto) ==========
+app.use('/tv-app', express.static(path.join(__dirname, 'tv-app'), {
+    maxAge: 0,
+    etag: true
 }));
 
 // Servir archivos estáticos del frontend en producción

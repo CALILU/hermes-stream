@@ -81,7 +81,7 @@ export function useRequests({ authState, videos }) {
 
     setRequestSearchLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/tmdb/search?query=${encodeURIComponent(requestSearchQuery)}`);
+      const res = await authFetch(`${API_BASE}/api/tmdb/search?query=${encodeURIComponent(requestSearchQuery)}`);
       const data = await res.json();
       console.log('🔍 Respuesta TMDB:', data);
 
@@ -112,7 +112,7 @@ export function useRequests({ authState, videos }) {
     setActorSearchLoading(true);
     setActorSearchResult(null);
     try {
-      const res = await fetch(`${API_BASE}/api/tmdb/actor?query=${encodeURIComponent(actorSearchQuery)}`);
+      const res = await authFetch(`${API_BASE}/api/tmdb/actor?query=${encodeURIComponent(actorSearchQuery)}`);
       const data = await res.json();
 
       if (data.success && data.actor) {
@@ -346,7 +346,8 @@ export function useRequests({ authState, videos }) {
 
       const data = await res.json();
       if (data.success) {
-        loadAllRequests();
+        setExistingRequests(prev => prev.filter(r => r.id !== id));
+        setAllRequests(prev => prev.filter(r => r.id !== id));
       }
     } catch (error) {
       console.error('Error eliminando petición:', error);
@@ -454,6 +455,56 @@ export function useRequests({ authState, videos }) {
     );
   };
 
+  // Toggle petición desde saga (click directo sin modal)
+  const toggleSagaRequest = async (movie) => {
+    if (!movie || !movie.tmdbId) return;
+    const numericId = Number(movie.tmdbId);
+    const existing = existingRequests.find(r =>
+      Number(r.tmdbId) === numericId && r.status !== 'server'
+    );
+
+    if (existing && existing.id) {
+      // Ya pedida → eliminar
+      try {
+        const res = await authFetch(`${API_BASE}/api/requests/${existing.id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          setExistingRequests(prev => prev.filter(r => r.id !== existing.id));
+          setAllRequests(prev => prev.filter(r => r.id !== existing.id));
+        }
+      } catch (error) {
+        console.error('Error eliminando petición saga:', error);
+      }
+    } else {
+      // No pedida → crear
+      try {
+        const requestedBy = authState.user?.username || 'Usuario local';
+        const res = await authFetch(`${API_BASE}/api/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            movies: [{
+              tmdbId: movie.tmdbId,
+              title: movie.title || '',
+              year: movie.year || movie.releaseDate?.substring(0, 4) || '',
+              poster: movie.poster || ''
+            }],
+            requestedBy
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Recargar desde servidor para tener IDs correctos
+          const reloadRes = await authFetch(`${API_BASE}/api/requests`);
+          const reloadData = await reloadRes.json();
+          if (reloadData.requests) setExistingRequests(reloadData.requests);
+        }
+      } catch (error) {
+        console.error('Error creando petición saga:', error);
+      }
+    }
+  };
+
   // Cerrar modal de peticiones
   const closeRequestsModal = () => {
     setSelectedRequests([]);
@@ -477,7 +528,7 @@ export function useRequests({ authState, videos }) {
     setRequestsAdminModal, setAllRequests, setDownloadUrl,
     // Functions
     handleRequestSearch, handleActorSearch, toggleRequestSelection,
-    submitRequests, addRecommendationToRequests, loadAllRequests,
+    submitRequests, addRecommendationToRequests, loadAllRequests, toggleSagaRequest,
     updateRequestStatus, deleteRequest, searchTodoTorrents,
     addToDownloadQueue, openRequestsAdmin, openRequestsModal,
     closeRequestsModal, isMovieInCatalog, isMovieRequested

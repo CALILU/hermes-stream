@@ -20,6 +20,7 @@ export function useVideos({ authState, setAuthState }) {
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [showCollections, setShowCollections] = useState(false);
   const [generatingCollections, setGeneratingCollections] = useState(false);
+  const [collectionFullParts, setCollectionFullParts] = useState(null);
 
   // Decades/years
   const [selectedDecade, setSelectedDecade] = useState(null);
@@ -198,6 +199,27 @@ export function useVideos({ authState, setAuthState }) {
       .catch(error => console.error('Error cargando colecciones:', error));
   }, [selectedGenre, authState.checking, authState.requiresLogin]);
 
+  // Cargar partes completas de la colección seleccionada (incluye no-en-catálogo)
+  useEffect(() => {
+    if (!selectedCollection) {
+      setCollectionFullParts(null);
+      return;
+    }
+    const collection = collections.find(c => c.name === selectedCollection);
+    if (!collection || !collection.id) {
+      setCollectionFullParts(null);
+      return;
+    }
+    authFetch(`${API_BASE}/api/collections/${collection.id}/full`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.parts) {
+          setCollectionFullParts(data.parts);
+        }
+      })
+      .catch(() => setCollectionFullParts(null));
+  }, [selectedCollection, collections]);
+
   // Generar colecciones
   const generateCollections = async () => {
     setGeneratingCollections(true);
@@ -338,7 +360,7 @@ export function useVideos({ authState, setAuthState }) {
 
     setGalleryActorLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/tmdb/actor?query=${encodeURIComponent(galleryActorQuery)}`);
+      const res = await authFetch(`${API_BASE}/api/tmdb/actor?query=${encodeURIComponent(galleryActorQuery)}`);
       const data = await res.json();
 
       if (data.success && data.actor && data.movies) {
@@ -378,10 +400,35 @@ export function useVideos({ authState, setAuthState }) {
     }
 
     if (selectedCollection) {
-      const collection = collections.find(c => c.name === selectedCollection);
-      if (collection && collection.movies) {
-        const collectionFilenames = collection.movies.map(m => m.filename);
-        result = result.filter(v => collectionFilenames.includes(v.filename));
+      if (collectionFullParts) {
+        // Usar partes completas: las del catálogo con datos locales, las demás como placeholder B&N
+        const localByTmdb = {};
+        result.forEach(v => { if (v.tmdbId) localByTmdb[v.tmdbId] = v; });
+        result = collectionFullParts.map(part => {
+          if (part.inCatalog && localByTmdb[part.tmdbId]) {
+            return localByTmdb[part.tmdbId];
+          }
+          // Película no en catálogo
+          return {
+            filename: `_saga_${part.tmdbId}`,
+            title: part.title || 'Sin título',
+            poster: part.poster || null,
+            overview: part.overview || null,
+            releaseDate: part.release_date || null,
+            tmdbId: part.tmdbId,
+            _notInCatalog: true,
+            size: '',
+            rating: null,
+            genreIds: [],
+            runtime: null
+          };
+        });
+      } else {
+        const collection = collections.find(c => c.name === selectedCollection);
+        if (collection && collection.movies) {
+          const collectionFilenames = collection.movies.map(m => m.filename);
+          result = result.filter(v => collectionFilenames.includes(v.filename));
+        }
       }
     } else if (selectedGenre) {
       result = result.filter(v =>
@@ -427,7 +474,7 @@ export function useVideos({ authState, setAuthState }) {
     }
 
     return result;
-  }, [videos, searchQuery, selectedGenre, selectedLetter, selectedCollection, collections, selectedDecade, selectedYear, galleryActorMovieIds, showRecent, showFavorites, favorites]);
+  }, [videos, searchQuery, selectedGenre, selectedLetter, selectedCollection, collections, collectionFullParts, selectedDecade, selectedYear, galleryActorMovieIds, showRecent, showFavorites, favorites]);
 
   // Reset pagination when filters change
   useEffect(() => {

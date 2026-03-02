@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, Users, LogOut, Heart, Shuffle, Sparkles, ChevronDown, UserPlus, Mail } from 'lucide-react';
+import { Play, Settings, Search, HardDrive, ListFilter, X, Layers, FolderOpen, RefreshCw, Lock, User, Users, LogOut, Heart, Sparkles, ChevronDown, UserPlus, Mail } from 'lucide-react';
 import { API_BASE, CACHE_KEY, ALPHABET, genreEmojis } from './constants';
 import { authFetch, getAccessToken } from './utils/api';
 import { loadCache, saveCache } from './utils/cache';
@@ -27,7 +27,6 @@ import EpisodePlayerModal from './components/EpisodePlayerModal';
 import RenameEpisodesModal from './components/RenameEpisodesModal';
 import SettingsModal from './components/SettingsModal';
 import CastDeviceModal from './components/CastDeviceModal';
-import RandomPickerModal from './components/RandomPickerModal';
 import RecommendationsSection from './components/RecommendationsSection';
 import UserManagementModal from './components/UserManagementModal';
 import { useRecommendations } from './hooks/useRecommendations';
@@ -77,7 +76,7 @@ export default function HermesApp() {
     setSelectedRequests, setRequestsFilter, setRequestDetailMovie,
     setRequestsAdminModal, setAllRequests,
     handleRequestSearch, handleActorSearch, toggleRequestSelection,
-    submitRequests, addRecommendationToRequests,
+    submitRequests, addRecommendationToRequests, toggleSagaRequest,
     updateRequestStatus, deleteRequest, searchTodoTorrents,
     openRequestsAdmin, openRequestsModal,
     closeRequestsModal, isMovieInCatalog, isMovieRequested
@@ -231,7 +230,6 @@ export default function HermesApp() {
 
   // Estado para modal de configuración
   const [settingsModal, setSettingsModal] = useState(false);
-  const [showRandomModal, setShowRandomModal] = useState(false);
   const [clearingCache, setClearingCache] = useState(false);
   const [cacheProgress, setCacheProgress] = useState({ current: 0, total: 0, status: '' });
 
@@ -1268,16 +1266,6 @@ export default function HermesApp() {
               <Heart size={18} fill={showFavorites ? "white" : "none"} />
             </button>
           )}
-          {/* Botón Sorprendeme (móvil) - Solo visible en modo películas */}
-          {viewMode === 'movies' && filteredVideos.length > 0 && (
-            <button
-              onClick={() => setShowRandomModal(true)}
-              className="p-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-xl hover:shadow-md transition-all text-white"
-              title="Pelicula aleatoria"
-            >
-              <Shuffle size={18} />
-            </button>
-          )}
           {/* Botón Pedir Película (móvil) - Solo visible en modo películas */}
           {viewMode === 'movies' && (
             <button
@@ -1441,16 +1429,6 @@ export default function HermesApp() {
           >
             <Heart size={16} fill={showFavorites ? "white" : "none"} /> Favoritos
           </button>
-          {/* Botón Sorprendeme (desktop) */}
-          {viewMode === 'movies' && filteredVideos.length > 0 && (
-            <button
-              onClick={() => setShowRandomModal(true)}
-              className="px-4 py-2.5 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600"
-              title="Pelicula aleatoria"
-            >
-              <Shuffle size={16} /> Sorprendeme
-            </button>
-          )}
           {/* Botón Pedir Película (desktop) */}
           <button
             onClick={openRequestsModal}
@@ -1459,16 +1437,14 @@ export default function HermesApp() {
           >
             🎬 Pedir Película
           </button>
-          {/* Botón Admin Peticiones (solo admin/local) */}
-          {(authState.isLocal || authState.user?.role === 'admin') && (
-            <button
-              onClick={openRequestsAdmin}
-              className="p-3 bg-slate-800/80 rounded-xl border border-slate-600 hover:shadow-md transition-all"
-              title="Ver peticiones"
-            >
-              📋
-            </button>
-          )}
+          {/* Botón Ver Peticiones */}
+          <button
+            onClick={openRequestsAdmin}
+            className="px-4 py-2.5 bg-slate-800/80 text-slate-300 rounded-xl font-medium border border-slate-600 hover:bg-slate-700 hover:text-white transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            title="Ver peticiones"
+          >
+            📋 Peticiones
+          </button>
           {/* Botón Admin Usuarios (solo admin/local) */}
           {(authState.isLocal || authState.user?.role === 'admin') && (
             <button
@@ -2102,10 +2078,10 @@ export default function HermesApp() {
               {displayedVideos.map((video, idx) => (
                 <div
                   key={video.filename}
-                  onClick={() => handlePlayClick(video)}
-                  onContextMenu={(e) => handlePosterContextMenu(e, video)}
-                  className="cursor-pointer group transition-transform duration-200 hover:-translate-y-2"
-                  title="Clic derecho para cambiar carátula"
+                  onClick={() => video._notInCatalog ? toggleSagaRequest(video) : handlePlayClick(video)}
+                  onContextMenu={(e) => !video._notInCatalog && handlePosterContextMenu(e, video)}
+                  className={`group transition-transform duration-200 ${video._notInCatalog ? 'cursor-pointer' : 'cursor-pointer hover:-translate-y-2'}`}
+                  title={video._notInCatalog ? (isMovieRequested(video.tmdbId) ? 'Clic para cancelar petición' : 'Clic para pedir esta película') : 'Clic derecho para cambiar carátula'}
                 >
                   <div className={`aspect-[3/4] rounded-[2.5rem] ${
                     !video.poster
@@ -2116,17 +2092,33 @@ export default function HermesApp() {
                       <img
                         src={video.poster}
                         alt={video.title}
-                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${video._notInCatalog ? 'grayscale opacity-50' : ''}`}
                         loading={idx < 10 ? "eager" : "lazy"}
                         decoding="async"
-                        style={{ opacity: 0 }}
-                        onLoad={(e) => { e.target.style.opacity = '1'; }}
+                        style={video._notInCatalog ? {} : { opacity: 0 }}
+                        onLoad={(e) => { if (!video._notInCatalog) e.target.style.opacity = '1'; }}
                       />
                     ) : null}
-                    <Play className="text-white opacity-0 group-hover:opacity-100 transition-opacity scale-150 z-10 drop-shadow-lg" fill="white" />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {!video._notInCatalog && (
+                      <Play className="text-white opacity-0 group-hover:opacity-100 transition-opacity scale-150 z-10 drop-shadow-lg" fill="white" />
+                    )}
+                    {!video._notInCatalog && (
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                    {/* Badge saga: "Pedida" o "No disponible" */}
+                    {video._notInCatalog && (
+                      isMovieRequested(video.tmdbId) ? (
+                        <div className="absolute top-3 right-3 bg-amber-500/90 text-black text-xs font-bold py-1 px-2.5 rounded-lg z-10 uppercase tracking-wide">
+                          Pedida
+                        </div>
+                      ) : (
+                        <div className="absolute bottom-3 left-3 right-3 bg-black/70 text-slate-400 text-xs text-center py-1.5 px-2 rounded-lg z-10">
+                          No disponible
+                        </div>
+                      )
+                    )}
                     {/* Sinopsis en hover */}
-                    {video.overview && (
+                    {video.overview && !video._notInCatalog && (
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 p-4 flex flex-col justify-end z-10 pointer-events-none">
                         <div
                           className="overflow-y-auto max-h-[85%] overscroll-contain scrollbar-thin scrollbar-thumb-white/40 scrollbar-track-transparent pointer-events-auto"
@@ -2139,6 +2131,7 @@ export default function HermesApp() {
                       </div>
                     )}
                     {/* Botón Favorito en esquina superior izquierda */}
+                    {!video._notInCatalog && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -2153,8 +2146,9 @@ export default function HermesApp() {
                     >
                       <Heart size={16} fill={favorites.has(video.filename) ? "white" : "none"} />
                     </button>
+                    )}
                     {/* Botón Trailer en esquina superior derecha */}
-                    {video.videos && video.videos.length > 0 && (
+                    {!video._notInCatalog && video.videos && video.videos.length > 0 && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2167,7 +2161,7 @@ export default function HermesApp() {
                       </button>
                     )}
                   </div>
-                  <h3 className="mt-4 font-bold text-white truncate px-2">{video.title}</h3>
+                  <h3 className={`mt-4 font-bold truncate px-2 ${video._notInCatalog ? 'text-slate-500' : 'text-white'}`}>{video.title}</h3>
                   <div className="flex items-center gap-2 px-2 text-sm text-slate-400">
                     <span>{video.size}</span>
                     {video.runtime && (
@@ -2377,16 +2371,6 @@ export default function HermesApp() {
           setActorSearchQuery(actor.name);
           openRequestsModal();
         }}
-      />
-
-      {/* Aleatorio inteligente */}
-      <RandomPickerModal
-        show={showRandomModal}
-        onClose={() => setShowRandomModal(false)}
-        videos={filteredVideos}
-        favorites={favorites}
-        allProgress={getAllVideoProgress()}
-        onPlay={handlePlayClick}
       />
 
       {/* Cast a TV (DLNA) */}

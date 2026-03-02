@@ -2,6 +2,36 @@
 
 ---
 
+## Sesion: 2026-03-02 18:18
+
+### Cambios Realizados
+- Deploy al NAS via SSH por `calilu.mooo.com` (workaround subredes diferentes WSL/NAS)
+- Limpieza de build files antiguos antes de scp (evita archivos JS/CSS huerfanos)
+- Monitoreo de normalizacion de audio: 169/576 (~29%), 0 errores, PID 49126
+
+### Deploy via Dominio Publico
+```bash
+# WSL en 192.168.0.x, NAS en 192.168.1.45 — SSH directo no funciona
+# Workaround: usar dominio publico DDNS
+ssh isidro@calilu.mooo.com "rm -f ~/isiprime/my-ui/build/static/js/main.*.js ~/isiprime/my-ui/build/static/css/main.*.css"
+scp -r my-ui/build/ isidro@calilu.mooo.com:~/isiprime/my-ui/
+ssh isidro@calilu.mooo.com "cd ~/isiprime && pm2 restart isiprime"
+```
+
+### Normalizacion de Audio (en progreso)
+- Script: `scripts/normalize-audio.js` corriendo en NAS (PID 49126)
+- Progreso: 169/576 (~29%), 0 errores
+- Velocidad: ~2.5 min/archivo
+- Estimado restante: ~17 horas
+- Monitoreo: `ssh isidro@calilu.mooo.com "tail -20 ~/isiprime/logs/normalize-audio.log"`
+
+### Notas
+- Build files desplegados: `main.fcefc682.js`, `main.762507e7.css`
+- PM2 restart exitoso (PID 59741, uptime 0s, status online)
+- La red WSL cambia de subred segun configuracion — siempre verificar con `ip route` antes de intentar SSH directo
+
+---
+
 ## Sesion: 2026-02-22 19:00
 
 ### Cambios Realizados

@@ -2,6 +2,39 @@
 
 ---
 
+## Sesion: 2026-03-02 18:18
+
+### Bugs Resueltos
+
+#### 1. Reorganizacion masiva del header rompio la pagina
+- **Sintoma**: Intento de eliminar Sorprendeme + mover botones a SettingsModal de golpe desconfiguro toda la UI
+- **Causa raiz**: Demasiados cambios simultaneos en App.js (estructura JSX, imports, estados)
+- **Solucion**: `git checkout` para revertir, luego cambios incrementales paso a paso
+
+#### 2. Build viejo no se reemplazaba en NAS
+- **Sintoma**: Tras scp del nuevo build, la app seguia mostrando codigo viejo
+- **Causa raiz**: El archivo JS antiguo (`main.33a32d55.js`) no se borraba; el nuevo tenia hash diferente
+- **Solucion**: `rm -f main.*.js main.*.css` antes de scp, luego verificar con ls
+
+#### 3. Badge "Pedida" no desaparecia al borrar desde modal Peticiones
+- **Sintoma**: Al eliminar peticion desde RequestsAdminModal, el badge ambar persistia en la galeria de sagas
+- **Causa raiz**: `deleteRequest` llamaba `loadAllRequests()` que sobreescribia `existingRequests` con datos potencialmente desactualizados. Ademas, la primera version de `toggleSagaRequest` usaba `data.requests` pero la API devuelve `data.added`
+- **Archivos**: `my-ui/src/hooks/useRequests.js`
+- **Solucion**: Reemplazar `loadAllRequests()` por actualizaciones directas: `setExistingRequests(prev => prev.filter(...))` + `setAllRequests(prev => prev.filter(...))`
+
+#### 4. 401 en busqueda TMDB para usuarios remotos
+- **Sintoma**: Usuarios remotos no podian buscar peliculas. Consola mostraba 401 en `/api/tmdb/search` y `/api/tmdb/actor`
+- **Causa raiz**: 3 endpoints usaban `fetch()` plano en vez de `authFetch()`. Sin JWT, el middleware rechazaba la peticion
+- **Archivos**: `useRequests.js` (lineas 84, 115), `useVideos.js` (linea 363)
+- **Solucion**: Cambiar `fetch(...)` → `authFetch(...)` en los 3 sitios
+
+#### 5. SSH desde WSL no llega al NAS
+- **Sintoma**: `ssh isidro@192.168.1.45` timeout (Connection timed out)
+- **Causa raiz**: WSL esta en subred 192.168.0.x, NAS en 192.168.1.45 (subredes diferentes)
+- **Solucion**: Usar `calilu.mooo.com` (dominio publico DDNS) como host SSH
+
+---
+
 ## Sesion: 2026-02-22 19:00
 
 ### Bugs Resueltos
