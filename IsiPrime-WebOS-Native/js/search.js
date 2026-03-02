@@ -58,10 +58,7 @@
             this._navFocusIndex = 0;
 
             // Capture nav items for nav panel focus
-            var navItemEls = document.querySelectorAll('#nav-bar .nav-item');
-            for (var n = 0; n < navItemEls.length; n++) {
-                this._navItems.push(navItemEls[n]);
-            }
+            App.NavBar.initItems(this);
 
             // --- Left panel: keyboard ---
             var leftPanel = document.createElement('div');
@@ -373,7 +370,7 @@
         _switchToKeyboard: function() {
             this._activePanel = 'keyboard';
             this._clearResultsFocus();
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
             this._updateKeyboardFocus(this._keyboardFocusIndex);
         },
 
@@ -381,84 +378,20 @@
          * Switch active panel to nav bar.
          */
         _switchToNav: function() {
-            this._activePanel = 'nav';
             this._clearKeyboardFocus();
             this._clearResultsFocus();
-
-            // Find the active nav item to start focus on
-            this._navFocusIndex = 0;
-            for (var i = 0; i < this._navItems.length; i++) {
-                if (this._navItems[i].getAttribute('data-view') === 'search') {
-                    this._navFocusIndex = i;
-                    break;
-                }
-            }
-
-            this._updateNavFocus(this._navFocusIndex);
+            App.NavBar.switchTo(this, 'search');
         },
 
         /**
          * Handle D-pad navigation within the nav bar.
          */
         _handleNavNav: function(key) {
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (this._navFocusIndex > 0) {
-                        this._updateNavFocus(this._navFocusIndex - 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.RIGHT:
-                    if (this._navFocusIndex < this._navItems.length - 1) {
-                        this._updateNavFocus(this._navFocusIndex + 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.DOWN:
-                    // Return to keyboard from nav
-                    this._clearNavFocus();
-                    this._activePanel = 'keyboard';
-                    this._updateKeyboardFocus(this._keyboardFocusIndex);
-                    break;
-
-                case App.Config.KEYS.OK:
-                    // Select nav item
-                    var item = this._navItems[this._navFocusIndex];
-                    if (item) {
-                        var view = item.getAttribute('data-view');
-                        if (view && typeof App._onNavSelect === 'function') {
-                            var allNavItems = [];
-                            for (var i = 0; i < this._navItems.length; i++) {
-                                allNavItems.push(this._navItems[i]);
-                            }
-                            App._onNavSelect(view, allNavItems);
-                        }
-                    }
-                    break;
-            }
-        },
-
-        /**
-         * Update nav focus visual.
-         */
-        _updateNavFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._navItems.length) index = this._navItems.length - 1;
-            this._navFocusIndex = index;
-
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
-            this._navItems[index].classList.add('focused');
-        },
-
-        /**
-         * Clear nav focus visual.
-         */
-        _clearNavFocus: function() {
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
+            var self = this;
+            App.NavBar.handleKey(this, key, function() {
+                self._activePanel = 'keyboard';
+                self._updateKeyboardFocus(self._keyboardFocusIndex);
+            });
         },
 
         /**
@@ -750,7 +683,7 @@
             }
 
             // Clean up state
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
             this._searchText = '';
             this._resultItems = [];
             this._resultData = [];

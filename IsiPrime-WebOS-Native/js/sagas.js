@@ -52,11 +52,7 @@
             this._container.innerHTML = '';
 
             // Cache nav items
-            var navEls = document.querySelectorAll('#nav-bar .nav-item');
-            this._navItems = [];
-            for (var i = 0; i < navEls.length; i++) {
-                this._navItems.push(navEls[i]);
-            }
+            App.NavBar.initItems(this);
 
             // Build UI skeleton
             this._buildUI();
@@ -608,7 +604,7 @@
         _clearAllFocus: function() {
             this._clearSagaFocus();
             this._clearGridFocus();
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
         },
 
         // =============================================
@@ -617,67 +613,21 @@
 
         _switchToNav: function() {
             this._prevPanel = this._activePanel;
-            this._activePanel = 'nav';
             this._clearAllFocus();
-
-            this._navFocusIndex = 0;
-            for (var i = 0; i < this._navItems.length; i++) {
-                if (this._navItems[i].getAttribute('data-view') === 'sagas') {
-                    this._navFocusIndex = i;
-                    break;
-                }
-            }
-            this._updateNavFocus(this._navFocusIndex);
+            App.NavBar.switchTo(this, 'sagas');
         },
 
         _handleNavNav: function(key) {
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (this._navFocusIndex > 0) this._updateNavFocus(this._navFocusIndex - 1);
-                    break;
-                case App.Config.KEYS.RIGHT:
-                    if (this._navFocusIndex < this._navItems.length - 1) this._updateNavFocus(this._navFocusIndex + 1);
-                    break;
-                case App.Config.KEYS.DOWN:
-                    this._clearNavFocus();
-                    if (this._prevPanel === 'grid' && this._movieElements.length > 0) {
-                        this._activePanel = 'grid';
-                        this._updateGridFocus(this._gridFocusIndex);
-                    } else {
-                        this._activePanel = 'sagas';
-                        this._updateSagaFocus(this._sagaFocusIndex);
-                    }
-                    break;
-                case App.Config.KEYS.OK:
-                    var item = this._navItems[this._navFocusIndex];
-                    if (item) {
-                        var view = item.getAttribute('data-view');
-                        if (view && typeof App._onNavSelect === 'function') {
-                            var allNavItems = [];
-                            for (var i = 0; i < this._navItems.length; i++) {
-                                allNavItems.push(this._navItems[i]);
-                            }
-                            App._onNavSelect(view, allNavItems);
-                        }
-                    }
-                    break;
-            }
-        },
-
-        _updateNavFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._navItems.length) index = this._navItems.length - 1;
-            this._navFocusIndex = index;
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
-            this._navItems[index].classList.add('focused');
-        },
-
-        _clearNavFocus: function() {
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
+            var self = this;
+            App.NavBar.handleKey(this, key, function() {
+                if (self._prevPanel === 'grid' && self._movieElements.length > 0) {
+                    self._activePanel = 'grid';
+                    self._updateGridFocus(self._gridFocusIndex);
+                } else {
+                    self._activePanel = 'sagas';
+                    self._updateSagaFocus(self._sagaFocusIndex);
+                }
+            });
         },
 
         // =============================================

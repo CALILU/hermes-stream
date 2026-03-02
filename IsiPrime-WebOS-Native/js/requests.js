@@ -99,10 +99,7 @@
             this._isAdmin = App.API._isLocal;
 
             // Capture nav items
-            var navItemEls = document.querySelectorAll('#nav-bar .nav-item');
-            for (var n = 0; n < navItemEls.length; n++) {
-                this._navItems.push(navItemEls[n]);
-            }
+            App.NavBar.initItems(this);
 
             // Load existing requests to know which tmdbIds are already requested
             App.API.getRequests().then(function(data) {
@@ -453,62 +450,16 @@
         // =============================================
 
         _switchToNav: function() {
-            this._activePanel = 'nav';
             this._clearAllFocus();
-
-            this._navFocusIndex = 0;
-            for (var i = 0; i < this._navItems.length; i++) {
-                if (this._navItems[i].getAttribute('data-view') === 'requests') {
-                    this._navFocusIndex = i;
-                    break;
-                }
-            }
-            this._updateNavFocus(this._navFocusIndex);
+            App.NavBar.switchTo(this, 'requests');
         },
 
         _handleNavNav: function(key) {
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (this._navFocusIndex > 0) this._updateNavFocus(this._navFocusIndex - 1);
-                    break;
-                case App.Config.KEYS.RIGHT:
-                    if (this._navFocusIndex < this._navItems.length - 1) this._updateNavFocus(this._navFocusIndex + 1);
-                    break;
-                case App.Config.KEYS.DOWN:
-                    this._clearNavFocus();
-                    this._activePanel = 'tabs';
-                    this._updateTabFocus(this._tabFocusIndex);
-                    break;
-                case App.Config.KEYS.OK:
-                    var item = this._navItems[this._navFocusIndex];
-                    if (item) {
-                        var view = item.getAttribute('data-view');
-                        if (view && typeof App._onNavSelect === 'function') {
-                            var allNavItems = [];
-                            for (var i = 0; i < this._navItems.length; i++) {
-                                allNavItems.push(this._navItems[i]);
-                            }
-                            App._onNavSelect(view, allNavItems);
-                        }
-                    }
-                    break;
-            }
-        },
-
-        _updateNavFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._navItems.length) index = this._navItems.length - 1;
-            this._navFocusIndex = index;
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
-            this._navItems[index].classList.add('focused');
-        },
-
-        _clearNavFocus: function() {
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
+            var self = this;
+            App.NavBar.handleKey(this, key, function() {
+                self._activePanel = 'tabs';
+                self._updateTabFocus(self._tabFocusIndex);
+            });
         },
 
         // =============================================
@@ -1615,7 +1566,7 @@
             this._clearKeyboardFocus();
             this._clearResultsFocus();
             this._clearTabFocus();
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
             this._clearFilterFocus();
             this._clearListFocus();
             if (this._submitBtn) this._submitBtn.classList.remove('focused');
