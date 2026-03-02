@@ -14,6 +14,8 @@
         _currentSection: 'movies',
         _rowGroupIds: [],
         _cachedFeatured: null,
+        _scrollTooltipHandler: null,
+        _scrollLazyHandler: null,
 
         /**
          * Show home view and build the current section.
@@ -34,9 +36,11 @@
             this._container.innerHTML = '';
 
             // Hide tooltip on scroll (Magic Remote mouseleave unreliable)
-            this._container.addEventListener('scroll', function() {
-                App._hideHoverTooltip();
-            });
+            if (this._scrollTooltipHandler) {
+                this._container.removeEventListener('scroll', this._scrollTooltipHandler);
+            }
+            this._scrollTooltipHandler = function() { App._hideHoverTooltip(); };
+            this._container.addEventListener('scroll', this._scrollTooltipHandler);
             this._destroyCarousels();
             this._rowGroupIds = [];
             this._lazyRows = [];
@@ -730,13 +734,17 @@
 
             // Check on scroll (throttled)
             var scrollThrottle = null;
-            this._container.addEventListener('scroll', function() {
+            if (this._scrollLazyHandler) {
+                this._container.removeEventListener('scroll', this._scrollLazyHandler);
+            }
+            this._scrollLazyHandler = function() {
                 if (scrollThrottle) return;
                 scrollThrottle = setTimeout(function() {
                     scrollThrottle = null;
                     checkVisibleRows();
                 }, 100);
-            });
+            };
+            this._container.addEventListener('scroll', this._scrollLazyHandler);
 
             // Initial check (first few rows)
             checkVisibleRows();
@@ -793,6 +801,14 @@
          */
         hide: function() {
             if (this._container) {
+                if (this._scrollTooltipHandler) {
+                    this._container.removeEventListener('scroll', this._scrollTooltipHandler);
+                    this._scrollTooltipHandler = null;
+                }
+                if (this._scrollLazyHandler) {
+                    this._container.removeEventListener('scroll', this._scrollLazyHandler);
+                    this._scrollLazyHandler = null;
+                }
                 this._container.style.display = 'none';
             }
         },

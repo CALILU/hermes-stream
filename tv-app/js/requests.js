@@ -11,9 +11,6 @@
 
     window.App = window.App || {};
 
-    var KEYBOARD_COLS = 6;
-    var KEYS_LAYOUT = 'ABCDEFGHIJKLMN\u00d1OPQRSTUVWXYZ0123456789'.split('');
-    var RESULTS_COLS = 4;
     var MAX_RESULTS = 20;
 
     var STATUS_MAP = {
@@ -100,10 +97,7 @@
             this._isAdmin = App.API._isLocal;
 
             // Capture nav items
-            var navItemEls = document.querySelectorAll('#nav-bar .nav-item');
-            for (var n = 0; n < navItemEls.length; n++) {
-                this._navItems.push(navItemEls[n]);
-            }
+            App.NavBar.initItems(this);
 
             // Load existing requests to know which tmdbIds are already requested
             App.API.getRequests().then(function(data) {
@@ -252,50 +246,8 @@
 
             var gridEl = document.createElement('div');
             gridEl.className = 'keyboard-grid';
-            this._keyElements = [];
 
-            for (var i = 0; i < KEYS_LAYOUT.length; i++) {
-                var keyEl = document.createElement('div');
-                keyEl.className = 'keyboard-key focusable';
-                keyEl.textContent = KEYS_LAYOUT[i];
-                keyEl.setAttribute('data-key', KEYS_LAYOUT[i]);
-                gridEl.appendChild(keyEl);
-                this._keyElements.push(keyEl);
-            }
-
-            var spaceEl = document.createElement('div');
-            spaceEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
-            spaceEl.textContent = 'ESPACIO';
-            spaceEl.setAttribute('data-key', ' ');
-            gridEl.appendChild(spaceEl);
-            this._keyElements.push(spaceEl);
-
-            var delEl = document.createElement('div');
-            delEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
-            delEl.textContent = 'BORRAR';
-            delEl.setAttribute('data-key', 'DEL');
-            gridEl.appendChild(delEl);
-            this._keyElements.push(delEl);
-
-            // Click + hover for Magic Remote on all keys
-            for (var ki = 0; ki < this._keyElements.length; ki++) {
-                (function(keyIndex, keyElement) {
-                    keyElement.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        self._activePanel = 'keyboard';
-                        self._updateKeyboardFocus(keyIndex);
-                        self._onKeyPress(keyElement);
-                    });
-                    keyElement.addEventListener('mouseenter', function() {
-                        if (self._activePanel !== 'keyboard') {
-                            self._clearResultsFocus();
-                        }
-                        self._activePanel = 'keyboard';
-                        self._updateKeyboardFocus(keyIndex);
-                    });
-                })(ki, this._keyElements[ki]);
-            }
+            App.Keyboard.buildKeys(this, gridEl);
 
             leftPanel.appendChild(gridEl);
 
@@ -392,7 +344,7 @@
                     if (self._activePanel === 'statusMenu') {
                         e.preventDefault();
                         e.stopImmediatePropagation();
-                        self._closeStatusMenu();
+                        self._hideStatusMenu();
                         self._activePanel = 'list';
                         if (self._listItems.length > 0) {
                             self._updateListFocus(self._listFocusIndex);
@@ -454,62 +406,16 @@
         // =============================================
 
         _switchToNav: function() {
-            this._activePanel = 'nav';
             this._clearAllFocus();
-
-            this._navFocusIndex = 0;
-            for (var i = 0; i < this._navItems.length; i++) {
-                if (this._navItems[i].getAttribute('data-view') === 'requests') {
-                    this._navFocusIndex = i;
-                    break;
-                }
-            }
-            this._updateNavFocus(this._navFocusIndex);
+            App.NavBar.switchTo(this, 'requests');
         },
 
         _handleNavNav: function(key) {
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (this._navFocusIndex > 0) this._updateNavFocus(this._navFocusIndex - 1);
-                    break;
-                case App.Config.KEYS.RIGHT:
-                    if (this._navFocusIndex < this._navItems.length - 1) this._updateNavFocus(this._navFocusIndex + 1);
-                    break;
-                case App.Config.KEYS.DOWN:
-                    this._clearNavFocus();
-                    this._activePanel = 'tabs';
-                    this._updateTabFocus(this._tabFocusIndex);
-                    break;
-                case App.Config.KEYS.OK:
-                    var item = this._navItems[this._navFocusIndex];
-                    if (item) {
-                        var view = item.getAttribute('data-view');
-                        if (view && typeof App._onNavSelect === 'function') {
-                            var allNavItems = [];
-                            for (var i = 0; i < this._navItems.length; i++) {
-                                allNavItems.push(this._navItems[i]);
-                            }
-                            App._onNavSelect(view, allNavItems);
-                        }
-                    }
-                    break;
-            }
-        },
-
-        _updateNavFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._navItems.length) index = this._navItems.length - 1;
-            this._navFocusIndex = index;
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
-            this._navItems[index].classList.add('focused');
-        },
-
-        _clearNavFocus: function() {
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
+            var self = this;
+            App.NavBar.handleKey(this, key, function() {
+                self._activePanel = 'tabs';
+                self._updateTabFocus(self._tabFocusIndex);
+            });
         },
 
         // =============================================
@@ -576,77 +482,21 @@
         // =============================================
 
         _handleKeyboardNav: function(key) {
-            var idx = this._keyboardFocusIndex;
-            var regularCount = KEYS_LAYOUT.length; // 37 (A-Z + Ñ + 0-9)
-            var SPACE_IDX = regularCount;      // 37
-            var DEL_IDX = regularCount + 1;    // 38
-            var isOnAction = idx >= regularCount;
-
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (!isOnAction) {
-                        var col = idx % KEYBOARD_COLS;
-                        if (col > 0) this._updateKeyboardFocus(idx - 1);
+            var self = this;
+            App.Keyboard.handleNav(this, key, {
+                onUp: function() {
+                    App.Keyboard.clearFocus(self);
+                    self._activePanel = 'tabs';
+                    self._updateTabFocus(self._tabFocusIndex);
+                },
+                onDown: function() {
+                    if (self._submitBtn && self._submitBtn.style.display !== 'none') {
+                        App.Keyboard.clearFocus(self);
+                        self._activePanel = 'submit';
+                        self._submitBtn.classList.add('focused');
                     }
-                    break;
-
-                case App.Config.KEYS.RIGHT:
-                    if (isOnAction) {
-                        this._switchToResults();
-                    } else {
-                        var colR = idx % KEYBOARD_COLS;
-                        if (colR < KEYBOARD_COLS - 1 && idx + 1 < regularCount) {
-                            this._updateKeyboardFocus(idx + 1);
-                        } else {
-                            this._switchToResults();
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.UP:
-                    if (idx === DEL_IDX) {
-                        this._updateKeyboardFocus(SPACE_IDX);
-                    } else if (idx === SPACE_IDX) {
-                        // Go to last row center
-                        var lastRow = Math.floor((regularCount - 1) / KEYBOARD_COLS);
-                        var target = lastRow * KEYBOARD_COLS + 2;
-                        if (target >= regularCount) target = regularCount - 1;
-                        this._updateKeyboardFocus(target);
-                    } else {
-                        var rowU = Math.floor(idx / KEYBOARD_COLS);
-                        if (rowU > 0) {
-                            this._updateKeyboardFocus(idx - KEYBOARD_COLS);
-                        } else {
-                            this._clearKeyboardFocus();
-                            this._activePanel = 'tabs';
-                            this._updateTabFocus(this._tabFocusIndex);
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.DOWN:
-                    if (idx === DEL_IDX) {
-                        if (this._submitBtn && this._submitBtn.style.display !== 'none') {
-                            this._clearKeyboardFocus();
-                            this._activePanel = 'submit';
-                            this._submitBtn.classList.add('focused');
-                        }
-                    } else if (idx === SPACE_IDX) {
-                        this._updateKeyboardFocus(DEL_IDX);
-                    } else {
-                        var nextIdx = idx + KEYBOARD_COLS;
-                        if (nextIdx < regularCount) {
-                            this._updateKeyboardFocus(nextIdx);
-                        } else {
-                            this._updateKeyboardFocus(SPACE_IDX);
-                        }
-                    }
-                    break;
-
-                case App.Config.KEYS.OK:
-                    this._onKeyPress(this._keyElements[idx]);
-                    break;
-            }
+                }
+            });
         },
 
         _switchToResults: function() {
@@ -663,19 +513,11 @@
         },
 
         _updateKeyboardFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._keyElements.length) index = this._keyElements.length - 1;
-            this._keyboardFocusIndex = index;
-            for (var i = 0; i < this._keyElements.length; i++) {
-                this._keyElements[i].classList.remove('focused');
-            }
-            this._keyElements[index].classList.add('focused');
+            App.Keyboard.updateFocus(this, index);
         },
 
         _clearKeyboardFocus: function() {
-            for (var i = 0; i < this._keyElements.length; i++) {
-                this._keyElements[i].classList.remove('focused');
-            }
+            App.Keyboard.clearFocus(this);
         },
 
         // =============================================
@@ -775,7 +617,7 @@
                     this._submitBtn.classList.remove('focused');
                     this._activePanel = 'keyboard';
                     // Focus the last action row key
-                    this._updateKeyboardFocus(KEYS_LAYOUT.length);
+                    this._updateKeyboardFocus(App.Keyboard.LAYOUT.length);
                     break;
                 case App.Config.KEYS.RIGHT:
                     if (this._resultItems.length > 0) {
@@ -788,7 +630,7 @@
                     // Same as UP — go back to keyboard
                     this._submitBtn.classList.remove('focused');
                     this._activePanel = 'keyboard';
-                    this._updateKeyboardFocus(KEYS_LAYOUT.length);
+                    this._updateKeyboardFocus(App.Keyboard.LAYOUT.length);
                     break;
                 case App.Config.KEYS.OK:
                     this._submitRequests();
@@ -801,15 +643,7 @@
         // =============================================
 
         _onKeyPress: function(el) {
-            if (!el) return;
-            var keyVal = el.getAttribute('data-key');
-            if (keyVal === 'DEL') {
-                this._searchText = this._searchText.slice(0, -1);
-            } else {
-                this._searchText += keyVal.toLowerCase();
-            }
-            this._updateDisplay();
-            this._doSearch();
+            App.Keyboard.onKeyPress(this, el);
         },
 
         _updateDisplay: function() {
@@ -974,7 +808,7 @@
         _toggleSelection: function(index) {
             if (index < 0 || index >= this._resultData.length) return;
             var movie = this._resultData[index];
-            var tmdbId = movie.id;
+            var tmdbId = movie.id || movie.tmdbId;
             var itemEl = this._resultItems[index];
             var overlay = itemEl.querySelector('.requests-selected-overlay');
 
@@ -1616,7 +1450,7 @@
             this._clearKeyboardFocus();
             this._clearResultsFocus();
             this._clearTabFocus();
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
             this._clearFilterFocus();
             this._clearListFocus();
             if (this._submitBtn) this._submitBtn.classList.remove('focused');

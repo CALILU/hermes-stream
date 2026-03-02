@@ -13,7 +13,7 @@ echo "Copiando CSS..."
 cp IsiPrime-WebOS-Native/css/styles.css tv-app/css/
 
 echo "Copiando JS modules..."
-for f in api login images focus carousel router home genre years sagas detail player series search requests actor app; do
+for f in api login images focus nav-bar sidebar-grid-view keyboard carousel router home genre years sagas detail player series search requests actor app; do
     cp IsiPrime-WebOS-Native/js/$f.js tv-app/js/
 done
 

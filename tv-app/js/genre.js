@@ -46,11 +46,7 @@
             this._container.innerHTML = '';
 
             // Cache nav items
-            var navEls = document.querySelectorAll('#nav-bar .nav-item');
-            this._navItems = [];
-            for (var i = 0; i < navEls.length; i++) {
-                this._navItems.push(navEls[i]);
-            }
+            App.NavBar.initItems(this);
 
             // Build sorted genre list with counts (only genres that have movies)
             this._buildGenreData();
@@ -82,21 +78,7 @@
         },
 
         hide: function() {
-            if (this._container) {
-                this._container.style.display = 'none';
-                this._container.innerHTML = '';
-            }
-            if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler, true);
-                this._keyHandler = null;
-            }
-            if (App.Focus && App.Focus.enable) {
-                App.Focus.enable();
-            }
-            if (this._autoSelectTimer) { clearTimeout(this._autoSelectTimer); this._autoSelectTimer = null; }
-            if (App.Images && App.Images.clearQueue) {
-                App.Images.clearQueue();
-            }
+            App.SidebarGridView.hide(this);
             this._genreElements = [];
             this._movieElements = [];
             this._movieData = [];
@@ -155,36 +137,13 @@
         // =============================================
 
         _buildUI: function() {
-            // Sidebar
-            this._sidebarEl = document.createElement('div');
-            this._sidebarEl.className = 'genre-sidebar';
-
-            var sidebarTitle = document.createElement('div');
-            sidebarTitle.className = 'genre-sidebar-title';
-            sidebarTitle.textContent = 'G\u00e9neros';
-            this._sidebarEl.appendChild(sidebarTitle);
-
-            this._genreListEl = document.createElement('div');
-            this._genreListEl.className = 'genre-list';
-            this._sidebarEl.appendChild(this._genreListEl);
-
-            // Right panel
-            this._contentEl = document.createElement('div');
-            this._contentEl.className = 'genre-content';
-
-            this._contentTitleEl = document.createElement('div');
-            this._contentTitleEl.className = 'genre-content-title';
-            this._contentTitleEl.textContent = 'Todas las pel\u00edculas';
-            this._contentEl.appendChild(this._contentTitleEl);
-
-            this._gridEl = document.createElement('div');
-            this._gridEl.className = 'genre-grid';
-            this._contentEl.appendChild(this._gridEl);
-
-            this._container.appendChild(this._sidebarEl);
-            this._container.appendChild(this._contentEl);
-
-            // Build genre list items
+            var layout = App.SidebarGridView.buildLayout(
+                this._container, 'G\u00e9neros', 'Todas las pel\u00edculas');
+            this._sidebarEl = layout.sidebarEl;
+            this._genreListEl = layout.listEl;
+            this._contentEl = layout.contentEl;
+            this._contentTitleEl = layout.contentTitleEl;
+            this._gridEl = layout.gridEl;
             this._buildGenreList();
         },
 
@@ -403,71 +362,31 @@
         },
 
         // =============================================
-        //  GRID COLUMNS
-        // =============================================
-
-        _getGridCols: function() {
-            if (this._movieElements.length < 2) return 1;
-            // Use offsetTop instead of getBoundingClientRect — not affected by
-            // CSS transform: scale() on the focused element
-            var firstTop = this._movieElements[0].offsetTop;
-            for (var c = 1; c < this._movieElements.length; c++) {
-                if (this._movieElements[c].offsetTop > firstTop + 5) {
-                    return c;
-                }
-            }
-            return this._movieElements.length;
-        },
-
-        // =============================================
-        //  FOCUS MANAGEMENT
+        //  FOCUS MANAGEMENT (delegates to SidebarGridView)
         // =============================================
 
         _updateGenreFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._genreElements.length) index = this._genreElements.length - 1;
-            this._genreFocusIndex = index;
-
-            for (var i = 0; i < this._genreElements.length; i++) {
-                this._genreElements[i].classList.remove('focused');
-            }
-            if (this._genreElements[index]) {
-                this._genreElements[index].classList.add('focused');
-                this._ensureVisible(this._genreElements[index], this._sidebarEl);
-            }
+            this._genreFocusIndex = App.SidebarGridView.updateFocus(
+                this._genreElements, index, this._sidebarEl);
         },
 
         _clearGenreFocus: function() {
-            for (var i = 0; i < this._genreElements.length; i++) {
-                this._genreElements[i].classList.remove('focused');
-            }
+            App.SidebarGridView.clearFocus(this._genreElements);
         },
 
         _updateGridFocus: function(index) {
-            if (this._movieElements.length === 0) return;
-            if (index < 0) index = 0;
-            if (index >= this._movieElements.length) index = this._movieElements.length - 1;
-            this._gridFocusIndex = index;
-
-            for (var i = 0; i < this._movieElements.length; i++) {
-                this._movieElements[i].classList.remove('focused');
-            }
-            if (this._movieElements[index]) {
-                this._movieElements[index].classList.add('focused');
-                this._ensureVisible(this._movieElements[index], this._contentEl);
-            }
+            this._gridFocusIndex = App.SidebarGridView.updateFocus(
+                this._movieElements, index, this._contentEl);
         },
 
         _clearGridFocus: function() {
-            for (var i = 0; i < this._movieElements.length; i++) {
-                this._movieElements[i].classList.remove('focused');
-            }
+            App.SidebarGridView.clearFocus(this._movieElements);
         },
 
         _clearAllFocus: function() {
             this._clearGenreFocus();
             this._clearGridFocus();
-            this._clearNavFocus();
+            App.NavBar.clearFocus(this);
         },
 
         // =============================================
@@ -475,70 +394,22 @@
         // =============================================
 
         _switchToNav: function() {
-            // Remember which panel we came from so DOWN returns there
             this._prevPanel = this._activePanel;
-            this._activePanel = 'nav';
             this._clearAllFocus();
-
-            this._navFocusIndex = 0;
-            for (var i = 0; i < this._navItems.length; i++) {
-                if (this._navItems[i].getAttribute('data-view') === 'genres') {
-                    this._navFocusIndex = i;
-                    break;
-                }
-            }
-            this._updateNavFocus(this._navFocusIndex);
+            App.NavBar.switchTo(this, 'genres');
         },
 
         _handleNavNav: function(key) {
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (this._navFocusIndex > 0) this._updateNavFocus(this._navFocusIndex - 1);
-                    break;
-                case App.Config.KEYS.RIGHT:
-                    if (this._navFocusIndex < this._navItems.length - 1) this._updateNavFocus(this._navFocusIndex + 1);
-                    break;
-                case App.Config.KEYS.DOWN:
-                    this._clearNavFocus();
-                    // Return to the panel user was in before going to nav
-                    if (this._prevPanel === 'grid' && this._movieElements.length > 0) {
-                        this._activePanel = 'grid';
-                        this._updateGridFocus(this._gridFocusIndex);
-                    } else {
-                        this._activePanel = 'genres';
-                        this._updateGenreFocus(this._genreFocusIndex);
-                    }
-                    break;
-                case App.Config.KEYS.OK:
-                    var item = this._navItems[this._navFocusIndex];
-                    if (item) {
-                        var view = item.getAttribute('data-view');
-                        if (view && typeof App._onNavSelect === 'function') {
-                            var allNavItems = [];
-                            for (var i = 0; i < this._navItems.length; i++) {
-                                allNavItems.push(this._navItems[i]);
-                            }
-                            App._onNavSelect(view, allNavItems);
-                        }
-                    }
-                    break;
-            }
-        },
-
-        _updateNavFocus: function(index) {
-            if (index < 0) index = 0;
-            if (index >= this._navItems.length) index = this._navItems.length - 1;
-            this._navFocusIndex = index;
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
-            this._navItems[index].classList.add('focused');
-        },
-
-        _clearNavFocus: function() {
-            for (var i = 0; i < this._navItems.length; i++) {
-                this._navItems[i].classList.remove('focused');
-            }
+            var self = this;
+            App.NavBar.handleKey(this, key, function() {
+                if (self._prevPanel === 'grid' && self._movieElements.length > 0) {
+                    self._activePanel = 'grid';
+                    self._updateGridFocus(self._gridFocusIndex);
+                } else {
+                    self._activePanel = 'genres';
+                    self._updateGenreFocus(self._genreFocusIndex);
+                }
+            });
         },
 
         // =============================================
@@ -547,42 +418,11 @@
 
         _setupKeyHandler: function() {
             var self = this;
-
-            if (this._keyHandler) {
-                document.removeEventListener('keydown', this._keyHandler, true);
-            }
-
-            if (App.Focus && App.Focus.disable) {
-                App.Focus.disable();
-            }
-
-            this._keyHandler = function(e) {
-                if (!self._container || self._container.style.display === 'none') return;
-
-                var key = e.keyCode;
-
-                // Let BACK propagate to router
-                if (key === App.Config.KEYS.BACK) {
-                    return;
-                }
-
-                e.preventDefault();
-                e.stopImmediatePropagation();
-
-                switch (self._activePanel) {
-                    case 'nav':
-                        self._handleNavNav(key);
-                        break;
-                    case 'genres':
-                        self._handleGenresNav(key);
-                        break;
-                    case 'grid':
-                        self._handleGridNav(key);
-                        break;
-                }
-            };
-
-            document.addEventListener('keydown', this._keyHandler, true);
+            App.SidebarGridView.setupKeyHandler(this, {
+                nav: function(key) { self._handleNavNav(key); },
+                genres: function(key) { self._handleGenresNav(key); },
+                grid: function(key) { self._handleGridNav(key); }
+            });
         },
 
         // =============================================
@@ -599,7 +439,6 @@
                         this._updateGenreFocus(idx - 1);
                         this._autoSelectGenre();
                     } else {
-                        // Go to nav bar
                         this._clearGenreFocus();
                         this._switchToNav();
                     }
@@ -613,7 +452,6 @@
                     break;
 
                 case App.Config.KEYS.LEFT:
-                    // Go to nav bar from sidebar
                     this._clearGenreFocus();
                     this._switchToNav();
                     break;
@@ -622,7 +460,6 @@
                 case App.Config.KEYS.OK:
                     if (this._autoSelectTimer) { clearTimeout(this._autoSelectTimer); this._autoSelectTimer = null; }
                     this._selectCurrentGenre();
-                    // Move focus to grid
                     if (this._movieElements.length > 0) {
                         this._activePanel = 'grid';
                         this._clearGenreFocus();
@@ -643,13 +480,10 @@
         _selectCurrentGenre: function() {
             var idx = this._genreFocusIndex;
             if (idx === 0) {
-                // "Todas"
                 this._selectGenre(null);
             } else {
                 var genre = this._allGenres[idx - 1];
-                if (genre) {
-                    this._selectGenre(genre.id);
-                }
+                if (genre) this._selectGenre(genre.id);
             }
         },
 
@@ -658,95 +492,15 @@
         // =============================================
 
         _handleGridNav: function(key) {
-            var idx = this._gridFocusIndex;
-            var total = this._movieElements.length;
-
-            if (total === 0) {
-                if (key === App.Config.KEYS.LEFT || key === App.Config.KEYS.UP) {
-                    this._activePanel = 'genres';
-                    this._updateGenreFocus(this._genreFocusIndex);
+            var self = this;
+            App.SidebarGridView.handleGridNav(this, key, {
+                sidebarPanel: 'genres',
+                onSidebarRestore: function() { self._updateGenreFocus(self._genreFocusIndex); },
+                onNav: function() { self._switchToNav(); },
+                onOK: function(idx) {
+                    if (self._movieData[idx]) App.Router.navigate('DETAIL', self._movieData[idx]);
                 }
-                return;
-            }
-
-            var cols = this._getGridCols();
-            var col = idx % cols;
-
-            switch (key) {
-                case App.Config.KEYS.LEFT:
-                    if (col > 0) {
-                        this._updateGridFocus(idx - 1);
-                    } else {
-                        // At column 0, return to genre list
-                        this._clearGridFocus();
-                        this._activePanel = 'genres';
-                        this._updateGenreFocus(this._genreFocusIndex);
-                    }
-                    break;
-
-                case App.Config.KEYS.RIGHT:
-                    if (col < cols - 1 && idx + 1 < total) {
-                        this._updateGridFocus(idx + 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.UP:
-                    if (idx - cols >= 0) {
-                        this._updateGridFocus(idx - cols);
-                    } else {
-                        // At top row, go to nav bar
-                        this._clearGridFocus();
-                        this._switchToNav();
-                    }
-                    break;
-
-                case App.Config.KEYS.DOWN:
-                    if (idx + cols < total) {
-                        this._updateGridFocus(idx + cols);
-                    } else if (idx < total - 1) {
-                        // At last full row but partial row below — snap to last item
-                        this._updateGridFocus(total - 1);
-                    }
-                    break;
-
-                case App.Config.KEYS.OK:
-                    if (this._movieData[idx]) {
-                        this._onMovieSelect(this._movieData[idx]);
-                    }
-                    break;
-            }
-        },
-
-        // =============================================
-        //  MOVIE SELECT
-        // =============================================
-
-        _onMovieSelect: function(movie) {
-            App.Router.navigate('DETAIL', movie);
-        },
-
-        // =============================================
-        //  SCROLL HELPERS
-        // =============================================
-
-        _ensureVisible: function(el, container) {
-            if (!el || !container) return;
-
-            var elRect = el.getBoundingClientRect();
-            var containerRect = container.getBoundingClientRect();
-            var margin = 40; // extra margin so item isn't right at the edge
-
-            // Check if element is above container viewport
-            if (elRect.top < containerRect.top + margin) {
-                var scrollUp = containerRect.top + margin - elRect.top;
-                container.scrollTop = Math.max(0, container.scrollTop - scrollUp);
-            }
-
-            // Check if element is below container viewport
-            if (elRect.bottom > containerRect.bottom - margin) {
-                var scrollDown = elRect.bottom - containerRect.bottom + margin;
-                container.scrollTop += scrollDown;
-            }
+            });
         }
     };
 })();
