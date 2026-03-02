@@ -647,7 +647,7 @@ export default function HermesApp() {
     setContextMenu(null);
   };
 
-  // Borrar archivo del FTP
+  // Borrar archivo del servidor
   const deleteFile = async () => {
     if (!deleteConfirm) return;
 

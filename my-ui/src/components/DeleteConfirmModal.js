@@ -26,7 +26,7 @@ export default function DeleteConfirmModal({ deleteConfirm, deleting, onDelete, 
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Eliminar archivo?</h3>
               <p className="text-slate-500 text-sm">
-                Esta accion eliminara permanentemente el archivo del servidor FTP:
+                Esta accion eliminara permanentemente el archivo del servidor:
               </p>
               <p className="text-slate-200 font-medium mt-2 bg-slate-800 p-2 rounded-lg text-sm break-all">
                 {deleteConfirm.filename}

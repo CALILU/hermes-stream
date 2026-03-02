@@ -122,11 +122,11 @@ export default function SettingsModal({
                   Modo de Almacenamiento
                 </h3>
                 <p className="text-sm text-slate-600 mb-4">
-                  Selecciona de donde leer las peliculas: disco local conectado al ordenador o disco en red via FTP.
+                  Selecciona de donde leer las peliculas: disco Samba (red local) o servidor web.
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={onBrowseLocalFolder}
+                    onClick={() => onStorageModeChange('local')}
                     disabled={changingMode}
                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
                       storageMode === 'local'
@@ -135,7 +135,7 @@ export default function SettingsModal({
                     } ${changingMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <FolderOpen size={18} />
-                    {storageMode === 'local' ? 'LOCAL' : 'Seleccionar Disco'}
+                    SAMBA
                   </button>
                   <button
                     onClick={() => onStorageModeChange('ftp')}
@@ -147,7 +147,7 @@ export default function SettingsModal({
                     } ${changingMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <Wifi size={18} />
-                    RED (FTP)
+                    WEB
                   </button>
                 </div>
                 {changingMode && (
@@ -248,7 +248,7 @@ export default function SettingsModal({
                   </div>
                 )}
 
-                {/* Solo espacio usado (desde listado FTP, sin total) */}
+                {/* Solo espacio usado (desde listado, sin total) */}
                 {diskUsage && diskUsage.fromListing && diskUsage.percentage == null && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -262,24 +262,24 @@ export default function SettingsModal({
                       </div>
                     </div>
                     <p className="text-xs text-slate-500">
-                      Calculado desde listado FTP. Introduce la IP del NAS para ver capacidad total.
+                      Calculado desde listado de archivos. Introduce la IP del NAS para ver capacidad total.
                     </p>
                   </div>
                 )}
 
-                {/* Datos parciales (solo espacio libre, desde FTP AVBL) */}
+                {/* Datos parciales (solo espacio libre) */}
                 {diskUsage && diskUsage.partial && diskUsage.free && (
                   <div className="py-1">
                     <p className="text-sm text-slate-300">
                       Espacio libre: <span className="font-semibold text-emerald-400">{formatBytes(diskUsage.free)}</span>
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
-                      El servidor FTP solo reporta espacio disponible
+                      El servidor solo reporta espacio disponible
                     </p>
                   </div>
                 )}
 
-                {/* Campo IP del NAS (solo en modo FTP) */}
+                {/* Campo IP del NAS (solo en modo web) */}
                 {storageMode === 'ftp' && (
                   <div className="mt-3 pt-3 border-t border-slate-700">
                     <label className="text-xs text-slate-500 mb-1 block">IP local del NAS (para info completa):</label>
