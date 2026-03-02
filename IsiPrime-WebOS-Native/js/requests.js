@@ -392,7 +392,7 @@
                     if (self._activePanel === 'statusMenu') {
                         e.preventDefault();
                         e.stopImmediatePropagation();
-                        self._closeStatusMenu();
+                        self._hideStatusMenu();
                         self._activePanel = 'list';
                         if (self._listItems.length > 0) {
                             self._updateListFocus(self._listFocusIndex);
@@ -974,7 +974,7 @@
         _toggleSelection: function(index) {
             if (index < 0 || index >= this._resultData.length) return;
             var movie = this._resultData[index];
-            var tmdbId = movie.id;
+            var tmdbId = movie.id || movie.tmdbId;
             var itemEl = this._resultItems[index];
             var overlay = itemEl.querySelector('.requests-selected-overlay');
 

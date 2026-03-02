@@ -274,6 +274,8 @@
             // Listen for messages from iframe
             this._messageHandler = function(e) {
                 if (self._destroyed) return;
+                // Verify origin to prevent fraudulent messages from injected iframes
+                if (e.origin && e.origin !== 'null' && e.origin !== App.Config.SERVER_URL.replace(/\/$/, '')) return;
                 var data = e.data;
                 if (!data || !data.type) return;
 
