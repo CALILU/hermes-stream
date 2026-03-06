@@ -25,6 +25,13 @@ my-ui/build/
 *.db-shm
 *.db-wal
 
+# Poster cache y datos locales
+data/
+
+# Archivos temporales de proyecto
+modelos_tv_usuario/
+verify-fix.js
+
 # Cache JSON (legacy, migrado a SQLite)
 cache.json
 cache-series.json

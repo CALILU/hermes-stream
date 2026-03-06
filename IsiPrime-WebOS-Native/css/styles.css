@@ -52,6 +52,36 @@ input {
     font-family: inherit;
 }
 
+/* ---- Clearable input (✕ button) ---- */
+.input-clearable-wrap {
+    position: relative;
+    display: block;
+}
+
+.input-clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    font-size: 18px;
+    color: #888;
+    cursor: pointer;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 2;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.input-clear-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
 a {
     color: inherit;
     text-decoration: none;
@@ -563,7 +593,7 @@ a {
     bottom: 0;
     background: #0f0f0f;
     z-index: 200;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .detail-backdrop {
@@ -592,11 +622,21 @@ a {
 .detail-content {
     position: relative;
     z-index: 1;
-    padding: 120px 60px 60px;
     max-width: 850px;
-    max-height: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.detail-info-fixed {
+    flex-shrink: 0;
+    padding: 120px 60px 0;
+}
+.detail-cast-wrapper {
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+    padding: 0 60px 60px;
 }
 
 .detail-title {
@@ -1107,6 +1147,10 @@ a {
     width: calc(100% - 8px);
 }
 
+.keyboard-key-wide {
+    width: calc(50% - 8px);
+}
+
 .keyboard-key-action {
     background: #252540;
     font-size: 24px;
@@ -1509,6 +1553,75 @@ a {
 .genre-content::-webkit-scrollbar-thumb {
     background: rgba(196, 181, 253, 0.3);
     border-radius: 2px;
+}
+
+
+/* =====================================================
+   SAGAS VIEW — filter + layout
+   ===================================================== */
+/* Sagas sidebar: flex column so filter stays fixed, list scrolls */
+#sagas-view .genre-sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+
+#sagas-view .genre-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.saga-filter-wrap {
+    padding: 8px 16px 12px;
+    flex-shrink: 0;
+}
+
+.saga-filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: #252540;
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 20px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.saga-filter-input::placeholder {
+    color: #666;
+}
+
+.saga-filter-input:focus,
+.saga-filter-input.focused {
+    border-color: #c4b5fd;
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.2);
+}
+
+
+/* =====================================================
+   SAGAS VIEW — on-screen keyboard panel
+   ===================================================== */
+.saga-keyboard-panel {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px;
+}
+
+.saga-keyboard-panel .search-input-display {
+    width: 520px;
+}
+
+.saga-keyboard-panel .keyboard-grid {
+    width: 520px;
 }
 
 

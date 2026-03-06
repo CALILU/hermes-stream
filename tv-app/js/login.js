@@ -8,6 +8,57 @@
 
     window.App = window.App || {};
 
+    /**
+     * Wrap an input with a clear (✕) button.
+     * Works for inputs already in DOM (login) or dynamically created (sagas).
+     * @param {HTMLInputElement} input
+     * @returns {HTMLElement} wrapper div (use this for DOM insertion if input has no parent)
+     */
+    App.wrapClearable = function(input) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'input-clearable-wrap';
+
+        var clearBtn = document.createElement('span');
+        clearBtn.className = 'input-clear-btn';
+        clearBtn.textContent = '\u2715'; // ✕
+        clearBtn.style.display = 'none';
+
+        // If input already in DOM, replace in-place
+        var parent = input.parentNode;
+        if (parent) {
+            parent.insertBefore(wrapper, input);
+        }
+        wrapper.appendChild(input);
+        wrapper.appendChild(clearBtn);
+
+        // Add right padding so text doesn't go under button
+        input.style.paddingRight = '40px';
+
+        function updateVisibility() {
+            clearBtn.style.display = input.value ? '' : 'none';
+        }
+
+        input.addEventListener('input', updateVisibility);
+
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            input.value = '';
+            clearBtn.style.display = 'none';
+            // Dispatch input event so listeners react (e.g. _applyFilter)
+            var evt;
+            try { evt = new Event('input', { bubbles: true }); }
+            catch (_) { evt = document.createEvent('Event'); evt.initEvent('input', true, true); }
+            input.dispatchEvent(evt);
+            input.focus();
+        });
+
+        // Check initial value
+        updateVisibility();
+
+        return wrapper;
+    };
+
     var _usernameInput = null;
     var _passwordInput = null;
     var _submitBtn = null;
@@ -31,6 +82,14 @@
             _submitBtn = document.getElementById('login-btn');
             _errorEl = document.getElementById('login-error');
 
+            // Wrap inputs with clear button (only once)
+            if (!_usernameInput.parentNode.classList.contains('input-clearable-wrap')) {
+                App.wrapClearable(_usernameInput);
+            }
+            if (!_passwordInput.parentNode.classList.contains('input-clearable-wrap')) {
+                App.wrapClearable(_passwordInput);
+            }
+
             _focusables = [_usernameInput, _passwordInput, _submitBtn];
             _focusIndex = 0;
 
@@ -44,6 +103,22 @@
             var self = this;
             _keyHandler = function(e) { self._onKeyDown(e); };
             document.addEventListener('keydown', _keyHandler);
+
+            // Mouse/click support for browser (PC) usage
+            _submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                self._submit();
+            });
+            _usernameInput.addEventListener('click', function() { self._setFocus(0); });
+            _passwordInput.addEventListener('click', function() { self._setFocus(1); });
+
+            // Enter key in password field submits directly
+            _passwordInput.addEventListener('keydown', function(e) {
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    self._submit();
+                }
+            });
         },
 
         /**

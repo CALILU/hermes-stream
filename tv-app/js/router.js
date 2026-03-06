@@ -29,20 +29,6 @@
         REQUESTS: 'REQUESTS'
     };
 
-    // Map states to view modules
-    var VIEW_MAP = {
-        HOME: 'Home',
-        GENRE: 'Genre',
-        YEARS: 'Years',
-        SAGAS: 'Sagas',
-        DETAIL: 'Detail',
-        PLAYER: 'Player',
-        SERIES: 'Series',
-        SEARCH: 'Search',
-        ACTOR: 'Actor',
-        REQUESTS: 'Requests'
-    };
-
     App.Router = {
         STATES: STATES,
 
@@ -115,13 +101,6 @@
         },
 
         /**
-         * Get current state data.
-         */
-        getCurrentData: function() {
-            return this._currentData;
-        },
-
-        /**
          * Clear navigation stack.
          */
         clearStack: function() {
@@ -174,7 +153,7 @@
                 case STATES.HOME:
                     this._ensureAppContainer();
                     if (App.Home && typeof App.Home.show === 'function') {
-                        App.Home.show(data);
+                        App.Home.show(data, isBack);
                     }
                     break;
 
@@ -206,6 +185,8 @@
                     break;
 
                 case STATES.PLAYER:
+                    // Purge all inactive views to free memory before playback
+                    this._purgeInactiveViews();
                     if (App.Player && typeof App.Player.show === 'function') {
                         App.Player.show(data);
                     }
@@ -348,6 +329,29 @@
                 if (activeNav) {
                     activeNav.classList.add('active');
                 }
+            }
+        },
+
+        /**
+         * Purge DOM of all inactive (hidden) views to free memory.
+         * Called before entering PLAYER to maximize available memory for video playback.
+         * Safe because each view's show() rebuilds its DOM from cached App._* data.
+         */
+        _purgeInactiveViews: function() {
+            var viewIds = [
+                'home-view', 'genre-view', 'years-view', 'sagas-view',
+                'detail-overlay', 'series-view', 'search-view',
+                'actor-view', 'requests-view'
+            ];
+            for (var i = 0; i < viewIds.length; i++) {
+                var el = document.getElementById(viewIds[i]);
+                if (el && el.style.display === 'none' && el.innerHTML !== '') {
+                    el.innerHTML = '';
+                }
+            }
+            // Flush image cache
+            if (App.Images && App.Images.flush) {
+                App.Images.flush();
             }
         },
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { API_BASE } from '../constants';
 import { authFetch } from '../utils/api';
 
@@ -104,21 +104,61 @@ export function useUsers() {
     }
   };
 
-  const updateUserEmail = async (userId, email) => {
+  const updateUser = async (userId, data) => {
     try {
       const res = await authFetch(`${API_BASE}/api/auth/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      if (result.success) loadUsers();
+      return result;
+    } catch (err) {
+      console.error('Error actualizando usuario:', err);
+      return { success: false };
+    }
+  };
+
+  // Keep backward-compatible alias
+  const updateUserEmail = (userId, email) => updateUser(userId, { email });
+
+  const addUserTV = async (userId, tvData) => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/auth/users/${userId}/tvs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tvData)
       });
       const data = await res.json();
       if (data.success) loadUsers();
       return data;
     } catch (err) {
-      console.error('Error actualizando email:', err);
+      console.error('Error añadiendo TV:', err);
       return { success: false };
     }
   };
+
+  const deleteUserTV = async (userId, tvId) => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/auth/users/${userId}/tvs/${tvId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) loadUsers();
+      return data;
+    } catch (err) {
+      console.error('Error eliminando TV:', err);
+      return { success: false };
+    }
+  };
+
+  // Auto-refresh users every 30s while modal is open (to update watching status)
+  const refreshRef = useRef(null);
+  useEffect(() => {
+    if (userManagementModal) {
+      refreshRef.current = setInterval(() => { loadUsers(); }, 30000);
+    }
+    return () => { if (refreshRef.current) clearInterval(refreshRef.current); };
+  }, [userManagementModal, loadUsers]);
 
   const openUserManagement = () => {
     setUserManagementModal(true);
@@ -137,7 +177,8 @@ export function useUsers() {
     createUserForm, creatingUser, createUserError,
     invitationForm, creatingInvitation, lastCreatedInvitation,
     setActiveTab, setCreateUserForm, setInvitationForm, setLastCreatedInvitation,
-    createUser, deleteUser, updateUserEmail, createInvitation, deleteInvitation,
+    createUser, deleteUser, updateUser, updateUserEmail, addUserTV, deleteUserTV,
+    createInvitation, deleteInvitation,
     openUserManagement, closeUserManagement
   };
 }

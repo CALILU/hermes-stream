@@ -2,6 +2,146 @@
 
 ---
 
+## Sesion: 2026-03-06 (noche)
+
+### Cambios Realizados — Newsletter: Recipient Selection + History View + Resend
+
+**Hook (`useNewsletter.js`):**
+- Estado `recipients`, `selectedRecipientIds` — cargados desde `/api/auth/users` (filtrados por email)
+- `toggleRecipient(userId)`, `toggleAllRecipients(selectAll)` — con persistencia localStorage (clave `newsletter_excluded_recipients`, logica invertida: guarda excluidos)
+- `sendNewsletter()` envia `recipientIds` en el body
+- `loadNewsletterDetail(id)` — `GET /api/newsletter/:id`, guarda en `selectedHistoryEntry`
+- `resendNewsletter(id)` — `POST /api/newsletter/:id/resend` con `selectedRecipientIds`
+- `closeHistoryDetail()` — limpia `selectedHistoryEntry` y `resendResult`
+- `_buildMoviePayload()` helper extraido para evitar duplicacion
+
+**Modal (`NewsletterModal.js`):**
+- Search X clear button con `searchInputRef.current?.focus()` para refocus
+- Tab Preview: seccion destinatarios con checkboxes (CheckSquare/Square icons), "Seleccionar/Deseleccionar todos", boton "Enviar a X usuarios" (disabled si 0 seleccionados)
+- Tab Historial: tarjetas clickeables → vista detalle con:
+  - Back arrow + titulo + fecha/stats + badge status (incluye "Reenviado" en purple)
+  - Recipient checkboxes para reenvio (reusan misma persistencia localStorage)
+  - Boton "Reenviar a X usuarios" (RotateCcw icon)
+  - Preview iframe con `srcDoc={html_content}` + sandbox
+  - Si no hay `html_content`: mensaje "Preview no disponible"
+  - Loading spinner mientras carga detalle
+- Delete button usa `e.stopPropagation()` para no abrir detalle
+- Nuevos imports: `ArrowLeft`, `RotateCcw`
+
+### Archivos Afectados
+- `my-ui/src/hooks/useNewsletter.js`: recipients state, localStorage persistence, detail/resend functions
+- `my-ui/src/components/NewsletterModal.js`: recipient checkboxes, history detail view, search X button
+- `my-ui/src/App.js`: destructure + pass new props (selectedHistoryEntry, loadingHistoryDetail, resending, resendResult, onLoadHistoryDetail, onResendNewsletter, onCloseHistoryDetail)
+
+---
+
+## Sesion: 2026-03-06 (tarde)
+
+### Cambios Realizados — TV App: Per-user Identity
+- **`api.js`**: deteccion automatica de serial/modelo TV via 3 estrategias:
+  1. `PalmSystem.deviceInfo` (sincrono, todos webOS) — extrae `serialNumber` + `modelName`
+  2. `webOS.deviceInfo()` callback (webOSTV.js) — solo webOS 5+
+  3. Luna Service `com.webos.service.tv.systemproperty` — fallback
+- Serial/modelo cacheados en `localStorage` (`isiprime_tv_serial`, `isiprime_tv_model`)
+- Headers `X-TV-Serial` y `X-TV-Model` enviados en TODAS las peticiones (`_fetch` + `init`)
+- `_username` y `_userRole` guardados desde respuesta de `/api/auth/status`
+- **`requests.js`**: `requestedBy` usa `App.API._username` en vez de "TV" generico
+- **`requests.js`**: admin detection cambiada de `App.API._isLocal` a `App.API._userRole === 'admin'`
+
+### Archivos Afectados
+- `IsiPrime-WebOS-Native/js/api.js`: `_detectTVSerial()`, `_lunaGetSerial()`, `_serialHeader()`, `_tvSerial`, `_tvModel`, `_username`, `_userRole`
+- `IsiPrime-WebOS-Native/js/requests.js`: requestedBy + isAdmin
+- `tv-app/js/api.js`, `tv-app/js/requests.js`: copias sincronizadas
+
+### Notas
+- Timeout 2s en `_detectTVSerial()` para no bloquear init si Luna/webOS API falla
+- En browser (`/tv`), `PalmSystem` y `webOS` no existen → skip deteccion (Promise.resolve)
+- Verificado en TV real: Pablo (LG 32LK6100PLB) identificado por modelo, favoritos independientes de Isidro
+
+---
+
+## Sesion: 2026-03-06 (manana)
+
+### Cambios Realizados — TV App: Scroll/Foco Restore
+- **Restauracion de scroll vertical**: al volver del detalle (BACK), la vista Home restaura `scrollTop` exacto
+- **Restauracion de foco horizontal**: el carrusel enfoca la pelicula exacta (por `filename`, no por indice)
+- **Cache de orden shuffled**: `_cachedGenreGroups`/`_cachedGenreOrder` evitan reshuffle al volver
+- **Sin flash visual**: `visibility: hidden` durante rebuild + init sincrono de lazy rows + reveal en 20ms
+- **Fix competencia de foco**: `_buildMoviesView` no hace `setActiveGroup` en restore, y restore usa `_currentGroup` directo (evita callback `onFocus` que reseteaba a indice 0)
+
+### Cambios Realizados — Backdrop Quality
+- **Fix `ensureFullPosterURL()`**: paths `/api/img/` ahora reemplazan size cuando se pasa parametro (antes se devolvian tal cual con w342)
+- **Fix TMDB legacy URLs**: usa size solicitado en vez del size extraido de la URL
+- **Backdrop size**: `w780` (~100KB) — balance entre calidad y rendimiento TV (original ~600KB demasiado lento)
+- **Prewarm backdrops**: 837 descargadas en 11s, 0 fallos
+
+### Cambios Realizados — TV App: Detail View Layout Fix
+- **Info fija + cast scrollable**: `.detail-content` split en flexbox column
+  - `.detail-info-fixed` (`flex-shrink: 0`): titulo, meta, generos, sinopsis, botones — no scrollea
+  - `.detail-cast-wrapper` (`flex: 1; min-height: 0; overflow-y: auto`): galeria actores — scrollea independiente
+- **`_setCastFocus()`**: scroll within `_castWrapperEl` en vez del contenedor completo
+
+### Cambios Realizados — TV App: Actor Grid Navigation Fix
+- **Deteccion dinamica de columnas**: `Math.floor(gridEl.clientWidth / 224)` en vez de hardcoded 5
+- **`GRID_COLS_DEFAULT = 7`**: fallback para cuando el grid no esta montado aun
+
+### Archivos Afectados
+- `IsiPrime-WebOS-Native/js/home.js`: scroll/foco restore completo (visibility, cache genreGroups, focusAt por movieId)
+- `IsiPrime-WebOS-Native/js/router.js`: pasa `isBack` a `App.Home.show()`
+- `IsiPrime-WebOS-Native/js/detail.js`: layout split (info fija + cast scrollable), `_castWrapperEl`
+- `IsiPrime-WebOS-Native/js/actor.js`: deteccion dinamica columnas grid (`GRID_COLS_DEFAULT`, clientWidth)
+- `IsiPrime-WebOS-Native/css/styles.css`: `.detail-info-fixed`, `.detail-cast-wrapper`
+- `lib/utils.js`: fix `ensureFullPosterURL()` — size replacement en `/api/img/` paths y TMDB URLs
+- `lib/normalizers.js`: backdrop size `w780`
+- `lib/poster-cache.js`: prewarm backdrop size `w780`
+- `tv-app/`: copias sincronizadas (home, router, detail, actor, styles.css)
+
+### Mecanismo de Restore (home.js)
+```
+hide():
+  1. Guardar scrollTop, seccion activa
+  2. Encontrar carousel activo por App.Focus._currentGroup
+  3. Guardar groupId (ej: 'genre-28'), focusIndex, y filename de la pelicula
+
+show(data, isBack):
+  1. Si isBack + misma seccion + savedRowIndex >= 0 → restoreScroll=true
+  2. visibility: hidden (evita flash)
+  3. Construir DOM con _buildMoviesView(restoreScroll=true)
+     → Reusar _cachedGenreGroups (sin reshuffle)
+     → No hacer setActiveGroup al primer carousel
+  4. Init sincrono de TODAS las lazy rows
+  5. scrollTop = savedScrollTop
+  6. Buscar carousel por savedGroupId
+  7. Buscar pelicula por filename en carousel._items
+  8. carousel.focusAt(movieIndex)
+  9. App.Focus._currentGroup = groupId (directo, sin callback)
+  10. setTimeout 20ms → visibility: '' (reveal)
+```
+
+---
+
+## Sesion: 2026-03-05
+
+### Cambios Realizados
+- **Modal Gestión Usuarios rediseñado**: tarjetas expandibles por usuario (click para abrir/cerrar)
+  - Sección datos: email editable inline, notificaciones toggle, fecha creación
+  - Sección TVs: lista con marca/modelo/año/IP/webOS, botón eliminar, formulario "Añadir TV"
+  - Watching status: icono Play verde pulsante + nombre película si usuario está viendo
+  - Auto-refresh cada 30s mientras modal abierto
+- **Búsqueda de sagas**: input "Buscar saga..." en tab Sagas, filtrado accent-insensitive (NFD)
+- **Botones redundantes eliminados** del panel Sagas (Pedir Película, Ver Peticiones, etc.)
+
+### Archivos Afectados
+- `my-ui/src/components/UserManagementModal.js`: rediseño completo con tarjetas expandibles, TVs, watching
+- `my-ui/src/hooks/useUsers.js`: `updateUser()` genérico, `addUserTV()`, `deleteUserTV()`, auto-refresh 30s
+- `my-ui/src/App.js`: estado `sagaSearch`, input búsqueda sagas, eliminación botones redundantes
+
+### Notas
+- `useUsers.js` usa `updateUser(userId, data)` genérico en vez del antiguo `updateUserEmail`
+- Imports nuevos lucide-react: ChevronDown, ChevronRight, Monitor, Plus, User, Wifi
+
+---
+
 ## Sesion: 2026-03-02 18:18
 
 ### Cambios Realizados

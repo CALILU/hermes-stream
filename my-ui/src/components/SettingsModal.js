@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, HardDrive, FolderOpen, Wifi, RefreshCw, Trash2, Layers, Database } from 'lucide-react';
+import { authFetch } from '../utils/api';
 
 export default function SettingsModal({
   settingsModal, storageMode, storagePath, changingMode, clearingCache, cacheProgress,
@@ -18,7 +19,7 @@ export default function SettingsModal({
     setDiskLoading(true);
     setDiskError(null);
     try {
-      const res = await fetch(`/api/storage/disk-usage${refresh ? '?refresh=true' : ''}`);
+      const res = await authFetch(`/api/storage/disk-usage${refresh ? '?refresh=true' : ''}`);
       const data = await res.json();
       if (data.success) {
         setDiskUsage(data);
@@ -37,7 +38,7 @@ export default function SettingsModal({
     if (!nasIP.trim() || savingNasIP) return;
     setSavingNasIP(true);
     try {
-      const res = await fetch('/api/storage/nas-ip', {
+      const res = await authFetch('/api/storage/nas-ip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nasIP: nasIP.trim() })
@@ -54,7 +55,7 @@ export default function SettingsModal({
     if (settingsModal) {
       fetchDiskUsage();
       // Cargar IP guardada
-      fetch('/api/storage/config').then(r => r.json()).then(data => {
+      authFetch('/api/storage/config').then(r => r.json()).then(data => {
         if (data.nasLocalIP) setNasIP(data.nasLocalIP);
       }).catch(() => {});
     } else {

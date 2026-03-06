@@ -242,6 +242,16 @@
                         }
                         break;
 
+                    case 'quality-change':
+                        // ABR: reload iframe at current position with new quality
+                        console.log('[Player] ABR quality change: ' + (data.quality || 'original') + ' at ' + Math.floor(data.position || 0) + 's');
+                        if (self._iframe && data.position > 0) {
+                            self._startPosition = Math.floor(data.position);
+                            self._currentQuality = data.quality || 'original';
+                            self._reloadWithQuality(data.quality, data.position);
+                        }
+                        break;
+
                     case 'error':
                         console.log('[Player] Iframe error: ' + (data.message || ''));
                         break;
@@ -260,6 +270,24 @@
                     App.API.saveProgress(self._videoPath, self._lastProgress.currentTime, self._lastProgress.duration);
                 }
             }, 10000);
+        },
+
+        /**
+         * Reload iframe with a different quality profile (ABR switch).
+         */
+        _reloadWithQuality: function(quality, position) {
+            if (!this._iframe) return;
+            var currentSrc = this._iframe.src;
+            // Remove existing quality param if present
+            currentSrc = currentSrc.replace(/&quality=[^&]*/g, '');
+            // Update position
+            currentSrc = currentSrc.replace(/([?&])pos=[^&]*/, '$1pos=' + Math.floor(position));
+            // Add quality param
+            if (quality && quality !== 'original') {
+                currentSrc += '&quality=' + quality;
+            }
+            console.log('[Player] ABR reload: ' + currentSrc);
+            this._iframe.src = currentSrc;
         },
 
         /**

@@ -12,19 +12,28 @@
         _refreshToken: localStorage.getItem('isiprime_refresh_token') || null,
         _isLocal: false,
         _refreshing: null,
+        _tvSerial: null,
+        _tvModel: null,
 
         /**
-         * Initialize: check if running on LAN (auto-auth).
+         * Initialize: detect TV serial number, then check LAN auth.
          * Returns true if locally authenticated.
          */
         init: function() {
             var self = this;
-            return fetch(App.Config.SERVER_URL + '/api/auth/status', {
-                credentials: 'include'
+            return this._detectTVSerial().then(function() {
+                return fetch(App.Config.SERVER_URL + '/api/auth/status', {
+                    credentials: 'include',
+                    headers: self._serialHeader()
+                });
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
                 self._isLocal = data.authenticated === true;
+                if (data.user) {
+                    self._username = data.user.username || null;
+                    self._userRole = data.user.role || null;
+                }
                 return self._isLocal;
             })
             .catch(function() {
@@ -33,10 +42,99 @@
         },
 
         /**
-         * Check if user is authenticated (locally or via token).
+         * Detect TV serial number via webOS Luna API.
+         * Falls back gracefully if not running on webOS.
          */
-        isAuthenticated: function() {
-            return this._isLocal || !!this._accessToken;
+        _detectTVSerial: function() {
+            var self = this;
+            // Check localStorage cache first
+            var cached = localStorage.getItem('isiprime_tv_serial');
+            if (cached) {
+                self._tvSerial = cached;
+                self._tvModel = localStorage.getItem('isiprime_tv_model');
+                return Promise.resolve();
+            }
+            // Load cached model even without serial
+            self._tvModel = localStorage.getItem('isiprime_tv_model');
+
+            // Not on webOS — skip
+            if (typeof webOS === 'undefined' && typeof PalmSystem === 'undefined') {
+                return Promise.resolve();
+            }
+
+            return new Promise(function(resolve) {
+                var resolved = false;
+                var done = function(serial) {
+                    if (resolved) return;
+                    resolved = true;
+                    if (serial) {
+                        self._tvSerial = serial;
+                        localStorage.setItem('isiprime_tv_serial', serial);
+                        console.log('[API] TV serial: ' + serial);
+                    }
+                    resolve();
+                };
+
+                // Strategy 1: PalmSystem.deviceInfo (sync, available on all webOS)
+                if (typeof PalmSystem !== 'undefined' && PalmSystem.deviceInfo) {
+                    try {
+                        var info = JSON.parse(PalmSystem.deviceInfo);
+                        if (info.modelName) {
+                            self._tvModel = info.modelName;
+                            localStorage.setItem('isiprime_tv_model', info.modelName);
+                        }
+                        if (info.serialNumber) {
+                            done(info.serialNumber);
+                            return;
+                        }
+                    } catch (e) { /* continue */ }
+                }
+
+                // Strategy 2: webOS.deviceInfo callback (webOSTV.js)
+                if (typeof webOS !== 'undefined' && webOS.deviceInfo) {
+                    try {
+                        webOS.deviceInfo(function(info) {
+                            if (info && info.serialNumber) {
+                                done(info.serialNumber);
+                            } else {
+                                self._lunaGetSerial(done);
+                            }
+                        });
+                    } catch (e) {
+                        self._lunaGetSerial(done);
+                    }
+                } else {
+                    self._lunaGetSerial(done);
+                }
+
+                // Timeout: don't block init
+                setTimeout(function() { done(null); }, 2000);
+            });
+        },
+
+        /**
+         * Try Luna Service to get serial number.
+         */
+        _lunaGetSerial: function(cb) {
+            if (typeof webOS === 'undefined' || !webOS.service || !webOS.service.request) return cb(null);
+            try {
+                webOS.service.request('luna://com.webos.service.tv.systemproperty', {
+                    method: 'getSystemInfo',
+                    parameters: { keys: ['serialNumber'] },
+                    onSuccess: function(res) { cb(res.serialNumber || null); },
+                    onFailure: function() { cb(null); }
+                });
+            } catch (e) { cb(null); }
+        },
+
+        /**
+         * Returns header object with TV serial if available.
+         */
+        _serialHeader: function() {
+            var h = {};
+            if (this._tvSerial) h['X-TV-Serial'] = this._tvSerial;
+            if (this._tvModel) h['X-TV-Model'] = this._tvModel;
+            return h;
         },
 
         /**
@@ -137,6 +235,10 @@
             var self = this;
             opts = opts || {};
             if (!opts.headers) opts.headers = {};
+
+            // Always send TV identity for user identification
+            if (this._tvSerial) opts.headers['X-TV-Serial'] = this._tvSerial;
+            if (this._tvModel) opts.headers['X-TV-Model'] = this._tvModel;
 
             if (this._isLocal) {
                 opts.credentials = 'include';

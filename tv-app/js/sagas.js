@@ -3,6 +3,7 @@
  * Sidebar with saga/collection list + grid of movie posters.
  * Movies not in local catalog shown in grayscale, clickable to send as request.
  * D-pad navigation, Magic Remote hover/click support.
+ * Filter input with webOS VKB support.
  *
  * Chromium ~53 compatible (no optional chaining, no nullish coalescing).
  */
@@ -28,6 +29,8 @@
         _selectedSagaId: null,
         _keyHandler: null,
         _allSagas: [],
+        _filteredSagas: [],
+        _filterInput: null,
         _navItems: [],
         _navFocusIndex: 0,
         _existingRequestIds: {},
@@ -36,6 +39,10 @@
         _sagaTooltipEl: null,
         _sagaTooltipTimer: null,
         _autoSelectTimer: null,
+        _keyElements: [],
+        _keyboardFocusIndex: 0,
+        _keyboardEl: null,
+        _keyboardDisplayEl: null,
 
         // =============================================
         //  SHOW / HIDE
@@ -97,6 +104,10 @@
                     return a.name.localeCompare(b.name, 'es');
                 });
 
+                // Reset filter
+                self._filteredSagas = self._allSagas;
+                if (self._filterInput) self._filterInput.value = '';
+
                 // Build sidebar
                 self._buildSagaList();
 
@@ -107,12 +118,12 @@
                     self._activePanel = 'grid';
                     self._gridFocusIndex = savedGridFocus;
                     // Focus will be set after grid loads
-                } else if (self._allSagas.length > 0) {
+                } else if (self._filteredSagas.length > 0) {
                     // Select first saga
                     self._activePanel = 'sagas';
                     self._sagaFocusIndex = 0;
                     self._updateSagaFocus(0);
-                    self._selectSaga(self._allSagas[0].id);
+                    self._selectSaga(self._filteredSagas[0].id);
                 } else {
                     self._showGridLoading('No hay sagas disponibles');
                 }
@@ -128,6 +139,11 @@
             this._movieElements = [];
             this._movieData = [];
             this._allSagas = [];
+            this._filteredSagas = [];
+            this._filterInput = null;
+            this._keyElements = [];
+            this._keyboardEl = null;
+            this._keyboardDisplayEl = null;
             this._navItems = [];
             this._sidebarEl = null;
             this._sagaListEl = null;
@@ -155,6 +171,7 @@
         // =============================================
 
         _buildUI: function() {
+            var self = this;
             var layout = App.SidebarGridView.buildLayout(this._container, 'Sagas');
             this._sidebarEl = layout.sidebarEl;
             this._sagaListEl = layout.listEl;
@@ -162,11 +179,68 @@
             this._contentTitleEl = layout.contentTitleEl;
             this._gridEl = layout.gridEl;
 
+            // Filter input (inserted before the saga list)
+            var filterWrap = document.createElement('div');
+            filterWrap.className = 'saga-filter-wrap';
+
+            var filterInput = document.createElement('input');
+            filterInput.type = 'text';
+            filterInput.className = 'saga-filter-input';
+            filterInput.placeholder = 'Buscar saga...';
+            filterInput.setAttribute('autocomplete', 'off');
+            filterInput.setAttribute('autocorrect', 'off');
+            filterInput.setAttribute('autocapitalize', 'off');
+            filterInput.setAttribute('spellcheck', 'false');
+            this._filterInput = filterInput;
+
+            filterInput.addEventListener('input', function() {
+                self._applyFilter();
+            });
+
+            // Magic Remote click → focus opens VKB
+            filterInput.addEventListener('focus', function() {
+                self._activePanel = 'filter';
+                self._clearSagaFocus();
+                self._clearGridFocus();
+                filterInput.classList.add('focused');
+            });
+
+            // Wrap with clear button
+            var inputWrapper = App.wrapClearable(filterInput);
+            filterWrap.appendChild(inputWrapper);
+            this._sidebarEl.insertBefore(filterWrap, this._sagaListEl);
+
             // Saga-specific: name tooltip (large floating label)
             this._sagaTooltipEl = document.createElement('div');
             this._sagaTooltipEl.className = 'saga-name-tooltip';
             this._sagaTooltipEl.style.display = 'none';
             this._container.appendChild(this._sagaTooltipEl);
+
+            // On-screen keyboard panel (shown in content area when filter active)
+            var kbPanel = document.createElement('div');
+            kbPanel.className = 'saga-keyboard-panel';
+            kbPanel.style.display = 'none';
+
+            var kbInputDisplay = document.createElement('div');
+            kbInputDisplay.className = 'search-input-display';
+
+            var kbTextSpan = document.createElement('span');
+            kbInputDisplay.appendChild(kbTextSpan);
+
+            var kbCursor = document.createElement('span');
+            kbCursor.className = 'search-input-cursor';
+            kbInputDisplay.appendChild(kbCursor);
+
+            kbPanel.appendChild(kbInputDisplay);
+
+            var kbGrid = document.createElement('div');
+            kbGrid.className = 'keyboard-grid';
+            App.Keyboard.buildKeys(this, kbGrid);
+            kbPanel.appendChild(kbGrid);
+
+            this._keyboardEl = kbPanel;
+            this._keyboardDisplayEl = kbTextSpan;
+            this._contentEl.appendChild(kbPanel);
         },
 
         _showSagaTooltip: function(text, targetEl) {
@@ -202,8 +276,9 @@
             this._sagaElements = [];
             this._sagaListEl.innerHTML = '';
 
-            for (var i = 0; i < this._allSagas.length; i++) {
-                var saga = this._allSagas[i];
+            var sagas = this._filteredSagas;
+            for (var i = 0; i < sagas.length; i++) {
+                var saga = sagas[i];
                 var item = document.createElement('div');
                 item.className = 'genre-list-item focusable';
                 item.setAttribute('data-saga-id', saga.id);
@@ -235,7 +310,9 @@
                         self._activePanel = 'sagas';
                         self._clearGridFocus();
                         self._updateSagaFocus(idx);
-                        self._showSagaTooltip(self._allSagas[idx].name, el);
+                        if (self._filteredSagas[idx]) {
+                            self._showSagaTooltip(self._filteredSagas[idx].name, el);
+                        }
                     });
                     el.addEventListener('mouseleave', function() {
                         self._hideSagaTooltip();
@@ -246,6 +323,39 @@
             // Mark first as active
             if (this._sagaElements.length > 0) {
                 this._sagaElements[0].classList.add('active');
+            }
+        },
+
+        // =============================================
+        //  FILTER
+        // =============================================
+
+        _normalizeText: function(str) {
+            return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        },
+
+        _applyFilter: function() {
+            var query = this._normalizeText(this._filterInput.value);
+
+            if (!query) {
+                this._filteredSagas = this._allSagas;
+            } else {
+                this._filteredSagas = [];
+                for (var i = 0; i < this._allSagas.length; i++) {
+                    if (this._normalizeText(this._allSagas[i].name).indexOf(query) !== -1) {
+                        this._filteredSagas.push(this._allSagas[i]);
+                    }
+                }
+            }
+
+            this._buildSagaList();
+            this._sagaFocusIndex = 0;
+
+            if (this._filteredSagas.length > 0) {
+                this._selectSaga(this._filteredSagas[0].id);
+            } else {
+                this._showGridLoading('No se encontraron sagas');
+                this._contentTitleEl.textContent = '';
             }
         },
 
@@ -503,11 +613,11 @@
 
         _updateSagaFocus: function(index) {
             this._sagaFocusIndex = App.SidebarGridView.updateFocus(
-                this._sagaElements, index, this._sidebarEl);
+                this._sagaElements, index, this._sagaListEl);
             // Saga-specific: show large tooltip with saga name
-            if (this._allSagas[this._sagaFocusIndex]) {
+            if (this._filteredSagas[this._sagaFocusIndex]) {
                 this._showSagaTooltip(
-                    this._allSagas[this._sagaFocusIndex].name,
+                    this._filteredSagas[this._sagaFocusIndex].name,
                     this._sagaElements[this._sagaFocusIndex]);
             }
         },
@@ -529,7 +639,83 @@
         _clearAllFocus: function() {
             this._clearSagaFocus();
             this._clearGridFocus();
+            this._clearKeyboardFocus();
+            if (this._filterInput) this._filterInput.classList.remove('focused');
             App.NavBar.clearFocus(this);
+        },
+
+        // =============================================
+        //  ON-SCREEN KEYBOARD
+        // =============================================
+
+        _showKeyboard: function() {
+            this._searchText = this._filterInput ? this._filterInput.value : '';
+            if (this._keyboardDisplayEl) this._keyboardDisplayEl.textContent = this._searchText;
+            this._keyboardEl.style.display = '';
+            this._gridEl.style.display = 'none';
+            this._contentTitleEl.style.display = 'none';
+            if (this._loadingEl) this._loadingEl.style.display = 'none';
+            this._activePanel = 'keyboard';
+            this._clearSagaFocus();
+            this._clearGridFocus();
+            if (this._filterInput) this._filterInput.classList.remove('focused');
+            App.Keyboard.updateFocus(this, this._keyboardFocusIndex);
+        },
+
+        _hideKeyboard: function() {
+            if (this._keyboardEl) this._keyboardEl.style.display = 'none';
+            this._gridEl.style.display = '';
+            this._contentTitleEl.style.display = '';
+            App.Keyboard.clearFocus(this);
+        },
+
+        // Keyboard context interface (required by App.Keyboard)
+        _updateDisplay: function() {
+            if (this._keyboardDisplayEl) {
+                this._keyboardDisplayEl.textContent = this._searchText;
+            }
+        },
+
+        _doSearch: function() {
+            if (this._filterInput) {
+                this._filterInput.value = this._searchText;
+            }
+            this._applyFilter();
+        },
+
+        _updateKeyboardFocus: function(index) {
+            App.Keyboard.updateFocus(this, index);
+        },
+
+        _clearKeyboardFocus: function() {
+            App.Keyboard.clearFocus(this);
+        },
+
+        _switchToResults: function() {
+            this._hideKeyboard();
+            if (this._sagaElements.length > 0) {
+                this._activePanel = 'sagas';
+                this._updateSagaFocus(this._sagaFocusIndex);
+            } else {
+                this._activePanel = 'filter';
+                if (this._filterInput) this._filterInput.classList.add('focused');
+            }
+        },
+
+        _clearResultsFocus: function() {
+            this._clearSagaFocus();
+            this._clearGridFocus();
+        },
+
+        _handleKeyboardNav: function(key) {
+            var self = this;
+            App.Keyboard.handleNav(this, key, {
+                onUp: function() {
+                    self._hideKeyboard();
+                    self._activePanel = 'filter';
+                    if (self._filterInput) self._filterInput.classList.add('focused');
+                }
+            });
         },
 
         // =============================================
@@ -545,27 +731,99 @@
         _handleNavNav: function(key) {
             var self = this;
             App.NavBar.handleKey(this, key, function() {
-                if (self._prevPanel === 'grid' && self._movieElements.length > 0) {
-                    self._activePanel = 'grid';
-                    self._updateGridFocus(self._gridFocusIndex);
-                } else {
-                    self._activePanel = 'sagas';
-                    self._updateSagaFocus(self._sagaFocusIndex);
-                }
+                // DOWN from nav → filter input
+                self._activePanel = 'filter';
+                self._filterInput.classList.add('focused');
             });
         },
 
         // =============================================
-        //  KEY HANDLER
+        //  KEY HANDLER (custom — handles BACK in filter)
         // =============================================
 
         _setupKeyHandler: function() {
             var self = this;
-            App.SidebarGridView.setupKeyHandler(this, {
-                nav: function(key) { self._handleNavNav(key); },
-                sagas: function(key) { self._handleSagasNav(key); },
-                grid: function(key) { self._handleGridNav(key); }
-            });
+
+            if (this._keyHandler) {
+                document.removeEventListener('keydown', this._keyHandler, true);
+            }
+            if (App.Focus && App.Focus.disable) {
+                App.Focus.disable();
+            }
+
+            this._keyHandler = function(e) {
+                if (!self._container || self._container.style.display === 'none') return;
+                var key = e.keyCode;
+
+                // BACK from keyboard → close keyboard, return to filter
+                if (key === App.Config.KEYS.BACK) {
+                    if (self._activePanel === 'keyboard') {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        self._hideKeyboard();
+                        self._activePanel = 'filter';
+                        if (self._filterInput) self._filterInput.classList.add('focused');
+                        return;
+                    }
+                    if (self._activePanel === 'filter' && self._filterInput && self._filterInput.value) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        self._searchText = '';
+                        self._filterInput.value = '';
+                        self._filterInput.blur();
+                        self._applyFilter();
+                        return;
+                    }
+                    return; // Let router handle BACK normally
+                }
+
+                // In filter mode, let character keys pass through for physical keyboard typing
+                if (self._activePanel === 'filter' &&
+                    key !== App.Config.KEYS.UP && key !== App.Config.KEYS.DOWN &&
+                    key !== App.Config.KEYS.LEFT && key !== App.Config.KEYS.RIGHT &&
+                    key !== App.Config.KEYS.OK) {
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                switch (self._activePanel) {
+                    case 'nav': self._handleNavNav(key); break;
+                    case 'filter': self._handleFilterNav(key); break;
+                    case 'keyboard': self._handleKeyboardNav(key); break;
+                    case 'sagas': self._handleSagasNav(key); break;
+                    case 'grid': self._handleGridNav(key); break;
+                }
+            };
+
+            document.addEventListener('keydown', this._keyHandler, true);
+        },
+
+        // =============================================
+        //  FILTER PANEL NAVIGATION
+        // =============================================
+
+        _handleFilterNav: function(key) {
+            switch (key) {
+                case App.Config.KEYS.UP:
+                    this._filterInput.classList.remove('focused');
+                    this._switchToNav();
+                    break;
+
+                case App.Config.KEYS.DOWN:
+                    this._filterInput.classList.remove('focused');
+                    if (this._sagaElements.length > 0) {
+                        this._activePanel = 'sagas';
+                        this._sagaFocusIndex = 0;
+                        this._updateSagaFocus(0);
+                    }
+                    break;
+
+                case App.Config.KEYS.OK:
+                    this._showKeyboard();
+                    break;
+            }
         },
 
         // =============================================
@@ -576,7 +834,7 @@
             var self = this;
             if (this._autoSelectTimer) clearTimeout(this._autoSelectTimer);
             this._autoSelectTimer = setTimeout(function() {
-                var saga = self._allSagas[idx];
+                var saga = self._filteredSagas[idx];
                 if (saga && saga.id !== self._selectedSagaId) {
                     self._selectSaga(saga.id);
                 }
@@ -593,8 +851,10 @@
                         this._updateSagaFocus(idx - 1);
                         this._autoSelectSaga(idx - 1);
                     } else {
+                        // UP from first saga → filter input
                         this._clearSagaFocus();
-                        this._switchToNav();
+                        this._activePanel = 'filter';
+                        this._filterInput.classList.add('focused');
                     }
                     break;
 
@@ -612,7 +872,7 @@
 
                 case App.Config.KEYS.RIGHT:
                 case App.Config.KEYS.OK:
-                    var saga = this._allSagas[idx];
+                    var saga = this._filteredSagas[idx];
                     if (saga) {
                         var sameSaga = (saga.id === this._selectedSagaId);
                         if (!sameSaga) this._selectSaga(saga.id);

@@ -2,6 +2,125 @@
 
 ---
 
+## Sesion: 2026-03-06 (noche)
+
+### Cambios Realizados — Newsletter: Recipient Selection + History Resend
+
+**Base de datos (`db/users-db.js`):**
+- Migracion: `ALTER TABLE newsletter_logs ADD COLUMN html_content TEXT`
+- `logNewsletter()` actualizado para aceptar y guardar `htmlContent`
+- Nueva funcion `getNewsletterById(id)` — SELECT con JOIN a users para `sent_by_username`
+
+**API (`routes/newsletter.js`):**
+- `moviesForEmail()` — convierte URLs proxy `/api/img/w342/xxx.jpg` a TMDB publicas via `posterCache.toTMDBURL()` (email clients no acceden a LAN)
+- `POST /send` — acepta `recipientIds` array para filtrar destinatarios
+- `POST /send` y `POST /test` — guardan `htmlContent` en newsletter_logs
+- `GET /:id` (NUEVO) — devuelve newsletter completo con `html_content`
+- `POST /:id/resend` (NUEVO) — reenvia HTML guardado a destinatarios seleccionados, loguea como status `resent`
+
+### Archivos Afectados
+- `db/users-db.js`: columna `html_content`, `logNewsletter()`, `getNewsletterById()` + exports
+- `routes/newsletter.js`: `moviesForEmail()`, recipientIds filtering, 2 nuevos endpoints
+
+### Notas
+- Newsletters enviados antes del fix no tienen `html_content` (mostrarán "Preview no disponible")
+- `posterCache.toTMDBURL()` extrae el path del poster y construye URL TMDB completa
+- Los newsletters reenviados se loguean como nuevas entradas con subject `[Reenvio] ...` y status `resent`
+
+---
+
+## Sesion: 2026-03-06 (tarde)
+
+### Cambios Realizados — Per-user TV Identification
+- **`db/users-db.js`**: 2 nuevas funciones para identificar usuario por TV
+  - `findTVBySerial(serial)` — busca TV por serial en `user_tvs`, devuelve user info (JOIN users)
+  - `findTVByModel(model)` — busca TV por modelo, solo devuelve si hay exactamente 1 match (evita ambiguedad)
+- **`lib/auth.js`**: LAN auto-auth mejorado — identifica usuario por headers `X-TV-Serial` / `X-TV-Model` antes de caer al generico `id:1, username:'local'`
+- **Resultado**: favoritos, progreso, continue-watching son ahora individuales por TV/usuario en LAN
+
+### Cambios Realizados — Guardianes Vol.3 Fix
+- Reemplazado archivo 10-bit H.264 (`yuv420p10le`) con version 8-bit (`yuv420p`) compatible webOS
+- Cache SQLite actualizado con nuevo archivo
+
+### Cambios Realizados — Transmission Wrapper
+- Bash wrapper para `torrent-done.js` — Node.js crashea con `node::Start` cuando lo llama Transmission desde systemd
+- Wrapper establece PATH, HOME, cd al directorio, ejecuta con `exec node`
+- Configurado en `/home/isidro/.config/transmission-daemon/settings.json`
+
+### Archivos Afectados
+- `db/users-db.js`: `findTVBySerial()`, `findTVByModel()` + exports
+- `lib/auth.js`: authMiddleware LAN block — TV serial/model lookup
+- `IsiPrime-WebOS-Native/js/api.js`: `_detectTVSerial()` (3 estrategias), `_serialHeader()`, headers en `_fetch()`
+- `IsiPrime-WebOS-Native/js/requests.js`: `requestedBy` = username, admin = role-based
+- `tv-app/js/api.js`, `tv-app/js/requests.js`: copias sincronizadas
+
+### Notas
+- webOS 4.0 `PalmSystem.deviceInfo` NO incluye `serialNumber`, solo `modelName` → fallback por modelo
+- webOS 6.0 `PalmSystem.deviceInfo` incluye ambos (serial + model)
+- Modelo funciona como identificador unico porque todos los TVs registrados tienen modelos distintos
+- Luna Service `com.webos.service.tv.systemproperty` falla en web-type apps sin permisos explícitos
+
+---
+
+## Sesion: 2026-03-06 (manana)
+
+### Cambios Realizados — Backdrop Quality Fix
+- **`lib/utils.js` `ensureFullPosterURL()`**: 2 bugs corregidos
+  - Paths `/api/img/w342/xxx.jpg` se devolvian sin cambiar size → ahora reemplazan con regex
+  - TMDB legacy URLs usaban size de la URL en vez del parametro solicitado
+- **`lib/normalizers.js`**: backdrop size cambiado a `w780` (equilibrio calidad/peso)
+- **`lib/poster-cache.js`**: prewarm descarga backdrops en `w780` (antes `w342`)
+- Prewarm ejecutado en NAS: 837 backdrops en 11s
+
+### Cambios Realizados — HEVC Conversion
+- **`scripts/reencode-beauty.sh`** (NUEVO): conversion HEVC 4K → H.264 1080p para 5 episodios "The Beauty"
+  - Queued: espera fin de `reencode-heavy-movies` antes de empezar
+  - ffmpeg libx264 preset faster crf 20
+  - Email de notificacion al completar
+
+### Archivos Afectados
+- `lib/utils.js`: fix `ensureFullPosterURL()` — size replacement
+- `lib/normalizers.js`: backdrop `w780`
+- `lib/poster-cache.js`: prewarm backdrop `w780`
+- `scripts/reencode-beauty.sh`: HEVC→H.264 conversion (NUEVO)
+
+---
+
+## Sesion: 2026-03-05
+
+### Cambios Realizados — Streaming Mejorado
+- **Dynamic Buffer (Phase 4)**: tv-player mide throughput con sliding window 10s, ajusta buffers automáticamente (fast >5Mbps: 45s/20s, normal 1-5Mbps: 30s/15s, slow <1Mbps: 60s/30s)
+- **ABR Adaptive Bitrate (Phase 2)**: endpoint `/video-profiles/:filename` devuelve perfiles según bitrate. `/stream-fmp4/` acepta `?quality=medium|low` para re-encode on-the-fly (720p 2500k / 480p 1000k)
+- **Probe on-demand (Phase 3)**: `/stream-fmp4/` handler async, ejecuta FFprobe si película no tiene bitrate en SQLite (~200ms), guarda resultado en DB
+- **Viewport `/tv` para PC**: meta viewport `width=device-width`, CSS transform `scale(Math.min(w/1920, h/1080))` con `transform-origin: 0 0`
+
+### Cambios Realizados — API Usuarios
+- `GET /api/auth/users` enriquecido con TVs (join `user_tvs`) + watching status (`getActiveViewers()`)
+- `PUT /api/auth/users/:id` acepta `displayName`, `role`, `emailNotifications` además de `email`
+- `POST /api/auth/users/:id/tvs` — añadir TV a usuario
+- `DELETE /api/auth/users/:id/tvs/:tvId` — eliminar TV de usuario
+- Fix: `/api/auth/refresh` devuelve objeto `user` completo (antes causaba role=viewer)
+
+### Archivos Afectados
+- `server.js`: ABR endpoint, quality param en fMP4, dynamic buffer en tv-player inline, viewport `/tv`, probe on-demand async
+- `routes/auth.js`: endpoints TV CRUD, GET /users enriquecido, PUT /:id genérico
+- `db/media-db.js`: query extendida `OR bitrate IS NULL` (837 películas re-probed en startup)
+- `db/users-db.js`: `getActiveViewers()` — detecta usuarios viendo (progress <3min)
+- `IsiPrime-WebOS-Native/js/player.js`: handling `quality-change` + `_reloadWithQuality`
+
+### Cambios Realizados — Conversión Batch (scripts NAS)
+- `scripts/convert-series-batch.js` (NUEVO): conversión recursiva MKV/AVI→MP4 en `/mnt/peliculas/Series/`
+- `scripts/reencode-heavy-movies.js` (NUEVO): re-encode 27 películas >12000kbps a 8000k target
+- `scripts/run-all-conversions.sh` (NUEVO): cadena automática series→películas con emails via nodemailer
+- Lanzado en NAS con `setsid nohup` (sobrevive desconexión SSH)
+
+### Notas
+- 837 películas tenían video_codec pero no bitrate → re-probed en startup (~56s). Distribución: 830 h264+aac, 7 hevc+aac
+- ABR: checkABR en tv-player evalúa throughput cada medición, postMessage `quality-change` al parent
+- Re-encode películas: ~206GB ahorro estimado, safety checks (ratio output/input, probe result)
+
+---
+
 ## Sesion: 2026-02-22 11:57
 
 ### Cambios Realizados

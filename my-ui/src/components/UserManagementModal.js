@@ -1,6 +1,324 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Trash2, Copy, Check, UserPlus, Mail, Shield, Eye } from 'lucide-react';
+import { X, Trash2, Copy, Check, UserPlus, Mail, Shield, ChevronDown, ChevronRight, Monitor, Plus, User, Wifi, Play } from 'lucide-react';
+
+function movieNameFromPath(videoPath) {
+  if (!videoPath) return '';
+  const name = videoPath.split('/').pop().replace(/\.\w+$/, '');
+  return name;
+}
+
+function UserCard({ user, authState, onDeleteUser, onUpdateUser, onAddUserTV, onDeleteUserTV, formatDate }) {
+  const [expanded, setExpanded] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailValue, setEmailValue] = useState(user.email || '');
+  const [showAddTV, setShowAddTV] = useState(false);
+  const [tvForm, setTvForm] = useState({ brand: 'LG', model: '', ipAddress: '', connectionType: '', year: '', webosVersion: '', aresDeviceName: '', notes: '' });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const isSelf = user.id === authState?.user?.id;
+
+  const handleEmailSave = () => {
+    onUpdateUser(user.id, { email: emailValue });
+    setEditingEmail(false);
+  };
+
+  const handleEmailKeyDown = (e) => {
+    if (e.key === 'Enter') handleEmailSave();
+    if (e.key === 'Escape') { setEditingEmail(false); setEmailValue(user.email || ''); }
+  };
+
+  const handleToggleNotifications = () => {
+    onUpdateUser(user.id, { emailNotifications: !user.email_notifications });
+  };
+
+  const handleAddTV = () => {
+    if (!tvForm.model.trim()) return;
+    onAddUserTV(user.id, tvForm);
+    setTvForm({ brand: 'LG', model: '', ipAddress: '', connectionType: '', year: '', webosVersion: '', aresDeviceName: '', notes: '' });
+    setShowAddTV(false);
+    setShowAdvanced(false);
+  };
+
+  return (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+      {/* Header — always visible */}
+      <div
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-800/80 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${user.active ? 'bg-green-400' : 'bg-red-400'} ${user.watching ? 'animate-pulse' : ''}`} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-medium text-sm truncate">{user.display_name || user.username}</span>
+              {user.display_name && user.display_name !== user.username && (
+                <span className="text-slate-500 text-xs">@{user.username}</span>
+              )}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                user.role === 'admin' ? 'bg-purple-900/50 text-purple-300' : 'bg-slate-700 text-slate-300'
+              }`}>
+                {user.role}
+              </span>
+              {user.tvs && user.tvs.length > 0 && (
+                <span className="text-slate-500 text-xs flex items-center gap-0.5">
+                  <Monitor size={10} /> {user.tvs.length}
+                </span>
+              )}
+            </div>
+            {user.watching ? (
+              <p className="text-xs mt-0.5 text-green-400 flex items-center gap-1">
+                <Play size={10} className="fill-green-400" />
+                <span className="truncate max-w-[250px]">Viendo: {movieNameFromPath(user.watching.video_path)}</span>
+              </p>
+            ) : (
+              <p className="text-slate-500 text-xs mt-0.5">
+                {user.last_login ? `Ultimo acceso: ${formatDate(user.last_login)}` : 'Sin acceso'}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Eliminar usuario "${user.username}"?`)) {
+                onDeleteUser(user.id);
+              }
+            }}
+            disabled={isSelf}
+            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
+            title={isSelf ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
+          >
+            <Trash2 size={16} />
+          </button>
+          {expanded ? <ChevronDown size={18} className="text-slate-400" /> : <ChevronRight size={18} className="text-slate-400" />}
+        </div>
+      </div>
+
+      {/* Expandable body */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-4 border-t border-slate-700/50 pt-3">
+              {/* Section: User Data */}
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <User size={12} /> Datos de usuario
+                </h4>
+                <div className="space-y-2 text-sm">
+                  {/* Email */}
+                  <div className="flex items-center gap-2">
+                    <Mail size={13} className="text-slate-500 flex-shrink-0" />
+                    {editingEmail ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="email"
+                          value={emailValue}
+                          onChange={e => setEmailValue(e.target.value)}
+                          onKeyDown={handleEmailKeyDown}
+                          onBlur={handleEmailSave}
+                          autoFocus
+                          className="px-2 py-1 bg-slate-700 rounded border border-slate-600 text-white text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          placeholder="email@ejemplo.com"
+                        />
+                      </div>
+                    ) : (
+                      <span
+                        className="text-slate-300 cursor-pointer hover:text-indigo-400 transition-colors"
+                        onClick={() => { setEmailValue(user.email || ''); setEditingEmail(true); }}
+                        title="Click para editar"
+                      >
+                        {user.email || <span className="text-slate-600 italic">Sin email — click para añadir</span>}
+                      </span>
+                    )}
+                  </div>
+                  {/* Created */}
+                  <div className="flex items-center gap-2 text-slate-500">
+                    <span className="text-xs">Creado: {formatDate(user.created_at)}</span>
+                  </div>
+                  {/* Email notifications toggle */}
+                  {user.email && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 text-xs">Notificaciones email:</span>
+                      <button
+                        onClick={handleToggleNotifications}
+                        className={`relative w-9 h-5 rounded-full transition-colors ${
+                          user.email_notifications ? 'bg-indigo-600' : 'bg-slate-600'
+                        }`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                          user.email_notifications ? 'left-[18px]' : 'left-0.5'
+                        }`} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section: TVs */}
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Monitor size={12} /> TVs asociadas
+                </h4>
+
+                {/* TV List */}
+                {user.tvs && user.tvs.length > 0 ? (
+                  <div className="space-y-2 mb-2">
+                    {user.tvs.map(tv => (
+                      <div key={tv.id} className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+                        <div className="flex items-start justify-between">
+                          <div className="min-w-0">
+                            <div className="text-white text-sm font-medium">
+                              {tv.brand || 'LG'} {tv.model}
+                              {tv.year ? <span className="text-slate-500 font-normal"> ({tv.year})</span> : null}
+                            </div>
+                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-slate-400">
+                              {tv.webos_version && <span>webOS {tv.webos_version}</span>}
+                              {tv.ip_address && <span>{tv.ip_address}</span>}
+                              {tv.connection_type && (
+                                <span className="flex items-center gap-0.5">
+                                  <Wifi size={10} /> {tv.connection_type}
+                                </span>
+                              )}
+                              {tv.ares_device_name && <span>ares: {tv.ares_device_name}</span>}
+                            </div>
+                            {tv.notes && <p className="text-slate-500 text-xs mt-1 italic">{tv.notes}</p>}
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Eliminar TV "${tv.model}"?`)) {
+                                onDeleteUserTV(user.id, tv.id);
+                              }
+                            }}
+                            className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-900/20 rounded transition-all flex-shrink-0"
+                            title="Eliminar TV"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-600 text-xs mb-2 italic">Sin TVs registradas</p>
+                )}
+
+                {/* Add TV */}
+                {showAddTV ? (
+                  <div className="bg-slate-900/50 rounded-lg p-3 border border-indigo-700/30 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Marca (ej: LG)"
+                        value={tvForm.brand}
+                        onChange={e => setTvForm({ ...tvForm, brand: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Modelo *"
+                        value={tvForm.model}
+                        onChange={e => setTvForm({ ...tvForm, model: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="IP (ej: 192.168.1.94)"
+                        value={tvForm.ipAddress}
+                        onChange={e => setTvForm({ ...tvForm, ipAddress: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <select
+                        value={tvForm.connectionType}
+                        onChange={e => setTvForm({ ...tvForm, connectionType: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="">Conexion...</option>
+                        <option value="Wired">Wired</option>
+                        <option value="WiFi">WiFi</option>
+                      </select>
+                      <input
+                        type="number"
+                        placeholder="Año (ej: 2021)"
+                        value={tvForm.year}
+                        onChange={e => setTvForm({ ...tvForm, year: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="webOS (ej: 6.0)"
+                        value={tvForm.webosVersion}
+                        onChange={e => setTvForm({ ...tvForm, webosVersion: e.target.value })}
+                        className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    {/* Advanced fields */}
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      className="text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+                    >
+                      {showAdvanced ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                      Campos avanzados
+                    </button>
+                    {showAdvanced && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nombre ares (ej: miLGTV)"
+                          value={tvForm.aresDeviceName}
+                          onChange={e => setTvForm({ ...tvForm, aresDeviceName: e.target.value })}
+                          className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Notas"
+                          value={tvForm.notes}
+                          onChange={e => setTvForm({ ...tvForm, notes: e.target.value })}
+                          className="px-2 py-1.5 bg-slate-700 rounded border border-slate-600 text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAddTV}
+                        disabled={!tvForm.model.trim()}
+                        className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => { setShowAddTV(false); setShowAdvanced(false); }}
+                        className="px-3 py-1.5 bg-slate-700 text-slate-300 text-xs rounded hover:bg-slate-600 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAddTV(true)}
+                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    <Plus size={13} /> Añadir TV
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function UserManagementModal({
   userManagementModal, users, invitations, loadingUsers, activeTab,
@@ -8,7 +326,8 @@ export default function UserManagementModal({
   invitationForm, creatingInvitation, lastCreatedInvitation,
   authState,
   onTabChange, onCreateUserFormChange, onInvitationFormChange,
-  onCreateUser, onDeleteUser, onUpdateUserEmail, onCreateInvitation, onDeleteInvitation,
+  onCreateUser, onDeleteUser, onUpdateUser, onUpdateUserEmail, onAddUserTV, onDeleteUserTV,
+  onCreateInvitation, onDeleteInvitation,
   onDismissInvitation, onClose
 }) {
   const [copiedId, setCopiedId] = useState(null);
@@ -148,59 +467,19 @@ export default function UserManagementModal({
                     </button>
                   </div>
 
-                  {/* Users List */}
+                  {/* Users List — Expandable Cards */}
                   <div className="space-y-2">
                     {users.map(user => (
-                      <div key={user.id} className="flex items-center justify-between bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${user.active ? 'bg-green-400' : 'bg-red-400'}`} />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-white font-medium text-sm truncate">{user.display_name || user.username}</span>
-                              {user.display_name && user.display_name !== user.username && (
-                                <span className="text-slate-500 text-xs">@{user.username}</span>
-                              )}
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                user.role === 'admin' ? 'bg-purple-900/50 text-purple-300' : 'bg-slate-700 text-slate-300'
-                              }`}>
-                                {user.role}
-                              </span>
-                            </div>
-                            {user.email && (
-                              <span className="text-slate-500 text-xs flex items-center gap-1">
-                                <Mail size={10} /> {user.email}
-                              </span>
-                            )}
-                            <p className="text-slate-500 text-xs mt-0.5">
-                              {user.last_login ? `Ultimo acceso: ${formatDate(user.last_login)}` : 'Sin acceso'}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            onClick={() => {
-                              const newEmail = window.prompt('Email para ' + user.username + ':', user.email || '');
-                              if (newEmail !== null) onUpdateUserEmail(user.id, newEmail);
-                            }}
-                            className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/20 rounded-lg transition-all flex-shrink-0"
-                            title="Editar email"
-                          >
-                            <Mail size={16} />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`Eliminar usuario "${user.username}"?`)) {
-                                onDeleteUser(user.id);
-                              }
-                            }}
-                            disabled={user.id === authState?.user?.id}
-                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
-                            title={user.id === authState?.user?.id ? 'No puedes eliminarte a ti mismo' : 'Eliminar usuario'}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
+                      <UserCard
+                        key={user.id}
+                        user={user}
+                        authState={authState}
+                        onDeleteUser={onDeleteUser}
+                        onUpdateUser={onUpdateUser}
+                        onAddUserTV={onAddUserTV}
+                        onDeleteUserTV={onDeleteUserTV}
+                        formatDate={formatDate}
+                      />
                     ))}
                   </div>
                 </>

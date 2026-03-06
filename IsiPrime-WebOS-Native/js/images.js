@@ -96,16 +96,36 @@
 
         /**
          * Prefetch images into browser cache (no DOM needed).
+         * Limits _prefetched to MAX_PREFETCHED entries to prevent unbounded growth.
          * @param {Array} urls - Array of image URLs to prefetch.
          */
+        MAX_PREFETCHED: 200,
         prefetch: function(urls) {
             if (!urls || !urls.length) return;
+            // Evict oldest entries if over limit
+            var keys = Object.keys(this._prefetched);
+            if (keys.length > this.MAX_PREFETCHED) {
+                var toRemove = keys.length - this.MAX_PREFETCHED + urls.length;
+                for (var r = 0; r < toRemove && r < keys.length; r++) {
+                    delete this._prefetched[keys[r]];
+                }
+            }
             for (var i = 0; i < urls.length; i++) {
                 if (!urls[i] || this._prefetched[urls[i]]) continue;
                 this._prefetched[urls[i]] = true;
                 var img = new Image();
                 img.src = urls[i];
             }
+        },
+
+        /**
+         * Flush all image state to free memory.
+         * Clears queue, prefetch cache, and resets loading counter.
+         */
+        flush: function() {
+            this._queue = [];
+            this._prefetched = {};
+            this._loading = 0;
         },
 
         /**

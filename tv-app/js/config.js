@@ -48,7 +48,7 @@
 
         backdropUrl: function(path) {
             if (!path) return '';
-            // Proxy URL from server (/api/img/w1280/xxx.jpg)
+            // Proxy URL from server (/api/img/w780/xxx.jpg)
             if (path.indexOf('/api/img/') === 0) return this.SERVER_URL + path;
             if (path.indexOf('http') === 0) return path;
             return this.TMDB_IMG + 'w1280' + path;

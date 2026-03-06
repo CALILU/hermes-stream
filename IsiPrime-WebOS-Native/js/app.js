@@ -200,7 +200,7 @@
         }
 
         // Set version text next to logo
-        var appVersion = (App.Config && App.Config.APP_VERSION) || '2.11.2';
+        var appVersion = (App.Config && App.Config.APP_VERSION) || '2.12.0';
         var logoDiv = document.querySelector('.nav-logo');
         if (logoDiv) {
             var versionEl = document.getElementById('nav-version');
@@ -351,7 +351,7 @@
 
         // Inject version label next to logo
         setTimeout(function() {
-            var appVersion = (App.Config && App.Config.APP_VERSION) || '2.11.2';
+            var appVersion = (App.Config && App.Config.APP_VERSION) || '2.12.0';
             var logoImg = document.querySelector('.nav-logo-img');
             if (logoImg && !document.getElementById('nav-version')) {
                 var v = document.createElement('span');
@@ -362,6 +362,76 @@
             }
         }, 3000);
     }
+
+    // ---- Visibility change: free memory when app goes to background ----
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // App went to background (user pressed HOME on remote)
+            // Pause player if active
+            if (App.Router && App.Router.getCurrentState() === 'PLAYER' && App.Player && App.Player._iframe) {
+                App.Player._sendCommand('pause');
+            }
+            // Flush image cache to free memory
+            if (App.Images && App.Images.flush) {
+                App.Images.flush();
+            }
+        } else {
+            // App returned to foreground — verify player iframe is still alive
+            if (App.Router && App.Router.getCurrentState() === 'PLAYER' && App.Player) {
+                if (!App.Player._iframe || !App.Player._iframe.contentWindow) {
+                    // iframe was killed by webOS while in background — recover
+                    App.Player.stop();
+                    App.Router.clearStack();
+                    App.Router.replace('HOME');
+                }
+            }
+        }
+    });
+
+    // ---- Memory monitor (webOS 6.0+ / Chromium ~87 only) ----
+    // Feature-detected: performance.memory only exists in Chrome-based browsers
+    (function() {
+        if (!window.performance || !performance.memory) return;
+
+        var memoryCheckInterval = null;
+
+        function startMemoryMonitor() {
+            if (memoryCheckInterval) return;
+            memoryCheckInterval = setInterval(function() {
+                var mem = performance.memory;
+                if (!mem || !mem.jsHeapSizeLimit) return;
+                var usage = mem.usedJSHeapSize / mem.jsHeapSizeLimit;
+                if (usage > 0.75) {
+                    console.warn('[Memory] Heap at ' + Math.round(usage * 100) + '% — emergency cleanup');
+                    // Purge inactive views
+                    if (App.Router && App.Router._purgeInactiveViews) {
+                        App.Router._purgeInactiveViews();
+                    }
+                }
+            }, 30000);
+        }
+
+        function stopMemoryMonitor() {
+            if (memoryCheckInterval) {
+                clearInterval(memoryCheckInterval);
+                memoryCheckInterval = null;
+            }
+        }
+
+        // Start/stop based on player state
+        var origNavigate = App.Router && App.Router.navigate;
+        if (origNavigate) {
+            var origSwitchTo = App.Router._switchTo;
+            App.Router._switchTo = function(state, data, isBack) {
+                origSwitchTo.call(this, state, data, isBack);
+                if (state === 'PLAYER') {
+                    startMemoryMonitor();
+                } else {
+                    stopMemoryMonitor();
+                }
+            };
+        }
+    })();
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', startApp);

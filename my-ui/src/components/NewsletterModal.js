@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Send, Eye, Clock, Search, Check, Film, AlertCircle, Trash2 } from 'lucide-react';
+import { X, Mail, Send, Eye, Clock, Search, Check, Film, AlertCircle, Trash2, Users, CheckSquare, Square, ArrowLeft, RotateCcw } from 'lucide-react';
 
 export default function NewsletterModal({
   newsletterModal, videos, selectedMovies, newsletterSubject,
   previewHTML, loadingPreview, sending, sendResult,
   history, loadingHistory, sentMovies = [],
+  recipients = [], selectedRecipientIds = [],
+  selectedHistoryEntry, loadingHistoryDetail, resending, resendResult,
   onSubjectChange, onToggleMovie, onGeneratePreview, onSendNewsletter,
-  onSendTest, onLoadHistory, onDeleteHistory, onClose
+  onSendTest, onLoadHistory, onDeleteHistory,
+  onToggleRecipient, onToggleAllRecipients,
+  onLoadHistoryDetail, onResendNewsletter, onCloseHistoryDetail, onClose
 }) {
   const [activeTab, setActiveTab] = useState('select');
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
   const [testEmailInput, setTestEmailInput] = useState('');
 
   // Load history when switching to that tab
@@ -136,12 +141,22 @@ export default function NewsletterModal({
                   <div className="relative">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
+                      ref={searchInputRef}
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-slate-800 rounded-lg border border-slate-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full pl-10 pr-9 py-2 bg-slate-800 rounded-lg border border-slate-600 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Buscar peliculas..."
                     />
+                    {searchQuery && (
+                      <button
+                        onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 hover:bg-slate-700 rounded-full transition-all"
+                        title="Limpiar búsqueda"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
 
                   {/* Selected count */}
@@ -237,14 +252,59 @@ export default function NewsletterModal({
                         </div>
                       )}
 
+                      {/* Recipients */}
+                      {recipients.length > 0 && (
+                        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                              <Users size={16} /> Destinatarios ({selectedRecipientIds.length}/{recipients.length})
+                            </h3>
+                            <button
+                              onClick={() => onToggleAllRecipients(selectedRecipientIds.length < recipients.length)}
+                              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                            >
+                              {selectedRecipientIds.length < recipients.length ? 'Seleccionar todos' : 'Deseleccionar todos'}
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {recipients.map(user => {
+                              const isChecked = selectedRecipientIds.includes(user.id);
+                              return (
+                                <label
+                                  key={user.id}
+                                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                                    isChecked ? 'bg-indigo-900/30 border border-indigo-700/50' : 'bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50'
+                                  }`}
+                                >
+                                  {isChecked
+                                    ? <CheckSquare size={18} className="text-indigo-400 flex-shrink-0" />
+                                    : <Square size={18} className="text-slate-500 flex-shrink-0" />
+                                  }
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => onToggleRecipient(user.id)}
+                                    className="hidden"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-sm text-white truncate">{user.display_name || user.username}</p>
+                                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Action Buttons */}
                       <div className="flex flex-wrap gap-3">
                         <button
                           onClick={onSendNewsletter}
-                          disabled={sending}
+                          disabled={sending || selectedRecipientIds.length === 0}
                           className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center gap-2"
                         >
-                          <Send size={16} /> {sending ? 'Enviando...' : 'Enviar Newsletter'}
+                          <Send size={16} /> {sending ? 'Enviando...' : `Enviar a ${selectedRecipientIds.length} usuario${selectedRecipientIds.length !== 1 ? 's' : ''}`}
                         </button>
                         <button
                           onClick={handleSendTest}
@@ -288,7 +348,126 @@ export default function NewsletterModal({
 
               {activeTab === 'history' && (
                 <div className="space-y-3">
-                  {loadingHistory ? (
+                  {loadingHistoryDetail ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <span className="animate-spin inline-block text-2xl mb-2">&#9203;</span>
+                      <p>Cargando newsletter...</p>
+                    </div>
+                  ) : selectedHistoryEntry ? (
+                    /* History Detail View */
+                    <div className="space-y-4">
+                      {/* Back button + title */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={onCloseHistoryDetail}
+                          className="text-slate-400 hover:text-white transition-colors p-1"
+                        >
+                          <ArrowLeft size={20} />
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-white text-sm font-medium truncate">{selectedHistoryEntry.subject}</h3>
+                          <p className="text-xs text-slate-500">
+                            {formatDate(selectedHistoryEntry.sent_at)} · {selectedHistoryEntry.movie_count} peliculas · {selectedHistoryEntry.recipients_count} destinatarios
+                          </p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                          selectedHistoryEntry.status === 'sent' ? 'bg-green-900/30 text-green-400' :
+                          selectedHistoryEntry.status === 'test' ? 'bg-blue-900/30 text-blue-400' :
+                          selectedHistoryEntry.status === 'resent' ? 'bg-purple-900/30 text-purple-400' :
+                          selectedHistoryEntry.status === 'partial' ? 'bg-yellow-900/30 text-yellow-400' :
+                          'bg-red-900/30 text-red-400'
+                        }`}>
+                          {selectedHistoryEntry.status === 'sent' ? 'Enviado' : selectedHistoryEntry.status === 'test' ? 'Test' : selectedHistoryEntry.status === 'resent' ? 'Reenviado' : selectedHistoryEntry.status === 'partial' ? 'Parcial' : selectedHistoryEntry.status}
+                        </span>
+                      </div>
+
+                      {/* Resend result banner */}
+                      {resendResult && (
+                        <div className={`p-3 rounded-lg border ${
+                          resendResult.error
+                            ? 'bg-red-900/30 border-red-700/50 text-red-300'
+                            : 'bg-green-900/30 border-green-700/50 text-green-300'
+                        }`}>
+                          {resendResult.error ? (
+                            <p className="flex items-center gap-2 text-sm"><AlertCircle size={16} /> {resendResult.error}</p>
+                          ) : (
+                            <p className="text-sm">Newsletter reenviado: {resendResult.sent} enviados, {resendResult.failed} fallidos de {resendResult.total} totales</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Recipients for resend */}
+                      {selectedHistoryEntry.html_content && recipients.length > 0 && (
+                        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                              <Users size={16} /> Reenviar a ({selectedRecipientIds.length}/{recipients.length})
+                            </h3>
+                            <button
+                              onClick={() => onToggleAllRecipients(selectedRecipientIds.length < recipients.length)}
+                              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                            >
+                              {selectedRecipientIds.length < recipients.length ? 'Seleccionar todos' : 'Deseleccionar todos'}
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {recipients.map(user => {
+                              const isChecked = selectedRecipientIds.includes(user.id);
+                              return (
+                                <label
+                                  key={user.id}
+                                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                                    isChecked ? 'bg-indigo-900/30 border border-indigo-700/50' : 'bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50'
+                                  }`}
+                                >
+                                  {isChecked
+                                    ? <CheckSquare size={18} className="text-indigo-400 flex-shrink-0" />
+                                    : <Square size={18} className="text-slate-500 flex-shrink-0" />
+                                  }
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => onToggleRecipient(user.id)}
+                                    className="hidden"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-sm text-white truncate">{user.display_name || user.username}</p>
+                                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => onResendNewsletter(selectedHistoryEntry.id)}
+                            disabled={resending || selectedRecipientIds.length === 0}
+                            className="mt-3 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                          >
+                            <RotateCcw size={16} /> {resending ? 'Reenviando...' : `Reenviar a ${selectedRecipientIds.length} usuario${selectedRecipientIds.length !== 1 ? 's' : ''}`}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Preview iframe or unavailable message */}
+                      {selectedHistoryEntry.html_content ? (
+                        <div className="bg-slate-950 rounded-xl border border-slate-700 overflow-hidden">
+                          <iframe
+                            srcDoc={selectedHistoryEntry.html_content}
+                            title="Newsletter Preview"
+                            className="w-full border-0"
+                            style={{ height: '500px' }}
+                            sandbox=""
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-slate-400 bg-slate-800/30 rounded-xl border border-slate-700">
+                          <Eye size={48} className="mx-auto mb-3 opacity-50" />
+                          <p>Preview no disponible</p>
+                          <p className="text-xs mt-1">Este newsletter fue enviado antes de guardar el HTML</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : loadingHistory ? (
                     <div className="text-center py-12 text-slate-400">
                       <span className="animate-spin inline-block text-2xl mb-2">&#9203;</span>
                       <p>Cargando historial...</p>
@@ -300,16 +479,21 @@ export default function NewsletterModal({
                     </div>
                   ) : (
                     history.map(entry => (
-                      <div key={entry.id} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                      <div
+                        key={entry.id}
+                        className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 cursor-pointer hover:bg-slate-800/80 hover:border-slate-600 transition-all"
+                        onClick={() => onLoadHistoryDetail(entry.id)}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="text-white text-sm font-medium">{entry.subject}</h3>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             entry.status === 'sent' ? 'bg-green-900/30 text-green-400' :
                             entry.status === 'test' ? 'bg-blue-900/30 text-blue-400' :
+                            entry.status === 'resent' ? 'bg-purple-900/30 text-purple-400' :
                             entry.status === 'partial' ? 'bg-yellow-900/30 text-yellow-400' :
                             'bg-red-900/30 text-red-400'
                           }`}>
-                            {entry.status === 'sent' ? 'Enviado' : entry.status === 'test' ? 'Test' : entry.status === 'partial' ? 'Parcial' : entry.status}
+                            {entry.status === 'sent' ? 'Enviado' : entry.status === 'test' ? 'Test' : entry.status === 'resent' ? 'Reenviado' : entry.status === 'partial' ? 'Parcial' : entry.status}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -320,7 +504,7 @@ export default function NewsletterModal({
                             {entry.sent_by_username && <span>por {entry.sent_by_username}</span>}
                           </div>
                           <button
-                            onClick={() => onDeleteHistory(entry.id)}
+                            onClick={(e) => { e.stopPropagation(); onDeleteHistory(entry.id); }}
                             className="text-slate-500 hover:text-red-400 transition-colors p-1"
                             title="Eliminar registro"
                           >

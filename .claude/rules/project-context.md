@@ -12,7 +12,7 @@ Servidor autónomo de streaming de películas y series para 5-10 usuarios remoto
 - **Base de datos**: SQLite via better-sqlite3 (WAL mode)
   - `isiprime.db` — media cache, series, colecciones, descargas, usuarios
   - `requests.db` — peticiones de películas
-- **Autenticación**: JWT (access token 15min + refresh token 30d) + bcrypt
+- **Autenticación**: JWT (access token 15min + refresh token 30d) + bcrypt. LAN TVs identificadas por `X-TV-Serial`/`X-TV-Model` headers → tabla `user_tvs` → per-user favorites/progress
 - **APIs externas**: TMDB (metadatos de películas)
 - **Usuario GitHub**: CALILU
 - **Producción**: LincStation N2 (Ubuntu 24.04 Server, IP 192.168.1.45)
@@ -51,7 +51,7 @@ F:\plex\
 │   ├── requests.js        # Peticiones CRUD + SSE
 │   ├── collections.js     # Colecciones de películas
 │   ├── downloads.js       # Cola de descargas
-│   ├── conversion.js      # Conversión de video + SSE (protección duplicados)
+│   ├── conversion.js      # Conversión video MKV/AVI→MP4 (FFmpeg spawn, batch, SSE, SQLite)
 │   ├── newsletter.js      # Newsletter email (preview, send, test, historial)
 │   ├── storage.js         # Configuración de almacenamiento
 │   ├── movies.js          # Gestión de archivos de películas
@@ -59,7 +59,7 @@ F:\plex\
 │   ├── tmdb.js            # Búsqueda TMDB
 │   └── misc.js            # Endpoints utilitarios
 ├── tv-app/                # JS/CSS servidos remotamente a TVs (auto-update)
-│   ├── js/                # 17 módulos (copia de IsiPrime-WebOS-Native/js/ sin config.js)
+│   ├── js/                # 20 módulos (copia de IsiPrime-WebOS-Native/js/ sin config.js)
 │   ├── css/styles.css     # Copia de IsiPrime-WebOS-Native/css/styles.css
 │   └── version.json       # {"version": "2.11.2"}
 ├── scripts/
@@ -67,26 +67,36 @@ F:\plex\
 │   ├── renew-webos-devmode.sh     # Cron renovar Developer Mode TV
 │   ├── sync-tv-app.sh            # Copia JS/CSS a tv-app/ + scp al NAS
 │   ├── check-audio.js            # Analizar audio de todos los MP4
-│   └── normalize-audio.js        # Normalizar audio a AAC estéreo 48kHz
-├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.11.2 (compatible webOS 4.0+)
+│   ├── normalize-audio.js        # Normalizar audio a AAC estéreo 48kHz
+│   ├── convert-series-batch.js   # Batch MKV/AVI→MP4 en /mnt/peliculas/Series/
+│   ├── reencode-heavy-movies.js  # Re-encode películas >12Mbps a 8Mbps
+│   ├── run-all-conversions.sh    # Cadena: series→email→películas→email
+│   └── clean-obsolete-entries.js # Limpieza registros huérfanos SQLite
+├── IsiPrime-WebOS-Native/ # App nativa webOS TV v2.12.0 (compatible webOS 4.0+)
 │   ├── appinfo.json       # Manifest webOS (com.isiprime.app, accessibleUrl)
-│   ├── index.html         # Entry point (dynamic loader, 17 scripts remotos + fallback local)
+│   ├── index.html         # Entry point (dynamic loader, 20 scripts remotos + fallback local)
 │   ├── css/styles.css     # CSS completo (~1920 líneas)
 │   ├── js/                # Vanilla JS, window.App namespace, Chromium ~53 compatible
 │   │   ├── config.js      # Constantes, TMDB helpers, keycodes, APP_VERSION (siempre local en IPK)
-│   │   ├── api.js         # HTTP client con JWT auth + auto-refresh + filmografía
-│   │   ├── login.js       # Login para usuarios remotos
-│   │   ├── focus.js       # Motor navegación D-pad
+│   │   ├── api.js         # HTTP client con JWT auth + auto-refresh + filmografía + TV serial/model detection
+│   │   ├── login.js       # Login para usuarios remotos + mouse/click browser + App.wrapClearable() helper
+│   │   ├── focus.js       # Motor navegación D-pad (init() safe para múltiples llamadas)
+│   │   ├── nav-bar.js     # Barra navegación compartida
+│   │   ├── sidebar-grid-view.js # Layout sidebar+grid compartido (género, años, sagas)
+│   │   ├── keyboard.js    # Teclado en pantalla compartido (BORRAR + LIMPIAR)
 │   │   ├── carousel.js    # Carrusel virtual horizontal (poster fallback)
 │   │   ├── images.js      # Carga directa con límite concurrencia (max 20) + timeout 15s
 │   │   ├── router.js      # State machine (HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR→SAGAS)
 │   │   ├── home.js        # Carruseles por género
-│   │   ├── detail.js      # Detalle película/serie + cast navegable + botón saga
+│   │   ├── genre.js       # Navegador por género (sidebar + grid)
+│   │   ├── years.js       # Navegador por año (sidebar + grid)
+│   │   ├── detail.js      # Detalle película/serie: info fija + cast scrollable + botón saga
 │   │   ├── player.js      # Reproductor iframe + loading overlay + auto-resume + key forwarding
 │   │   ├── series.js      # Temporadas + episodios
 │   │   ├── search.js      # Teclado en pantalla + búsqueda (columnas dinámicas)
+│   │   ├── requests.js    # Peticiones: búsqueda TMDB + lista existentes
 │   │   ├── actor.js       # Filmografía de actor (solo películas locales)
-│   │   ├── sagas.js       # Navegador de sagas/colecciones (sidebar + grid, B&W no disponibles, toggle peticiones)
+│   │   ├── sagas.js       # Navegador de sagas (sidebar con filtro + grid, B&W no disponibles, toggle peticiones)
 │   │   └── app.js         # Bootstrap, versión en nav bar (cargado último)
 │   └── assets/            # placeholder.svg, logo.svg, icon-hd.png (1024x1024)
 ├── scripts/
@@ -152,14 +162,16 @@ npm run dev
 
 ### Auth
 - `POST /api/auth/login` - Login (devuelve accessToken + refreshToken)
-- `POST /api/auth/refresh` - Renovar access token
+- `POST /api/auth/refresh` - Renovar access token (devuelve user con id/username/role/displayName)
 - `POST /api/auth/logout` - Cerrar sesión
 - `POST /api/auth/register` - Registro con código de invitación (público)
 - `GET /api/auth/status` - Estado de autenticación (LAN auto-auth)
-- `GET /api/auth/users` - Listar usuarios (admin)
+- `GET /api/auth/users` - Listar usuarios con TVs y watching status (admin)
 - `POST /api/auth/users` - Crear usuario (admin)
-- `PUT /api/auth/users/:id` - Actualizar usuario/email (admin)
+- `PUT /api/auth/users/:id` - Actualizar usuario: email, displayName, role, emailNotifications (admin)
 - `DELETE /api/auth/users/:id` - Eliminar usuario (admin)
+- `POST /api/auth/users/:id/tvs` - Añadir TV a usuario (admin)
+- `DELETE /api/auth/users/:id/tvs/:tvId` - Eliminar TV de usuario (admin)
 - `POST /api/auth/invitations` - Crear invitación (admin)
 - `GET /api/auth/invitations` - Listar invitaciones (admin)
 - `DELETE /api/auth/invitations/:id` - Eliminar invitación (admin)
@@ -182,13 +194,23 @@ npm run dev
 ### Newsletter
 - `POST /api/newsletter/preview` - Generar preview HTML del newsletter
 - `POST /api/newsletter/send` - Enviar newsletter a usuarios con email
+- `POST /api/newsletter/send` - Enviar newsletter a usuarios seleccionados (recipientIds)
 - `POST /api/newsletter/test` - Enviar email de prueba a un destinatario
 - `GET /api/newsletter/history` - Historial de newsletters enviados
 - `GET /api/newsletter/sent-movies` - Lista de películas ya enviadas
+- `GET /api/newsletter/:id` - Detalle de newsletter con HTML guardado
+- `POST /api/newsletter/:id/resend` - Reenviar newsletter guardado a destinatarios seleccionados
 - `DELETE /api/newsletter/history/:id` - Eliminar entrada del historial
 
+### TV App Browser Mode
+- `GET /tv` - Página HTML que carga todos los módulos TV desde `/tv-app/js/`. `SERVER_URL` dinámico via `req.get('host')`. Accesible remotamente en `https://calilu.mooo.com/tv`. Login JWT para usuarios remotos. Backspace/Escape mapeados a BACK
+
+### Streaming Avanzado
+- `GET /video-profiles/:filename` - Perfiles de calidad ABR según bitrate (original/medium 720p/low 480p)
+- `GET /stream-fmp4/:filename` - Streaming MSE/fMP4 con `?quality=medium|low` para re-encode on-the-fly. Probe on-demand si falta bitrate
+
 ### TV Player (webOS) — compatible Chromium ~53+
-- `GET /tv-player` - Página HTML inline para reproducción en iframe (controles, barra de progreso, seek, spinner de carga). Usa getParam() regex (no URLSearchParams), XHR (no fetch) para duración. Streaming: MSE+fetch → MSE+XHR (direct mode deshabilitado por enableVideoHole). Audio 5.1 auto-downmix a estéreo
+- `GET /tv-player` - Página HTML inline para reproducción en iframe. Dynamic buffer (throughput sliding window), ABR client-side. Usa getParam() regex, XHR para duración. MSE+fetch (direct mode deshabilitado por enableVideoHole). Audio 5.1 auto-downmix a estéreo
 - `GET /video-duration/:filename` - Duración real del video via FFprobe (necesario porque MSE reporta Infinity)
 - `GET /api/collections/:id/full` - Detalle completo de colección/saga con datos TMDB (cache SQLite 14 días)
 
@@ -209,7 +231,7 @@ npm run dev
 - **LEDs**: daemon `lincstation_leds` (I2C bus 2, systemd)
 - **Developer Mode TV**: cron renewal diario 3AM (`~/scripts/renew-webos-devmode.sh`)
 - **Scripts**: `transfer-to-nas.sh`, `migrate-to-nas.sh`, `start-tv-nas.sh`, `setup-nginx-https.sh`
-- **Config**: `ecosystem.config.js`, `.env.nas`, `HermesStream.bat` (launcher simplificado)
+- **Config**: `ecosystem.config.js`, `.env.nas`, `HermesStream.bat` (launcher inteligente: ping LAN → IP directa o DDNS)
 
 ## Desarrollador
 

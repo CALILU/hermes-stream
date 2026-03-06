@@ -93,8 +93,8 @@
             this._container.innerHTML = '';
             this._resetState();
 
-            // Detect admin (LAN users are admin)
-            this._isAdmin = App.API._isLocal;
+            // Detect admin by role (not just LAN)
+            this._isAdmin = App.API._userRole === 'admin';
 
             // Capture nav items
             App.NavBar.initItems(this);
@@ -711,11 +711,8 @@
             if (!year && movie.releaseDate) {
                 year = movie.releaseDate.substring(0, 4);
             }
-            // Backend returns full URL in 'poster', or relative path in 'poster_path'
-            var posterUrl = movie.poster || '';
-            if (!posterUrl && movie.poster_path) {
-                posterUrl = App.Config.posterUrl(movie.poster_path);
-            }
+            // Always resolve through posterUrl() to ensure SERVER_URL prefix
+            var posterUrl = App.Config.posterUrl(movie.poster || movie.poster_path || '');
 
             var itemEl = document.createElement('div');
             itemEl.className = 'requests-tmdb-item focusable';
@@ -726,7 +723,7 @@
 
             var img = document.createElement('img');
             img.className = 'poster-img';
-            img.setAttribute('data-src', posterUrl || 'assets/placeholder.svg');
+            img.setAttribute('data-src', posterUrl || App.Config.PLACEHOLDER_IMG);
             img.alt = title;
             img.onload = function() { img.classList.add('loaded'); };
             wrapper.appendChild(img);
@@ -857,7 +854,8 @@
                 });
             }
 
-            App.API.submitRequests(movies, 'TV').then(function(data) {
+            var requestedBy = App.API._username || 'TV';
+            App.API.submitRequests(movies, requestedBy).then(function(data) {
                 if (data && data.success) {
                     var msg = data.created + ' peticion' + (data.created !== 1 ? 'es' : '') + ' enviada' + (data.created !== 1 ? 's' : '');
                     if (data.duplicates > 0) {
@@ -952,10 +950,7 @@
             var title = (request.title || 'Sin titulo');
             var year = request.year ? ' (' + request.year + ')' : '';
             var statusInfo = STATUS_MAP[request.status] || STATUS_MAP.pending;
-            var posterSrc = request.poster || '';
-            if (posterSrc && posterSrc.indexOf('http') !== 0) {
-                posterSrc = App.Config.posterUrl(posterSrc);
-            }
+            var posterSrc = App.Config.posterUrl(request.poster || '');
 
             var itemEl = document.createElement('div');
             itemEl.className = 'requests-list-item focusable';
@@ -966,7 +961,7 @@
 
             var img = document.createElement('img');
             img.className = 'poster-img';
-            img.setAttribute('data-src', posterSrc || 'assets/placeholder.svg');
+            img.setAttribute('data-src', posterSrc || App.Config.PLACEHOLDER_IMG);
             img.alt = title;
             img.onload = function() { img.classList.add('loaded'); };
             wrapper.appendChild(img);

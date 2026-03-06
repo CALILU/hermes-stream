@@ -59,13 +59,21 @@
             gridEl.appendChild(spaceEl);
             ctx._keyElements.push(spaceEl);
 
-            // Delete key (full width)
+            // Delete key (half width — backspace)
             var delEl = document.createElement('div');
-            delEl.className = 'keyboard-key keyboard-key-full keyboard-key-action focusable';
+            delEl.className = 'keyboard-key keyboard-key-wide keyboard-key-action focusable';
             delEl.textContent = 'BORRAR';
             delEl.setAttribute('data-key', 'DEL');
             gridEl.appendChild(delEl);
             ctx._keyElements.push(delEl);
+
+            // Clear key (half width — clear all)
+            var clearEl = document.createElement('div');
+            clearEl.className = 'keyboard-key keyboard-key-wide keyboard-key-action focusable';
+            clearEl.textContent = 'LIMPIAR';
+            clearEl.setAttribute('data-key', 'CLEAR');
+            gridEl.appendChild(clearEl);
+            ctx._keyElements.push(clearEl);
 
             // Click + hover for Magic Remote
             for (var ki = 0; ki < ctx._keyElements.length; ki++) {
@@ -127,6 +135,8 @@
             var keyVal = el.getAttribute('data-key');
             if (keyVal === 'DEL') {
                 ctx._searchText = ctx._searchText.slice(0, -1);
+            } else if (keyVal === 'CLEAR') {
+                ctx._searchText = '';
             } else {
                 ctx._searchText += keyVal.toLowerCase();
             }
@@ -150,12 +160,15 @@
             var regularCount = KEYS_LAYOUT.length; // 37 (A-Z + Ñ + 0-9)
             var SPACE_IDX = regularCount;           // 37
             var DEL_IDX = regularCount + 1;         // 38
+            var CLEAR_IDX = regularCount + 2;       // 39
             var isOnAction = idx >= regularCount;
             var KB = App.Keyboard;
 
             switch (key) {
                 case App.Config.KEYS.LEFT:
-                    if (!isOnAction) {
+                    if (idx === CLEAR_IDX) {
+                        KB.updateFocus(ctx, DEL_IDX);
+                    } else if (!isOnAction) {
                         var col = idx % KEYBOARD_COLS;
                         if (col > 0) {
                             KB.updateFocus(ctx, idx - 1);
@@ -164,7 +177,9 @@
                     break;
 
                 case App.Config.KEYS.RIGHT:
-                    if (isOnAction) {
+                    if (idx === DEL_IDX) {
+                        KB.updateFocus(ctx, CLEAR_IDX);
+                    } else if (isOnAction) {
                         ctx._switchToResults();
                     } else {
                         var colR = idx % KEYBOARD_COLS;
@@ -177,7 +192,7 @@
                     break;
 
                 case App.Config.KEYS.UP:
-                    if (idx === DEL_IDX) {
+                    if (idx === DEL_IDX || idx === CLEAR_IDX) {
                         KB.updateFocus(ctx, SPACE_IDX);
                     } else if (idx === SPACE_IDX) {
                         var lastRow = Math.floor((regularCount - 1) / KEYBOARD_COLS);
@@ -196,7 +211,7 @@
                     break;
 
                 case App.Config.KEYS.DOWN:
-                    if (idx === DEL_IDX) {
+                    if (idx === DEL_IDX || idx === CLEAR_IDX) {
                         // Module-specific: requests goes to submit button
                         if (config.onDown) {
                             config.onDown();

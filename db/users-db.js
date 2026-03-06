@@ -155,6 +155,38 @@ function init() {
     `);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_newsletter_movies_filename ON newsletter_movies(filename);`);
 
+    // Migration: add html_content column to newsletter_logs
+    try { db.exec(`ALTER TABLE newsletter_logs ADD COLUMN html_content TEXT`); } catch (e) { /* already exists */ }
+
+    // Crear tabla de TVs por usuario
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS user_tvs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            brand TEXT DEFAULT 'LG',
+            model TEXT NOT NULL,
+            serial_number TEXT,
+            webos_version TEXT,
+            chromium_version TEXT,
+            year INTEGER,
+            power TEXT,
+            connection_type TEXT,
+            ip_address TEXT,
+            dev_mode_token TEXT,
+            ares_passphrase TEXT,
+            ares_device_name TEXT,
+            label_photo TEXT,
+            product_code TEXT,
+            factory_code TEXT,
+            manufacture_date TEXT,
+            origin TEXT,
+            notes TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, serial_number)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_tvs_user ON user_tvs(user_id);
+    `);
+
     console.log('🔐 Tablas de usuarios SQLite creadas/verificadas');
 
     // Seed admin si no hay usuarios
@@ -510,6 +542,38 @@ function getAllProgress(userId) {
 }
 
 /**
+ * Obtiene usuarios que están viendo algo activamente (progreso actualizado en los últimos 3 minutos)
+ * @returns {Array} Lista con user_id, video_path, position_seconds, duration_seconds, updated_at
+ */
+function getActiveViewers() {
+    init();
+    return db.prepare(`
+        SELECT up.user_id, up.video_path, up.position_seconds, up.duration_seconds, up.updated_at
+        FROM user_progress up
+        WHERE up.updated_at > datetime('now', '-3 minutes')
+        AND up.completed = 0
+        ORDER BY up.updated_at DESC
+    `).all();
+}
+
+/**
+ * Elimina registros de progreso completados con más de 30 días
+ * @returns {number} Número de registros eliminados
+ */
+function cleanCompletedProgress() {
+    init();
+    const info = db.prepare(`
+        DELETE FROM user_progress
+        WHERE completed = 1
+        AND updated_at < datetime('now', '-30 days')
+    `).run();
+    if (info.changes > 0) {
+        console.log(`🔐 Limpiados ${info.changes} registros de progreso completados (>30 días)`);
+    }
+    return info.changes;
+}
+
+/**
  * Elimina un registro de progreso
  * @param {number} userId
  * @param {string} videoPath
@@ -669,6 +733,131 @@ function deleteInvitation(id) {
 }
 
 // ============================================================
+// User TVs
+// ============================================================
+
+/**
+ * Registra o actualiza una TV asociada a un usuario
+ */
+function upsertUserTV(userId, tvData) {
+    init();
+    const existing = db.prepare('SELECT id FROM user_tvs WHERE user_id = ? AND serial_number = ?')
+        .get(userId, tvData.serial_number);
+
+    if (existing) {
+        const fields = [];
+        const values = {};
+        for (const [key, val] of Object.entries(tvData)) {
+            if (val !== undefined) {
+                fields.push(`${key} = @${key}`);
+                values[key] = val;
+            }
+        }
+        if (fields.length > 0) {
+            values.id = existing.id;
+            db.prepare(`UPDATE user_tvs SET ${fields.join(', ')} WHERE id = @id`).run(values);
+        }
+        return existing.id;
+    } else {
+        const info = db.prepare(`
+            INSERT INTO user_tvs (user_id, brand, model, serial_number, webos_version, chromium_version,
+                year, power, connection_type, ip_address, dev_mode_token, ares_passphrase,
+                ares_device_name, label_photo, product_code, factory_code, manufacture_date, origin, notes)
+            VALUES (@user_id, @brand, @model, @serial_number, @webos_version, @chromium_version,
+                @year, @power, @connection_type, @ip_address, @dev_mode_token, @ares_passphrase,
+                @ares_device_name, @label_photo, @product_code, @factory_code, @manufacture_date, @origin, @notes)
+        `).run({
+            user_id: userId,
+            brand: tvData.brand || 'LG',
+            model: tvData.model,
+            serial_number: tvData.serial_number || null,
+            webos_version: tvData.webos_version || null,
+            chromium_version: tvData.chromium_version || null,
+            year: tvData.year || null,
+            power: tvData.power || null,
+            connection_type: tvData.connection_type || null,
+            ip_address: tvData.ip_address || null,
+            dev_mode_token: tvData.dev_mode_token || null,
+            ares_passphrase: tvData.ares_passphrase || null,
+            ares_device_name: tvData.ares_device_name || null,
+            label_photo: tvData.label_photo || null,
+            product_code: tvData.product_code || null,
+            factory_code: tvData.factory_code || null,
+            manufacture_date: tvData.manufacture_date || null,
+            origin: tvData.origin || null,
+            notes: tvData.notes || null
+        });
+        return info.lastInsertRowid;
+    }
+}
+
+/**
+ * Obtiene las TVs de un usuario
+ */
+function getUserTVs(userId) {
+    init();
+    return db.prepare('SELECT * FROM user_tvs WHERE user_id = ? ORDER BY created_at').all(userId);
+}
+
+/**
+ * Obtiene todas las TVs registradas (con info del usuario)
+ */
+function getAllTVs() {
+    init();
+    return db.prepare(`
+        SELECT t.*, u.username, u.display_name
+        FROM user_tvs t
+        JOIN users u ON t.user_id = u.id
+        WHERE u.active = 1
+        ORDER BY u.username, t.created_at
+    `).all();
+}
+
+/**
+ * Busca una TV por serial number y devuelve user_id + info usuario
+ * @param {string} serial - Serial number de la TV
+ * @returns {Object|null} { user_id, username, role, display_name, tv_id } o null
+ */
+function findTVBySerial(serial) {
+    init();
+    if (!serial) return null;
+    return db.prepare(`
+        SELECT t.id as tv_id, t.user_id, u.username, u.role, u.display_name
+        FROM user_tvs t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.serial_number = ? AND u.active = 1
+    `).get(serial) || null;
+}
+
+/**
+ * Busca una TV por modelo y devuelve user_id + info usuario
+ * Solo útil si los modelos son únicos entre usuarios
+ * @param {string} model - Modelo de la TV
+ * @returns {Object|null} { user_id, username, role, display_name, tv_id } o null
+ */
+function findTVByModel(model) {
+    init();
+    if (!model) return null;
+    // Only return if exactly one TV matches (avoid ambiguity)
+    const matches = db.prepare(`
+        SELECT t.id as tv_id, t.user_id, u.username, u.role, u.display_name
+        FROM user_tvs t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.model = ? AND u.active = 1
+    `).all(model);
+    return matches.length === 1 ? matches[0] : null;
+}
+
+/**
+ * Elimina una TV por id
+ */
+function deleteUserTV(id) {
+    init();
+    const info = db.prepare('DELETE FROM user_tvs WHERE id = ?').run(id);
+    return info.changes > 0;
+}
+
+// ============================================================
 // Utilidades
 // ============================================================
 
@@ -716,18 +905,19 @@ function updateUserEmail(id, email, emailNotifications) {
     return getUserById(id);
 }
 
-function logNewsletter({ subject, movieCount, recipientsCount, sentBy, status }) {
+function logNewsletter({ subject, movieCount, recipientsCount, sentBy, status, htmlContent }) {
     init();
     const stmt = db.prepare(`
-        INSERT INTO newsletter_logs (subject, movie_count, recipients_count, sent_by, status)
-        VALUES (@subject, @movie_count, @recipients_count, @sent_by, @status)
+        INSERT INTO newsletter_logs (subject, movie_count, recipients_count, sent_by, status, html_content)
+        VALUES (@subject, @movie_count, @recipients_count, @sent_by, @status, @html_content)
     `);
     const info = stmt.run({
         subject,
         movie_count: movieCount,
         recipients_count: recipientsCount,
         sent_by: sentBy,
-        status: status || 'sent'
+        status: status || 'sent',
+        html_content: htmlContent || null
     });
     return db.prepare('SELECT * FROM newsletter_logs WHERE id = ?').get(info.lastInsertRowid);
 }
@@ -755,6 +945,16 @@ function getSentMovieFilenames() {
     return db.prepare(`
         SELECT DISTINCT filename FROM newsletter_movies
     `).all().map(r => r.filename);
+}
+
+function getNewsletterById(id) {
+    init();
+    return db.prepare(`
+        SELECT nl.*, u.username as sent_by_username
+        FROM newsletter_logs nl
+        LEFT JOIN users u ON nl.sent_by = u.id
+        WHERE nl.id = ?
+    `).get(id) || null;
 }
 
 function deleteNewsletterLog(id) {
@@ -799,6 +999,8 @@ module.exports = {
     getProgress,
     getContinueWatching,
     getAllProgress,
+    getActiveViewers,
+    cleanCompletedProgress,
     deleteProgress,
 
     // Favorites
@@ -814,12 +1016,21 @@ module.exports = {
     getInvitations,
     deleteInvitation,
 
+    // User TVs
+    upsertUserTV,
+    getUserTVs,
+    getAllTVs,
+    findTVBySerial,
+    findTVByModel,
+    deleteUserTV,
+
     // Newsletter
     getUsersWithEmail,
     updateUserEmail,
     logNewsletter,
     logNewsletterMovies,
     getSentMovieFilenames,
+    getNewsletterById,
     deleteNewsletterLog,
     getNewsletterHistory,
 

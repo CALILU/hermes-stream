@@ -79,9 +79,12 @@
             gradient.className = 'detail-gradient';
             container.appendChild(gradient);
 
-            // Content area
+            // Content area (flex column: fixed info + scrollable cast)
             var content = document.createElement('div');
             content.className = 'detail-content';
+
+            var infoFixed = document.createElement('div');
+            infoFixed.className = 'detail-info-fixed';
 
             // Title
             var title = document.createElement('h1');
@@ -128,7 +131,7 @@
                 meta.appendChild(sizeSpan);
             }
 
-            content.appendChild(meta);
+            infoFixed.appendChild(meta);
 
             // Genre tags
             if (movie.genreIds && movie.genreIds.length > 0) {
@@ -145,7 +148,7 @@
                     }
                 });
 
-                content.appendChild(genresDiv);
+                infoFixed.appendChild(genresDiv);
             }
 
             // Overview / synopsis
@@ -153,7 +156,7 @@
                 var overview = document.createElement('p');
                 overview.className = 'detail-overview';
                 overview.textContent = movie.overview;
-                content.appendChild(overview);
+                infoFixed.appendChild(overview);
             }
 
             // Action buttons
@@ -172,7 +175,7 @@
             favBtn.setAttribute('data-action', 'favorite');
             buttonsDiv.appendChild(favBtn);
 
-            content.appendChild(buttonsDiv);
+            infoFixed.appendChild(buttonsDiv);
             this._buttons = [playBtn, favBtn];
 
             // Magic Remote pointer: click handlers for buttons
@@ -198,9 +201,16 @@
                 self._setButtonFocus(1);
             });
 
-            // Cast section
+            // Add fixed info to content
+            content.appendChild(infoFixed);
+
+            // Cast section (inside scrollable wrapper)
             this._castItems = [];
             if (movie.cast && movie.cast.length > 0) {
+                var castWrapper = document.createElement('div');
+                castWrapper.className = 'detail-cast-wrapper';
+                this._castWrapperEl = castWrapper;
+
                 var castSection = document.createElement('div');
                 castSection.className = 'detail-cast-section';
 
@@ -282,7 +292,8 @@
                 });
 
                 castSection.appendChild(castScroll);
-                content.appendChild(castSection);
+                castWrapper.appendChild(castSection);
+                content.appendChild(castWrapper);
             }
 
             container.appendChild(content);
@@ -328,16 +339,14 @@
             this._focusedCastIndex = index;
             this._castItems[index].classList.add('focused');
 
-            // Vertical scroll: ensure cast section is visible in detail-content
-            var content = this._container.querySelector('.detail-content');
-            if (content) {
-                var castSection = this._container.querySelector('.detail-cast-section');
-                if (castSection) {
-                    var csRect = castSection.getBoundingClientRect();
-                    var ctRect = content.getBoundingClientRect();
-                    if (csRect.bottom > ctRect.bottom) {
-                        content.scrollTop += csRect.bottom - ctRect.bottom + 40;
-                    }
+            // Scroll focused cast item into view within the cast wrapper
+            if (this._castWrapperEl) {
+                var itemRect = this._castItems[index].getBoundingClientRect();
+                var wrapRect = this._castWrapperEl.getBoundingClientRect();
+                if (itemRect.bottom > wrapRect.bottom - 10) {
+                    this._castWrapperEl.scrollTop += itemRect.bottom - wrapRect.bottom + 40;
+                } else if (itemRect.top < wrapRect.top + 10) {
+                    this._castWrapperEl.scrollTop -= wrapRect.top - itemRect.top + 40;
                 }
             }
         },
@@ -614,6 +623,7 @@
             this._buttons = [];
             this._castItems = [];
             this._castScrollEl = null;
+            this._castWrapperEl = null;
             this._movie = null;
             this._focusZone = 'buttons';
         }

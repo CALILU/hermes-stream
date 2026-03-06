@@ -2,6 +2,18 @@ import { useState, useCallback } from 'react';
 import { API_BASE } from '../constants';
 import { authFetch } from '../utils/api';
 
+const LS_KEY = 'newsletter_excluded_recipients';
+
+function loadExcluded() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+  } catch { return []; }
+}
+
+function saveExcluded(ids) {
+  localStorage.setItem(LS_KEY, JSON.stringify(ids));
+}
+
 export function useNewsletter(genres = []) {
   // Helper: convert genreIds to genre names
   const getGenreNames = (genreIds) => {
@@ -22,6 +34,56 @@ export function useNewsletter(genres = []) {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [sentMovies, setSentMovies] = useState([]);
 
+  // History detail view
+  const [selectedHistoryEntry, setSelectedHistoryEntry] = useState(null);
+  const [loadingHistoryDetail, setLoadingHistoryDetail] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendResult, setResendResult] = useState(null);
+
+  // Recipients
+  const [recipients, setRecipients] = useState([]);
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState([]);
+
+  const loadRecipients = useCallback(async () => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/auth/users`);
+      const data = await res.json();
+      if (data.success) {
+        const withEmail = (data.data || data.users || []).filter(u => u.email && u.email.trim());
+        setRecipients(withEmail);
+        const excluded = loadExcluded();
+        const selected = withEmail.filter(u => !excluded.includes(u.id)).map(u => u.id);
+        setSelectedRecipientIds(selected);
+      }
+    } catch (err) {
+      console.error('Error cargando destinatarios:', err);
+    }
+  }, []);
+
+  const toggleRecipient = useCallback((userId) => {
+    setSelectedRecipientIds(prev => {
+      const next = prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId];
+      // Persist excluded (inverted logic: store who is NOT selected)
+      const allIds = recipients.map(r => r.id);
+      const excluded = allIds.filter(id => !next.includes(id));
+      saveExcluded(excluded);
+      return next;
+    });
+  }, [recipients]);
+
+  const toggleAllRecipients = useCallback((selectAll) => {
+    if (selectAll) {
+      const all = recipients.map(r => r.id);
+      setSelectedRecipientIds(all);
+      saveExcluded([]);
+    } else {
+      setSelectedRecipientIds([]);
+      saveExcluded(recipients.map(r => r.id));
+    }
+  }, [recipients]);
+
   const toggleMovie = useCallback((movie) => {
     setSelectedMovies(prev => {
       const exists = prev.find(m => m.filename === movie.filename);
@@ -33,19 +95,21 @@ export function useNewsletter(genres = []) {
     setSendResult(null);
   }, []);
 
+  const _buildMoviePayload = (movies) => movies.map(m => ({
+    filename: m.filename || '',
+    title: m.title || m.filename,
+    poster: m.poster || '',
+    overview: m.overview || '',
+    rating: m.rating || m.vote_average || '',
+    year: m.year || '',
+    genres: getGenreNames(m.genreIds) || m.genres || ''
+  }));
+
   const generatePreview = useCallback(async () => {
     if (selectedMovies.length === 0) return;
     setLoadingPreview(true);
     try {
-      const movies = selectedMovies.map(m => ({
-        filename: m.filename || '',
-        title: m.title || m.filename,
-        poster: m.poster || '',
-        overview: m.overview || '',
-        rating: m.rating || m.vote_average || '',
-        year: m.year || '',
-        genres: getGenreNames(m.genreIds) || m.genres || ''
-      }));
+      const movies = _buildMoviePayload(selectedMovies);
       const res = await authFetch(`${API_BASE}/api/newsletter/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,23 +127,15 @@ export function useNewsletter(genres = []) {
   }, [selectedMovies, newsletterSubject]);
 
   const sendNewsletter = useCallback(async () => {
-    if (selectedMovies.length === 0) return;
+    if (selectedMovies.length === 0 || selectedRecipientIds.length === 0) return;
     setSending(true);
     setSendResult(null);
     try {
-      const movies = selectedMovies.map(m => ({
-        filename: m.filename || '',
-        title: m.title || m.filename,
-        poster: m.poster || '',
-        overview: m.overview || '',
-        rating: m.rating || m.vote_average || '',
-        year: m.year || '',
-        genres: getGenreNames(m.genreIds) || m.genres || ''
-      }));
+      const movies = _buildMoviePayload(selectedMovies);
       const res = await authFetch(`${API_BASE}/api/newsletter/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ movies, subject: newsletterSubject })
+        body: JSON.stringify({ movies, subject: newsletterSubject, recipientIds: selectedRecipientIds })
       });
       const data = await res.json();
       if (data.success) {
@@ -97,21 +153,13 @@ export function useNewsletter(genres = []) {
     } finally {
       setSending(false);
     }
-  }, [selectedMovies, newsletterSubject]);
+  }, [selectedMovies, newsletterSubject, selectedRecipientIds]);
 
   const sendTest = useCallback(async (testEmail) => {
     if (selectedMovies.length === 0) return;
     setSending(true);
     try {
-      const movies = selectedMovies.map(m => ({
-        filename: m.filename || '',
-        title: m.title || m.filename,
-        poster: m.poster || '',
-        overview: m.overview || '',
-        rating: m.rating || m.vote_average || '',
-        year: m.year || '',
-        genres: getGenreNames(m.genreIds) || m.genres || ''
-      }));
+      const movies = _buildMoviePayload(selectedMovies);
       const res = await authFetch(`${API_BASE}/api/newsletter/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,6 +204,50 @@ export function useNewsletter(genres = []) {
     }
   }, []);
 
+  const loadNewsletterDetail = useCallback(async (id) => {
+    setLoadingHistoryDetail(true);
+    setResendResult(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/newsletter/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedHistoryEntry(data.data);
+      }
+    } catch (err) {
+      console.error('Error cargando detalle newsletter:', err);
+    } finally {
+      setLoadingHistoryDetail(false);
+    }
+  }, []);
+
+  const resendNewsletter = useCallback(async (id) => {
+    if (selectedRecipientIds.length === 0) return;
+    setResending(true);
+    setResendResult(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/newsletter/${id}/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientIds: selectedRecipientIds })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResendResult(data.data);
+      } else {
+        setResendResult({ error: data.error });
+      }
+    } catch (err) {
+      setResendResult({ error: 'Error de conexion' });
+    } finally {
+      setResending(false);
+    }
+  }, [selectedRecipientIds]);
+
+  const closeHistoryDetail = useCallback(() => {
+    setSelectedHistoryEntry(null);
+    setResendResult(null);
+  }, []);
+
   const deleteHistory = useCallback(async (id) => {
     try {
       const res = await authFetch(`${API_BASE}/api/newsletter/history/${id}`, { method: 'DELETE' });
@@ -176,20 +268,27 @@ export function useNewsletter(genres = []) {
     setSendResult(null);
     setNewsletterSubject('Nuevas peliculas en IsiPrime');
     loadSentMovies();
-  }, [loadSentMovies]);
+    loadRecipients();
+  }, [loadSentMovies, loadRecipients]);
 
   const closeNewsletter = useCallback(() => {
     setNewsletterModal(false);
     setSelectedMovies([]);
     setPreviewHTML('');
     setSendResult(null);
+    setSelectedHistoryEntry(null);
+    setResendResult(null);
   }, []);
 
   return {
     newsletterModal, selectedMovies, newsletterSubject, previewHTML,
     loadingPreview, sending, sendResult, history, loadingHistory, sentMovies,
+    recipients, selectedRecipientIds,
+    selectedHistoryEntry, loadingHistoryDetail, resending, resendResult,
     setNewsletterSubject,
     toggleMovie, generatePreview, sendNewsletter, sendTest,
-    loadHistory, deleteHistory, openNewsletter, closeNewsletter
+    toggleRecipient, toggleAllRecipients,
+    loadHistory, deleteHistory, openNewsletter, closeNewsletter,
+    loadNewsletterDetail, resendNewsletter, closeHistoryDetail
   };
 }

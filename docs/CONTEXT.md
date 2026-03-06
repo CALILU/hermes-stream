@@ -1,24 +1,30 @@
-# Contexto del Proyecto - Ultima Actualizacion: 2026-03-02
+# Contexto del Proyecto - Ultima Actualizacion: 2026-03-06
 
 ## En que estabamos trabajando?
-**Mejoras de UI en React + correcciones de auth remoto + monitoreo de normalizacion de audio**. Se elimino el boton "Sorprendeme", se implemento galeria de sagas con peliculas no-catalogo en B&N (toggle peticiones), se corrigieron 401 en busqueda TMDB por uso de `fetch` sin auth, y se desplego al NAS via `calilu.mooo.com`.
+**Newsletter: historial con preview y reenvio** — Las entradas del historial son clickeables, muestran el HTML guardado y permiten reenviar a destinatarios seleccionados.
 
 ## Estado Actual
-- Completado: Boton "Sorprendeme" eliminado (import, estado, botones mobile/desktop, RandomPickerModal)
-- Completado: Boton "Peticiones" visible para todos los usuarios junto a "Pedir Pelicula"
-- Completado: Galeria de sagas muestra peliculas no-catalogo en B&N con badge "No disponible"
-- Completado: Click en pelicula no-catalogo crea/cancela peticion (toggle) con badge "Pedida"
-- Completado: Sincronizacion de badges al borrar desde modal de Peticiones
-- Completado: Fix 401 en busqueda TMDB remota (3x `fetch` → `authFetch`)
-- Completado: Deploy al NAS via SSH `calilu.mooo.com` (WSL en subred diferente al NAS)
-- En progreso: Normalizacion de audio en NAS — 169/576 (~29%), 0 errores, PID 49126
-- Pendiente: Monitorear normalizacion hasta completar (~17h restantes)
+- Completado: Newsletter recipient selection con checkboxes + localStorage persistence
+- Completado: Newsletter poster fix (proxy URLs → TMDB URLs para email clients)
+- Completado: Newsletter history detail view (preview HTML guardado + reenviar)
+- Completado: Newsletter search X clear button con refocus
+- Completado: Usuario javi creado (Jamarvi8@gmail.com)
+- Completado: Per-user TV identification (serial/modelo)
+- En progreso: Re-encode peliculas pesadas (>12Mbps) en NAS
+- Pendiente: HEVC Beauty 5 episodios
+- Pendiente: Verificar estabilidad OOM en TV (v2.12.0)
 
-## Archivos Clave Modificados
-- `my-ui/src/App.js`: Eliminar Sorprendeme, boton Peticiones para todos, galeria sagas B&N + toggle
-- `my-ui/src/hooks/useVideos.js`: Estado `collectionFullParts`, fetch full parts, merge no-catalogo, fix `authFetch`
-- `my-ui/src/hooks/useRequests.js`: `toggleSagaRequest()`, fix `authFetch` en TMDB search/actor, fix `deleteRequest` sync
-- `my-ui/src/components/RandomPickerModal.js`: Ya no se importa (archivo conservado en disco)
+## Archivos Clave Modificados (sesion actual)
+- `routes/newsletter.js`: `moviesForEmail()` (proxy→TMDB URLs), `GET /:id`, `POST /:id/resend`, recipientIds filtering
+- `db/users-db.js`: columna `html_content` en newsletter_logs, `logNewsletter()` guarda HTML, `getNewsletterById()`
+- `my-ui/src/hooks/useNewsletter.js`: recipient state + localStorage, `loadNewsletterDetail()`, `resendNewsletter()`, `closeHistoryDetail()`
+- `my-ui/src/components/NewsletterModal.js`: recipient checkboxes, history detail view (preview iframe + resend), search X button
+
+## Archivos Clave (referencia general)
+- `routes/conversion.js`: API de conversion video (6 endpoints)
+- `lib/probe.js`: FFprobe wrapper (codec info)
+- `db/media-db.js`: SQLite — getMovie, upsertMovie, deleteMovie, cleanupMovies
+- `lib/cache.js`: cleanupCache() — compara cache vs archivos reales en disco
 
 ## Comandos Rapidos para Empezar
 ```bash
@@ -28,23 +34,32 @@ cd /mnt/f/plex && node server.js
 # Compilar frontend
 cd /mnt/f/plex/my-ui && npm run build
 
-# Deploy al NAS (usar calilu.mooo.com, no IP directa desde WSL)
-ssh isidro@calilu.mooo.com "rm -f ~/isiprime/my-ui/build/static/js/main.*.js ~/isiprime/my-ui/build/static/css/main.*.css"
-scp -r my-ui/build/ isidro@calilu.mooo.com:~/isiprime/my-ui/
+# Deploy al NAS (solo codigo, NUNCA .db)
+scp server.js isidro@calilu.mooo.com:~/isiprime/
+scp routes/auth.js isidro@calilu.mooo.com:~/isiprime/routes/
+scp db/users-db.js isidro@calilu.mooo.com:~/isiprime/db/
 ssh isidro@calilu.mooo.com "cd ~/isiprime && pm2 restart isiprime"
 
-# Monitorear normalizacion de audio
-ssh isidro@calilu.mooo.com "tail -20 ~/isiprime/logs/normalize-audio.log"
-ssh isidro@calilu.mooo.com "grep -c '✅' ~/isiprime/logs/normalize-audio.log"
+# Sync TV app al NAS
+bash scripts/sync-tv-app.sh
+
+# Deploy rapido de un modulo TV
+cp IsiPrime-WebOS-Native/js/MODULE.js tv-app/js/ && scp tv-app/js/MODULE.js isidro@calilu.mooo.com:~/isiprime/tv-app/js/
+```
+
+## Procesos en NAS (monitorizar por SSH)
+```bash
+tail -20 ~/isiprime/logs/convert-series.log      # progreso series
+tail -20 ~/isiprime/logs/run-all-conversions.log  # estado cadena
+tail -20 ~/isiprime/logs/reencode-movies.log      # peliculas
 ```
 
 ## Problemas Conocidos
-- **WSL en subred diferente**: WSL usa 192.168.0.x, NAS esta en 192.168.1.45. SSH solo funciona via `calilu.mooo.com`
-- **Normalizacion audio**: 576 archivos, ~2.5 min/archivo, proceso corriendo (PID 49126)
+- **WSL en subred diferente**: WSL usa 192.168.0.x, NAS esta en 192.168.1.45. SSH solo via `calilu.mooo.com`
 - **RandomPickerModal.js**: Archivo aun existe en disco pero ya no se importa (limpieza pendiente)
 
 ## Documentacion Detallada
-- [Ultima sesion](./sessions/session-20260302-1818.md)
+- [API Conversion para APK Movil](./api-conversion-mobile.md)
 - [Frontend](./categories/frontend.md)
 - [Backend](./categories/backend.md)
 - [Bugs](./categories/bugs.md)

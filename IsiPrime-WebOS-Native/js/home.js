@@ -16,23 +16,41 @@
         _cachedFeatured: null,
         _scrollTooltipHandler: null,
         _scrollLazyHandler: null,
+        _savedScrollTop: 0,
+        _savedRowIndex: -1,
+        _savedCarouselIndex: 0,
+        _savedMovieId: null,
+        _savedGroupId: null,
+        _savedSection: null,
+        _cachedGenreOrder: null,
+        _cachedGenreGroups: null,
 
         /**
          * Show home view and build the current section.
          * Can be called with explicit data or with no args (uses cached App._* data).
          * The Router calls show(data) with a single arg or undefined on back navigation.
          */
-        show: function(videos, genres, continueWatching, favorites) {
+        show: function(videos, genres, continueWatching, favorites, isBack) {
             // If called from Router with no meaningful data, use cached values
             if (!Array.isArray(videos)) {
+                // Router calls show(data, isBack) — data may be undefined
+                if (typeof videos === 'undefined' || videos === null) {
+                    isBack = genres; // second arg is isBack when called from Router
+                }
                 videos = App._videos || [];
                 genres = App._genres || [];
                 continueWatching = App._continueWatching || [];
                 favorites = App._favorites || [];
             }
 
+            var restoreScroll = isBack && this._savedSection === this._currentSection && this._savedRowIndex >= 0;
+
             this._container = document.getElementById('home-view');
             this._container.style.display = '';
+            // Hide container during restore to avoid visual flash
+            if (restoreScroll) {
+                this._container.style.visibility = 'hidden';
+            }
             this._container.innerHTML = '';
 
             // Hide tooltip on scroll (Magic Remote mouseleave unreliable)
@@ -46,12 +64,66 @@
             this._lazyRows = [];
 
             if (this._currentSection === 'movies') {
-                this._buildMoviesView(videos, genres, continueWatching);
+                this._buildMoviesView(videos, genres, continueWatching, restoreScroll);
             } else if (this._currentSection === 'series') {
                 this._buildSeriesView();
             } else if (this._currentSection === 'favorites') {
                 this._buildFavoritesView(videos, favorites);
             }
+
+            // Restore scroll position and focused row when coming back
+            if (restoreScroll) {
+                var self = this;
+                var savedGroupId = this._savedGroupId;
+                var savedCarousel = this._savedCarouselIndex;
+                var savedMovieId = this._savedMovieId;
+                var savedScroll = this._savedScrollTop;
+
+                // Force init ALL lazy rows synchronously so the target carousel exists
+                var cwData = App._continueWatching || [];
+                for (var i = 0; i < this._lazyRows.length; i++) {
+                    if (!this._lazyRows[i].initialized) {
+                        this._initLazyRow(this._lazyRows[i], cwData);
+                    }
+                }
+                // Restore scroll position
+                this._container.scrollTop = savedScroll;
+
+                // Find the carousel by groupId
+                var targetCarousel = null;
+                if (savedGroupId) {
+                    for (var c = 0; c < this._carousels.length; c++) {
+                        if (this._carousels[c].groupId === savedGroupId) {
+                            targetCarousel = this._carousels[c];
+                            break;
+                        }
+                    }
+                }
+                if (targetCarousel) {
+                    // Find the movie by identifier in the carousel
+                    var focusIdx = savedCarousel;
+                    if (savedMovieId) {
+                        for (var m = 0; m < targetCarousel._items.length; m++) {
+                            var item = targetCarousel._items[m];
+                            if (item.filename === savedMovieId || item.tmdbId === savedMovieId) {
+                                focusIdx = m;
+                                break;
+                            }
+                        }
+                    }
+                    targetCarousel.focusAt(focusIdx);
+                    App.Focus._currentGroup = targetCarousel.groupId;
+                }
+
+                // Show container after everything is positioned
+                setTimeout(function() {
+                    if (self._container) {
+                        self._container.style.visibility = '';
+                    }
+                }, 20);
+            }
+
+            this._savedRowIndex = -1;
         },
 
         /**
@@ -264,7 +336,7 @@
             infoBar.classList.add('visible');
         },
 
-        _buildMoviesView: function(videos, genres, continueWatching) {
+        _buildMoviesView: function(videos, genres, continueWatching, restoreScroll) {
             var self = this;
             var container = this._container;
 
@@ -293,37 +365,52 @@
                 });
             }
 
-            // Group movies by primary genre (genreIds[0])
-            var genreGroups = {};
-            var genreOrder = [];
+            // Reuse cached genre order on back navigation (avoid reshuffle)
+            var genreGroups;
+            var genreOrder;
+            if (restoreScroll && this._cachedGenreOrder && this._cachedGenreGroups) {
+                genreGroups = this._cachedGenreGroups;
+                genreOrder = this._cachedGenreOrder;
+            } else {
+                // Group movies by primary genre (genreIds[0])
+                genreGroups = {};
+                genreOrder = [];
 
-            videos.forEach(function(movie) {
-                var gid = (movie.genreIds && movie.genreIds.length > 0) ? movie.genreIds[0] : 0;
-                if (!genreGroups[gid]) {
-                    genreGroups[gid] = [];
-                    genreOrder.push(gid);
-                }
-                genreGroups[gid].push(movie);
-            });
+                videos.forEach(function(movie) {
+                    var gid = (movie.genreIds && movie.genreIds.length > 0) ? movie.genreIds[0] : 0;
+                    if (!genreGroups[gid]) {
+                        genreGroups[gid] = [];
+                        genreOrder.push(gid);
+                    }
+                    genreGroups[gid].push(movie);
+                });
 
-            // Sort genres by number of movies (descending)
-            genreOrder.sort(function(a, b) {
-                return genreGroups[b].length - genreGroups[a].length;
-            });
+                // Sort genres by number of movies (descending)
+                genreOrder.sort(function(a, b) {
+                    return genreGroups[b].length - genreGroups[a].length;
+                });
+
+                // Shuffle movies within each genre (Fisher-Yates)
+                genreOrder.forEach(function(gid) {
+                    var movies = genreGroups[gid];
+                    for (var sh = movies.length - 1; sh > 0; sh--) {
+                        var rj = Math.floor(Math.random() * (sh + 1));
+                        var temp = movies[sh];
+                        movies[sh] = movies[rj];
+                        movies[rj] = temp;
+                    }
+                });
+
+                // Cache for back navigation
+                this._cachedGenreOrder = genreOrder;
+                this._cachedGenreGroups = genreGroups;
+            }
 
             // Create genre rows lazily — only initialize carousel when scrolled into view
             var lazyRows = [];
             genreOrder.forEach(function(gid) {
                 var movies = genreGroups[gid];
                 if (movies.length < 3) return;
-
-                // Shuffle movies within each genre (Fisher-Yates)
-                for (var sh = movies.length - 1; sh > 0; sh--) {
-                    var rj = Math.floor(Math.random() * (sh + 1));
-                    var temp = movies[sh];
-                    movies[sh] = movies[rj];
-                    movies[rj] = temp;
-                }
 
                 var genreName = gid === 0 ? 'Otros' : App.getGenreName(gid);
                 if (!genreName) genreName = 'Otros';
@@ -381,8 +468,8 @@
             self._lazyRows = lazyRows;
             self._initLazyObserver(continueWatching);
 
-            // Focus the first carousel
-            if (this._carousels.length > 0) {
+            // Focus the first carousel (skip if restoring scroll — handled in show())
+            if (!restoreScroll && this._carousels.length > 0) {
                 var firstGroupId = this._rowGroupIds[0];
                 if (firstGroupId && App.Focus && App.Focus.setActiveGroup) {
                     App.Focus.setActiveGroup(firstGroupId, 0);
@@ -801,6 +888,32 @@
          */
         hide: function() {
             if (this._container) {
+                // Save scroll and focus state for restoration on back
+                this._savedScrollTop = this._container.scrollTop || 0;
+                this._savedSection = this._currentSection;
+                this._savedRowIndex = -1;
+                this._savedCarouselIndex = 0;
+
+                // Find which carousel is currently focused and save movie identity
+                var activeGroupId = App.Focus._currentGroup;
+                this._savedGroupId = activeGroupId || null;
+                this._savedMovieId = null;
+                if (activeGroupId) {
+                    for (var i = 0; i < this._carousels.length; i++) {
+                        if (this._carousels[i].groupId === activeGroupId) {
+                            this._savedRowIndex = i;
+                            var fi = this._carousels[i]._focusIndex || 0;
+                            this._savedCarouselIndex = fi;
+                            // Save movie identifier to find it after reshuffle
+                            var focusedItem = this._carousels[i]._items[fi];
+                            if (focusedItem) {
+                                this._savedMovieId = focusedItem.filename || focusedItem.tmdbId || null;
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 if (this._scrollTooltipHandler) {
                     this._container.removeEventListener('scroll', this._scrollTooltipHandler);
                     this._scrollTooltipHandler = null;
@@ -809,6 +922,11 @@
                     this._container.removeEventListener('scroll', this._scrollLazyHandler);
                     this._scrollLazyHandler = null;
                 }
+                // Release memory: destroy carousels, focus groups, and DOM
+                this._destroyCarousels();
+                this._rowGroupIds = [];
+                this._lazyRows = [];
+                this._container.innerHTML = '';
                 this._container.style.display = 'none';
             }
         },

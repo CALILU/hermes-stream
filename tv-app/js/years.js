@@ -345,7 +345,7 @@
                     el.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
-                        self._onMovieSelect(mov);
+                        App.Router.navigate('DETAIL', mov);
                     });
                     el.addEventListener('mouseenter', function() {
                         self._activePanel = 'grid';

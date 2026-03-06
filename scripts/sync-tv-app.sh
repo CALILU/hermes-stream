@@ -17,6 +17,13 @@ for f in api login images focus nav-bar sidebar-grid-view keyboard carousel rout
     cp IsiPrime-WebOS-Native/js/$f.js tv-app/js/
 done
 
+echo "Copiando assets..."
+mkdir -p tv-app/assets
+cp IsiPrime-WebOS-Native/assets/icon-hd.png tv-app/assets/
+cp IsiPrime-WebOS-Native/assets/logo.svg tv-app/assets/
+cp IsiPrime-WebOS-Native/assets/placeholder.svg tv-app/assets/
+cp IsiPrime-WebOS-Native/icon.png tv-app/assets/
+
 echo "Archivos copiados a tv-app/"
 
 # Subir al NAS

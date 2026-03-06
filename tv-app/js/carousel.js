@@ -420,7 +420,7 @@
                         var url = App.Config.posterUrl(
                             item.poster || item.poster_path || item.posterPath || '', 'w342'
                         );
-                        if (url && url !== 'assets/placeholder.svg') urls.push(url);
+                        if (url && url !== App.Config.PLACEHOLDER_IMG) urls.push(url);
                     }
                     var startBwd = Math.floor(this._currentOffset / this._totalItemWidth) - this._bufferCount - 1;
                     for (var j = startBwd; j > startBwd - ahead && j >= 0; j--) {
@@ -428,7 +428,7 @@
                         var u = App.Config.posterUrl(
                             itm.poster || itm.poster_path || itm.posterPath || '', 'w342'
                         );
-                        if (u && u !== 'assets/placeholder.svg') urls.push(u);
+                        if (u && u !== App.Config.PLACEHOLDER_IMG) urls.push(u);
                     }
                     if (urls.length > 0) App.Images.prefetch(urls);
                 },

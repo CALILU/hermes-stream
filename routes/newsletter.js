@@ -58,13 +58,19 @@ module.exports = function createNewsletterRoutes(deps) {
      */
     router.post('/send', authenticate, adminOnly, async (req, res) => {
         try {
-            const { movies, subject } = req.body;
+            const { movies, subject, recipientIds } = req.body;
 
             if (!movies || !Array.isArray(movies) || movies.length === 0) {
                 return res.status(400).json({ error: 'Se requiere al menos una pelicula', code: 'NO_MOVIES' });
             }
 
-            const recipients = usersDB.getUsersWithEmail();
+            let recipients = usersDB.getUsersWithEmail();
+
+            // Filter by selected recipient IDs if provided
+            if (Array.isArray(recipientIds) && recipientIds.length > 0) {
+                const idSet = new Set(recipientIds);
+                recipients = recipients.filter(r => idSet.has(r.id));
+            }
 
             if (recipients.length === 0) {
                 return res.status(400).json({ error: 'No hay usuarios con email configurado', code: 'NO_RECIPIENTS' });
@@ -75,13 +81,14 @@ module.exports = function createNewsletterRoutes(deps) {
 
             const results = await emailService.sendBulkEmails(recipients, emailSubject, html);
 
-            // Log newsletter + movies
+            // Log newsletter + movies + HTML
             const logEntry = usersDB.logNewsletter({
                 subject: emailSubject,
                 movieCount: movies.length,
                 recipientsCount: results.sent,
                 sentBy: req.user.id,
-                status: results.failed > 0 ? 'partial' : 'sent'
+                status: results.failed > 0 ? 'partial' : 'sent',
+                htmlContent: html
             });
             if (logEntry) usersDB.logNewsletterMovies(logEntry.id, movies);
 
@@ -167,13 +174,14 @@ module.exports = function createNewsletterRoutes(deps) {
 
             await emailService.sendEmail(email, emailSubject, html);
 
-            // Log test send in history + movies
+            // Log test send in history + movies + HTML
             const logEntry = usersDB.logNewsletter({
                 subject: emailSubject,
                 movieCount: movies.length,
                 recipientsCount: 1,
                 sentBy: req.user.id,
-                status: 'test'
+                status: 'test',
+                htmlContent: html
             });
             if (logEntry) usersDB.logNewsletterMovies(logEntry.id, movies);
 
@@ -181,6 +189,73 @@ module.exports = function createNewsletterRoutes(deps) {
         } catch (err) {
             console.error('[Newsletter] Error enviando test:', err);
             res.status(500).json({ error: `Error enviando test: ${err.message}`, code: 'SEND_ERROR' });
+        }
+    });
+
+    /**
+     * GET /:id
+     * Get a specific newsletter with HTML content
+     */
+    router.get('/:id', authenticate, adminOnly, (req, res) => {
+        try {
+            const entry = usersDB.getNewsletterById(parseInt(req.params.id));
+            if (!entry) {
+                return res.status(404).json({ error: 'Newsletter no encontrado', code: 'NOT_FOUND' });
+            }
+            res.json({ success: true, data: entry });
+        } catch (err) {
+            console.error('[Newsletter] Error obteniendo newsletter:', err);
+            res.status(500).json({ error: 'Error obteniendo newsletter', code: 'SERVER_ERROR' });
+        }
+    });
+
+    /**
+     * POST /:id/resend
+     * Resend a saved newsletter to selected recipients
+     */
+    router.post('/:id/resend', authenticate, adminOnly, async (req, res) => {
+        try {
+            const entry = usersDB.getNewsletterById(parseInt(req.params.id));
+            if (!entry || !entry.html_content) {
+                return res.status(400).json({ error: 'Newsletter sin contenido HTML guardado', code: 'NO_HTML' });
+            }
+
+            const { recipientIds } = req.body;
+            let recipients = usersDB.getUsersWithEmail();
+
+            if (Array.isArray(recipientIds) && recipientIds.length > 0) {
+                const idSet = new Set(recipientIds);
+                recipients = recipients.filter(r => idSet.has(r.id));
+            }
+
+            if (recipients.length === 0) {
+                return res.status(400).json({ error: 'No hay destinatarios seleccionados', code: 'NO_RECIPIENTS' });
+            }
+
+            const results = await emailService.sendBulkEmails(recipients, entry.subject, entry.html_content);
+
+            // Log resend as new entry
+            usersDB.logNewsletter({
+                subject: `[Reenvio] ${entry.subject}`,
+                movieCount: entry.movie_count,
+                recipientsCount: results.sent,
+                sentBy: req.user.id,
+                status: 'resent',
+                htmlContent: entry.html_content
+            });
+
+            res.json({
+                success: true,
+                data: {
+                    sent: results.sent,
+                    failed: results.failed,
+                    total: recipients.length,
+                    errors: results.errors
+                }
+            });
+        } catch (err) {
+            console.error('[Newsletter] Error reenviando newsletter:', err);
+            res.status(500).json({ error: 'Error reenviando newsletter', code: 'SERVER_ERROR' });
         }
     });
 

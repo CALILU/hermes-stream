@@ -403,10 +403,11 @@ export function useVideos({ authState, setAuthState }) {
       if (collectionFullParts) {
         // Usar partes completas: las del catálogo con datos locales, las demás como placeholder B&N
         const localByTmdb = {};
-        result.forEach(v => { if (v.tmdbId) localByTmdb[v.tmdbId] = v; });
+        result.forEach(v => { if (v.tmdbId) { localByTmdb[v.tmdbId] = v; localByTmdb[String(v.tmdbId)] = v; } });
         result = collectionFullParts.map(part => {
-          if (part.inCatalog && localByTmdb[part.tmdbId]) {
-            return localByTmdb[part.tmdbId];
+          const localMatch = localByTmdb[part.tmdbId] || localByTmdb[String(part.tmdbId)];
+          if (localMatch) {
+            return localMatch;
           }
           // Película no en catálogo
           return {
@@ -426,8 +427,9 @@ export function useVideos({ authState, setAuthState }) {
       } else {
         const collection = collections.find(c => c.name === selectedCollection);
         if (collection && collection.movies) {
-          const collectionFilenames = collection.movies.map(m => m.filename);
-          result = result.filter(v => collectionFilenames.includes(v.filename));
+          const collectionFilenames = new Set(collection.movies.map(m => m.filename));
+          const collectionTmdbIds = new Set(collection.movies.map(m => m.tmdb_id).filter(Boolean));
+          result = result.filter(v => collectionFilenames.has(v.filename) || (v.tmdbId && collectionTmdbIds.has(v.tmdbId)));
         }
       }
     } else if (selectedGenre) {

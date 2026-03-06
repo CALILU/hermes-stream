@@ -377,7 +377,7 @@
                 still.alt = ep.name || '';
                 App.Images.observe(still);
             } else {
-                still.src = 'assets/placeholder.svg';
+                still.src = App.Config.PLACEHOLDER_IMG;
                 still.alt = '';
             }
             item.appendChild(still);

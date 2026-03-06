@@ -38,7 +38,7 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 
 **Storage**: Always local mode. Path configured in `storage-settings.json` (default: `LOCAL_VIDEOS_PATH` env var).
 
-**Authentication (JWT)**: Handled by `lib/auth.js`. LAN IPs are auto-authenticated as admin (configurable via `ALLOW_LAN_AUTH`). External users authenticate with JWT access tokens (15min) + refresh tokens (30d). Passwords hashed with bcrypt. Legacy SHA256 hashes auto-migrate on first login.
+**Authentication (JWT)**: Handled by `lib/auth.js`. LAN IPs are auto-authenticated with per-TV user identification: checks `X-TV-Serial` header → `X-TV-Model` header → fallback to generic admin (configurable via `ALLOW_LAN_AUTH`). TV-to-user mapping stored in `user_tvs` table, looked up via `usersDB.findTVBySerial()` / `findTVByModel()`. External users authenticate with JWT access tokens (15min) + refresh tokens (30d). Passwords hashed with bcrypt. Legacy SHA256 hashes auto-migrate on first login.
 
 **Key env vars**:
 - `JWT_SECRET` — Secret for signing JWTs (auto-generated if not set)
@@ -55,7 +55,7 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 ### Routes (`routes/`)
 | File | Mount Point | Purpose |
 |------|------------|---------|
-| `auth.js` | `/api/auth` | Login, refresh, logout, register, invitations, user/session management |
+| `auth.js` | `/api/auth` | Login, refresh, logout, register, invitations, user/session/TV management |
 | `user-data.js` | `/api` | Per-user progress, favorites, continue-watching |
 | `videos.js` | `/api/videos`, `/api/genres` | Movie listing, TMDB enrichment |
 | `streaming.js` | `/stream/:filename` | Video streaming with FFmpeg transcoding |
@@ -64,8 +64,8 @@ Express 5 server. Serves the React build as static files and all API routes. Lis
 | `tmdb.js` | `/api/tmdb` | TMDB search, cast lookup, actor filmography |
 | `collections.js` | `/api/collections` | Custom and auto-generated movie collections. `/:id/full` returns full TMDB details (cached 14 days in SQLite) |
 | `downloads.js` | `/api/download-queue`, `/api/search-torrents` | Download queue management |
-| `conversion.js` | `/api/convert` | Single video conversion with SSE progress (duplicate protection) |
-| `newsletter.js` | `/api/newsletter` | Newsletter email system (preview, send, test, history) |
+| `conversion.js` | `/api/convert` | Video conversion (MKV/AVI→MP4) with smart FFmpeg (copy H.264, re-encode AVI), audio normalization (AAC stereo 48kHz), individual + batch mode, SSE progress, SQLite integration |
+| `newsletter.js` | `/api/newsletter` | Newsletter email system (preview, send, test, history, resend). `moviesForEmail()` converts proxy URLs to TMDB. HTML saved in `newsletter_logs.html_content` for resend |
 | `storage.js` | `/api/storage` | Storage configuration |
 | `movies.js` | `/api/movies`, `/api/files` | Poster update, file deletion, renaming |
 | `dlna.js` | `/api/dlna`, `/dlna` | DLNA/Cast to TV (optional via `DLNA_ENABLED`) |
@@ -92,7 +92,7 @@ Routes receive shared context via factory function pattern: `module.exports = fu
 All data persisted in SQLite via `better-sqlite3` (WAL mode):
 
 - **`db/media-db.js`** → `isiprime.db` — 6 tables: `movies_cache` (+ `audio_sample_rate` column), `series_cache`, `series_episodes`, `collections`, `collection_details_cache`, `download_queue`. 30+ exported functions. `collection_details_cache` stores TMDB collection movie details with 14-day TTL.
-- **`db/users-db.js`** → `isiprime.db` — 7 tables: `users` (+ `email`, `email_notifications` columns), `sessions`, `user_progress`, `user_favorites`, `invitations`, `newsletter_logs`, `newsletter_movies`. 36+ exported functions. Seeds admin user on first init.
+- **`db/users-db.js`** → `isiprime.db` — 8 tables: `users` (+ `email`, `email_notifications` columns), `sessions`, `user_progress`, `user_favorites`, `user_tvs`, `invitations`, `newsletter_logs` (+ `html_content` column for resend), `newsletter_movies`. 40+ exported functions. Seeds admin user on first init. `getActiveViewers()` detects users watching (progress updated <3min). `cleanCompletedProgress()` auto-cleans completed entries >30 days (runs at startup). `findTVBySerial(serial)` and `findTVByModel(model)` look up TV-to-user mappings for LAN auto-auth (model only returns if exactly 1 match).
 - **`db/requests-db.js`** → `requests.db` — Movie requests with statuses: `pending`, `downloading`, `downloaded`, `mp4`, `server`, `rejected`.
 
 **Migration**: Run `node scripts/migrate-json-to-sqlite.js` to import legacy JSON files (`cache.json`, `cache-series.json`, `series-episodes.json`, `collections.json`, `download-queue.json`) into SQLite.
@@ -107,17 +107,17 @@ React 19 app with Tailwind CSS and Framer Motion. Built with react-scripts, outp
 - `useVideos` — Catalog + favorites (server-synced) + search
 - `useSeries` — Series + episodes
 - `useRequests` — Requests + SSE real-time updates
-- `useUsers` — User management + invitations (admin CRUD, create/delete/update users, email management, generate invitation codes)
+- `useUsers` — User management + invitations (admin CRUD, create/delete/update users, email, TV management, auto-refresh 30s for watching status)
 - `useVideoProgress` — Playback position (server-synced + localStorage cache)
 - `useVolumeBoost` — Audio gain control
 - `useRecommendations` — AI-based personalized recommendations
 - `useCast` — DLNA/Cast to TV
-- `useNewsletter` — Newsletter management (movie selection, preview, send, history, sent-movie tracking)
+- `useNewsletter` — Newsletter management (movie selection, preview, send/test, recipient selection with localStorage persistence, history detail view, resend saved newsletters, sent-movie tracking)
 
 **Components** (in `my-ui/src/components/`):
 - `VideoPlayer.js` — Custom video player with seek bar (mouse+touch), thumbnail preview, volume boost, PiP, fullscreen, cast button, keyboard shortcuts, recommended movies
-- `UserManagementModal.js` — Admin modal: user CRUD (with email) + invitation management (2 tabs)
-- `NewsletterModal.js` — Newsletter admin modal: movie selector (with "sent" badges), preview, send/test, history (3 tabs)
+- `UserManagementModal.js` — Admin modal: expandable user cards (email, TVs, watching status) + invitation management (2 tabs)
+- `NewsletterModal.js` — Newsletter admin modal: movie selector (with "sent" badges + search with X clear), preview with recipient checkboxes, send/test, history with clickable entries (preview saved HTML + resend to selected recipients) (3 tabs)
 - `CastButton.js` — Cast to TV button with status indicator
 - `CastDeviceModal.js` — DLNA device selector modal
 - `RandomPickerModal.js` — Smart random movie picker
@@ -131,14 +131,14 @@ Two entry points:
 - `converter-server.js` + `converter-ui/index.html` — Web UI for the same
 
 ### Newsletter System
-Email newsletter for notifying users about new movies. Admin selects movies (with "already sent" badges), previews HTML email, and sends to all users with email configured. Uses nodemailer with Gmail SMTP. Dark Netflix-style template with genre grouping, table-based layout, inline CSS. Sent movies tracked in `newsletter_movies` table to avoid duplicates. History with delete support.
+Email newsletter for notifying users about new movies. Admin selects movies (with "already sent" badges), previews HTML email, and sends to selected recipients. Uses nodemailer with Gmail SMTP. Dark Netflix-style template with genre grouping, table-based layout, inline CSS. Poster URLs converted from local proxy (`/api/img/`) to public TMDB URLs via `moviesForEmail()` + `posterCache.toTMDBURL()`. Sent movies tracked in `newsletter_movies` table to avoid duplicates. Recipient selection with localStorage persistence (stores excluded IDs). History with preview (saved HTML), resend to selected recipients, and delete support.
 
 ### Requests System
 Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "server" when found on disk. Requests with status `downloaded`/`server` are auto-deleted after 7 days based on `requestedAt`. `REQUESTS_READONLY` env var makes the instance view-only.
 
 ## Key Patterns
 
-- **JWT Auth**: Access token (15min, in memory) + refresh token (30d, localStorage). Token rotation on refresh. Rate limiting on login (5 attempts/15min per IP).
+- **JWT Auth**: Access token (15min, in memory) + refresh token (30d, localStorage). Token rotation on refresh. Rate limiting on login (5 attempts/15min per IP). LAN TVs identified by `X-TV-Serial`/`X-TV-Model` headers → `user_tvs` table lookup → per-user favorites/progress.
 - **SSE (Server-Sent Events)**: Used for real-time request updates and conversion progress. Token passed via query string (`?token=`).
 - **Per-user data**: Video progress and favorites synced to server (SQLite), with localStorage as fallback cache. Server has authoritative data.
 - **Role-based access**: `admin` role can manage users, invitations, requests. `viewer` role has standard access. LAN users auto-authenticated as admin.
@@ -150,9 +150,10 @@ Requests stored in SQLite (`requests.db`). Auto-detection marks movies as "serve
 - **TMDB multi-strategy search**: Tries 5 strategies (exact, main title, year variants, partial, English) before giving up.
 - **SQLite singleton pattern**: Each db module (`media-db.js`, `users-db.js`, `requests-db.js`) creates its own `Database` instance with WAL mode. Tables auto-created on `init()`.
 - **TV App auto-update**: IPK is a minimal bootstrap (`config.js` local + dynamic loader). 17 JS modules + CSS loaded from `SERVER_URL/tv-app/` with `?v=timestamp` cache-bust. Fallback to local IPK copy on server failure. Update flow: edit in `IsiPrime-WebOS-Native/` → `bash scripts/sync-tv-app.sh` → TVs load new version on next app open. `tv-app/` served via `express.static` with `maxAge:0, etag:true`.
+- **TV App browser mode**: `GET /tv` serves inline HTML page that loads all TV app modules from `/tv-app/js/` with `SERVER_URL` set dynamically from `req.get('host')`. Works remotely via `https://calilu.mooo.com/tv`. Same codebase as webOS IPK but with inline `App.Config` (no local config.js). Backspace/Escape mapped to BACK key. Requires login for remote users (JWT).
 
 ### webOS Native TV App (`IsiPrime-WebOS-Native/`)
-Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API. Compatible with webOS 4.0+ (Chromium ~53+). **Auto-update**: IPK is a minimal bootstrap; 17 JS modules + CSS loaded dynamically from server (`/tv-app/`) with local fallback. Only `config.js` stays local in IPK.
+Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO build step. Connects to the IsiPrime server via HTTP API. Compatible with webOS 4.0+ (Chromium ~53+). Also accessible via browser at `/tv` (server-rendered HTML with same modules). **Auto-update**: IPK is a minimal bootstrap; 17 JS modules + CSS loaded dynamically from server (`/tv-app/`) with local fallback. Only `config.js` stays local in IPK.
 
 **Target TVs**:
 | Device | Model | webOS | Chromium | IP | Connection |
@@ -167,26 +168,32 @@ Standalone vanilla JS app for LG webOS TVs. NO frameworks, NO ES modules, NO bui
 - `appinfo.json` must include `accessibleUrl: "http://*:*;https://*:*"` for external HTTP requests
 - Uses `window.App` namespace pattern
 
-**Architecture** (17 JS modules loaded dynamically from server, fallback to local):
+**Architecture** (20 JS modules loaded dynamically from server, fallback to local):
 | Module | Purpose |
 |--------|---------|
 | `config.js` | Constants, TMDB image helpers (detect full URLs), key codes, APP_VERSION (always local in IPK) |
-| `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography |
-| `login.js` | Login screen for remote (non-LAN) users |
+| `api.js` | HTTP client with JWT auth + auto-refresh on 401, actor filmography, TV serial/model detection (`X-TV-Serial`/`X-TV-Model` headers) |
+| `login.js` | Login screen for remote (non-LAN) users. Mouse/click support for browser/PC (click submit, Enter in password, click inputs). Defines `App.wrapClearable(input)` reusable helper (clear ✕ button) |
 | `images.js` | Direct image loading with concurrency limit (max 20) + 15s timeout protection |
-| `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement) |
+| `focus.js` | D-pad navigation engine (groups, vertical/horizontal movement). `init()` guards against duplicate handlers (safe to call multiple times) |
+| `nav-bar.js` | Shared navigation bar logic (focus, key handling, section switching) |
+| `sidebar-grid-view.js` | Shared sidebar + grid layout utilities (used by genre, years, sagas) |
+| `keyboard.js` | Shared on-screen keyboard (A-Z, Ñ, 0-9, ESPACIO, BORRAR, LIMPIAR). Used by search + requests |
 | `carousel.js` | Virtual horizontal carousel (only renders visible items + buffer) |
 | `router.js` | State machine (LOADING→HOME→DETAIL→PLAYER→SERIES→SEARCH→ACTOR→SAGAS) |
-| `home.js` | Genre carousels, continue-watching, series, favorites sections |
-| `detail.js` | Movie/series detail overlay with backdrop, cast grid (D-pad + click navigation), play/favorite/saga buttons |
+| `home.js` | Genre carousels, continue-watching, series, favorites. Scroll/focus restore on back (cached shuffle order, identify movie by filename, visibility hidden + sync init to avoid flash) |
+| `detail.js` | Movie/series detail overlay with backdrop, fixed info section (title/meta/synopsis/buttons) + scrollable cast grid (D-pad + click navigation), play/favorite/saga buttons |
 | `player.js` | Video player: iframe to `/tv-player`, loading overlay, auto-resume, progress save, key forwarding |
 | `series.js` | Series detail with season tabs + episode list |
 | `search.js` | On-screen keyboard + local search results (dynamic column detection) |
+| `requests.js` | Movie request system: TMDB search tab + existing requests list tab. `requestedBy` = actual username (from `App.API._username`), admin detection = role-based |
 | `actor.js` | Actor filmography grid — shows only locally available movies, TMDB data via `/api/tmdb/actor` |
-| `sagas.js` | Collection/saga browser — sidebar list + movie grid, unavailable movies in B&W with request toggle |
+| `sagas.js` | Collection/saga browser — sidebar list with filter (on-screen keyboard on TV, physical keyboard passthrough on browser) + movie grid, unavailable movies in B&W with request toggle |
+| `genre.js` | Genre browser — sidebar genre list + movie grid with auto-select |
+| `years.js` | Year browser — sidebar year list + movie grid with auto-select |
 | `app.js` | Bootstrap, data loading, nav bar setup, version label (loaded last) |
 
-**Auth**: LAN users auto-authenticated (no login). Remote users see login form, JWT stored in memory/localStorage.
+**Auth**: LAN users auto-authenticated with per-TV identity (`X-TV-Serial`/`X-TV-Model` headers → `user_tvs` lookup). Remote users see login form, JWT stored in memory/localStorage. TV serial/model detected via `PalmSystem.deviceInfo` (sync) with fallback to `webOS.deviceInfo()` and Luna Service. Cached in `localStorage`.
 
 **TV Player** (`/tv-player`): Inline HTML page served by `server.js` for video playback inside an iframe. Uses Chromium ~53 compatible JS (regex params, XHR for duration). Contains its own transport controls (play/pause, seek ±10s, stop), interactive progress bar (click to seek), title bar, time display, and **loading spinner** (shown during buffering, hidden on `canplay`/`playing`). Streaming strategy: MSE/fMP4 forced (direct mode disabled for webOS `enableVideoHole` compatibility), with XHR fallback for older browsers. Duration fetched via FFprobe (`/video-duration/:filename`) using XHR. Seek reloads iframe at new position. Supports both D-pad remote (keydown) and Magic Remote (mousemove/click).
 
@@ -247,7 +254,7 @@ scripts/renew-webos-devmode.sh
 **Config files**:
 - `ecosystem.config.js` — PM2 config (fork mode, 1 instance, logs in `logs/`)
 - `.env.nas` — Template .env for NAS
-- `HermesStream.bat` — Simplified launcher (just opens browser to NAS URL)
+- `HermesStream.bat` — Smart launcher: pings NAS LAN (`192.168.1.45`), opens LAN URL if reachable, otherwise DDNS (`calilu.mooo.com`)
 
 ## Install Package
 

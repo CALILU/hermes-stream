@@ -103,11 +103,11 @@
             // Try HTTPS first, then LAN fallback
             tryConnect(SERVER_URL, function(ok) {
                 if (ok) {
-                    window.location.href = SERVER_URL;
+                    window.location.href = SERVER_URL + '/tv';
                 } else {
                     tryConnect(SERVER_URL_LAN, function(ok2) {
                         if (ok2) {
-                            window.location.href = SERVER_URL_LAN;
+                            window.location.href = SERVER_URL_LAN + '/tv';
                         } else {
                             showError();
                         }

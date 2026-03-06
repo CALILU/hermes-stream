@@ -11,14 +11,14 @@
 
     window.App = window.App || {};
 
-    var GRID_COLS = 5;
+    var GRID_COLS_DEFAULT = 7;
 
     /**
      * Helper: if url is already absolute (http), return as-is.
      * Otherwise treat as TMDB path and build via posterUrl.
      */
     function resolveImg(url, size) {
-        if (!url) return 'assets/placeholder.svg';
+        if (!url) return App.Config.PLACEHOLDER_IMG;
         if (url.indexOf('http') === 0) return url;
         return App.Config.posterUrl(url, size);
     }
@@ -343,7 +343,12 @@
 
             if (total === 0) return;
 
-            var cols = Math.min(total, GRID_COLS);
+            // Calculate columns from grid container width and item width (200px + 24px gap)
+            var cols = GRID_COLS_DEFAULT;
+            if (this._gridEl) {
+                cols = Math.floor(this._gridEl.clientWidth / 224) || GRID_COLS_DEFAULT;
+            }
+            if (cols > total) cols = total;
 
             switch (key) {
                 case App.Config.KEYS.LEFT:

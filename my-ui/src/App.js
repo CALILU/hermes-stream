@@ -87,7 +87,8 @@ export default function HermesApp() {
     createUserForm, creatingUser, createUserError,
     invitationForm, creatingInvitation, lastCreatedInvitation,
     setActiveTab: setUsersActiveTab, setCreateUserForm, setInvitationForm, setLastCreatedInvitation,
-    createUser, deleteUser, updateUserEmail, createInvitation, deleteInvitation,
+    createUser, deleteUser, updateUser, updateUserEmail, addUserTV, deleteUserTV,
+    createInvitation, deleteInvitation,
     openUserManagement, closeUserManagement
   } = useUsers();
 
@@ -96,10 +97,14 @@ export default function HermesApp() {
     previewHTML: newsletterPreviewHTML, loadingPreview: newsletterLoadingPreview,
     sending: newsletterSending, sendResult: newsletterSendResult,
     history: newsletterHistory, loadingHistory: newsletterLoadingHistory, sentMovies,
+    recipients: newsletterRecipients, selectedRecipientIds,
     setNewsletterSubject,
     toggleMovie: newsletterToggleMovie, generatePreview: newsletterGeneratePreview,
     sendNewsletter, sendTest: newsletterSendTest,
-    loadHistory: loadNewsletterHistory, deleteHistory: deleteNewsletterHistory, openNewsletter, closeNewsletter
+    toggleRecipient, toggleAllRecipients,
+    loadHistory: loadNewsletterHistory, deleteHistory: deleteNewsletterHistory, openNewsletter, closeNewsletter,
+    selectedHistoryEntry, loadingHistoryDetail, resending, resendResult,
+    loadNewsletterDetail, resendNewsletter, closeHistoryDetail
   } = useNewsletter(genres);
 
   // Registration page state (for ?code= URL)
@@ -200,6 +205,7 @@ export default function HermesApp() {
   const [contextMenu, setContextMenu] = useState(null);
 
   // Estados para modal de búsqueda de carátula
+  const [sagaSearch, setSagaSearch] = useState('');
   const [posterSearchModal, setPosterSearchModal] = useState(null);
   const [posterSearchQuery, setPosterSearchQuery] = useState('');
   const [posterSearchResults, setPosterSearchResults] = useState([]);
@@ -1492,6 +1498,7 @@ export default function HermesApp() {
                   setSelectedDecade(null);
                   setSelectedYear(null);
                   setShowRecent(false);
+                  setSagaSearch('');
                 }}
                 className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[10px] font-medium transition-all ${
                   !showCollections && !showDecades
@@ -1525,6 +1532,7 @@ export default function HermesApp() {
                   setSelectedGenre(null);
                   setSelectedCollection(null);
                   setShowRecent(false);
+                  setSagaSearch('');
                 }}
                 className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[10px] font-medium transition-all ${
                   showDecades
@@ -1750,6 +1758,17 @@ export default function HermesApp() {
               🎬 Todas las sagas
             </button>
 
+            {/* Búsqueda de sagas */}
+            <div className="mb-2">
+              <input
+                type="text"
+                placeholder="Buscar saga..."
+                value={sagaSearch || ''}
+                onChange={(e) => setSagaSearch(e.target.value)}
+                className="w-full px-3 py-2 text-xs text-white bg-slate-800/80 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-500"
+              />
+            </div>
+
             {/* Filtro de colecciones por género */}
             <div className="mb-3">
               <select
@@ -1764,7 +1783,7 @@ export default function HermesApp() {
               </select>
             </div>
 
-            {collections.length === 0 ? (
+            {(sagaSearch ? collections.filter(c => c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(sagaSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) : collections).length === 0 ? (
               <div className="text-sm text-slate-400 px-2 py-2 text-center">
                 <FolderOpen className="mx-auto mb-2 opacity-50" size={24} />
                 <p className="mb-3">{selectedGenre ? 'Sin sagas en este género' : 'Sin sagas disponibles'}</p>
@@ -1786,7 +1805,7 @@ export default function HermesApp() {
               </div>
             ) : (
               <div className="space-y-2">
-                {collections.map(collection => (
+                {(sagaSearch ? collections.filter(c => c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(sagaSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) : collections).map(collection => (
                   <button
                     key={collection.name}
                     onClick={() => setSelectedCollection(collection.name)}
@@ -1820,44 +1839,6 @@ export default function HermesApp() {
           </>
         )}
 
-        {/* Separador */}
-        <div className="border-t border-slate-200 my-4"></div>
-
-        {/* Botones de Peticiones */}
-        <div className="space-y-2">
-          <button
-            onClick={openRequestsModal}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg"
-          >
-            🎬 Pedir Película
-          </button>
-
-          {/* Botón Admin - solo para usuarios locales o admin */}
-          {(authState.isLocal || authState.user?.role === 'admin') && (
-            <button
-              onClick={openRequestsAdmin}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
-            >
-              📋 Ver Peticiones
-            </button>
-          )}
-          {(authState.isLocal || authState.user?.role === 'admin') && (
-            <button
-              onClick={openUserManagement}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
-            >
-              <Users size={16} /> Gestionar Usuarios
-            </button>
-          )}
-          {(authState.isLocal || authState.user?.role === 'admin') && (
-            <button
-              onClick={openNewsletter}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-700 transition-all"
-            >
-              <Mail size={16} /> Newsletter
-            </button>
-          )}
-        </div>
         </div>
       </div>
 
@@ -2515,7 +2496,10 @@ export default function HermesApp() {
         onInvitationFormChange={setInvitationForm}
         onCreateUser={createUser}
         onDeleteUser={deleteUser}
+        onUpdateUser={updateUser}
         onUpdateUserEmail={updateUserEmail}
+        onAddUserTV={addUserTV}
+        onDeleteUserTV={deleteUserTV}
         onCreateInvitation={createInvitation}
         onDeleteInvitation={deleteInvitation}
         onDismissInvitation={() => setLastCreatedInvitation(null)}
@@ -2541,6 +2525,17 @@ export default function HermesApp() {
         onSendTest={newsletterSendTest}
         onLoadHistory={loadNewsletterHistory}
         onDeleteHistory={deleteNewsletterHistory}
+        recipients={newsletterRecipients}
+        selectedRecipientIds={selectedRecipientIds}
+        onToggleRecipient={toggleRecipient}
+        onToggleAllRecipients={toggleAllRecipients}
+        selectedHistoryEntry={selectedHistoryEntry}
+        loadingHistoryDetail={loadingHistoryDetail}
+        resending={resending}
+        resendResult={resendResult}
+        onLoadHistoryDetail={loadNewsletterDetail}
+        onResendNewsletter={resendNewsletter}
+        onCloseHistoryDetail={closeHistoryDetail}
         onClose={closeNewsletter}
       />
 

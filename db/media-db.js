@@ -484,7 +484,7 @@ function updateMovieCodecInfoBatch(entries) {
  */
 function getMoviesWithoutCodecInfo() {
     init();
-    return db.prepare('SELECT filename FROM movies_cache WHERE video_codec IS NULL OR audio_sample_rate IS NULL').all().map(r => r.filename);
+    return db.prepare('SELECT filename FROM movies_cache WHERE video_codec IS NULL OR audio_sample_rate IS NULL OR bitrate IS NULL').all().map(r => r.filename);
 }
 
 // ============================================================

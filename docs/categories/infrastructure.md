@@ -2,6 +2,37 @@
 
 ---
 
+## Sesion: 2026-03-05
+
+### Cambios Realizados
+- Deploy de streaming mejorado (ABR + dynamic buffer + probe on-demand) al NAS
+- Deploy de viewport `/tv` adaptativo para PC
+- Lanzamiento de conversión batch series + re-encode películas pesadas en NAS
+- Scripts subidos: `convert-series-batch.js`, `reencode-heavy-movies.js`, `run-all-conversions.sh`
+- Cadena automática: series (PID 15909) → email → re-encode 27 películas → email
+- Proceso lanzado con `setsid nohup` para sobrevivir desconexión SSH
+
+### Deploy
+```bash
+# Scripts de conversión
+scp scripts/run-all-conversions.sh scripts/reencode-heavy-movies.js isidro@calilu.mooo.com:~/isiprime/scripts/
+
+# Lanzar cadena automática
+ssh isidro@calilu.mooo.com "cd ~/isiprime && setsid nohup bash scripts/run-all-conversions.sh > logs/run-all-conversions.log 2>&1 < /dev/null &"
+
+# Monitorizar
+ssh isidro@calilu.mooo.com "tail -20 ~/isiprime/logs/convert-series.log"
+ssh isidro@calilu.mooo.com "tail -20 ~/isiprime/logs/reencode-movies.log"
+```
+
+### Notas
+- CRLF fix necesario: `sed -i 's/\r$//' script.sh` (archivos creados en Windows)
+- `nohup` simple via SSH no persiste. `setsid nohup ... < /dev/null &` sí lo hace
+- Emails de notificación a isidromislata@gmail.com via SMTP del servidor (.env)
+- N100 soporta bien la carga continua (TDP 6W, throttle solo a 3.4GHz bajo stress)
+
+---
+
 ## Sesion: 2026-03-02 18:18
 
 ### Cambios Realizados

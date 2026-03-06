@@ -23,6 +23,10 @@
          * Initialize focus engine. Listen for keydown events globally.
          */
         init: function() {
+            // Remove previous handler if init() is called again (e.g. after login)
+            if (this._keyHandler) {
+                document.removeEventListener('keydown', this._keyHandler);
+            }
             var self = this;
             this._keyHandler = function(e) {
                 if (self._enabled) {

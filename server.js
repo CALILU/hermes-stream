@@ -273,9 +273,10 @@ app.use('/api/files', filesRouter);
 
 // fMP4 streaming endpoint for MSE playback (webOS TV app)
 // Remuxes MP4 to fragmented MP4 on-the-fly (no re-encoding, just container change)
-app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
+app.get('/stream-fmp4/:filename', jwtAuthMiddleware, async (req, res) => {
     const filename = decodeURIComponent(req.params.filename);
     const startTime = parseFloat(req.query.t) || 0;
+    const quality = req.query.quality || 'original';
     const seriesFolder = req.query.series ? decodeURIComponent(req.query.series) : null;
 
     // Movies: direct in localPath. Series: in Series/folder/filename
@@ -318,11 +319,24 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
         cmd.seekInput(startTime);
     }
 
-    // Mejora 3: Audio passthrough — check if audio is already AAC (no re-encode needed)
+    // Probe on-demand: if movie has no codec info, probe now (~200ms, only first play)
+    let movie = mediaDB.getMovie(filename);
+    if (movie && !movie.bitrate) {
+        try {
+            const { probeFile } = require('./lib/probe');
+            const probeResult = await probeFile(localPath);
+            if (probeResult) {
+                mediaDB.updateMovieCodecInfo(filename, probeResult);
+                movie = { ...movie, ...probeResult };
+                console.log(`🔍 Probe on-demand: ${filename} (${probeResult.bitrate}kbps)`);
+            }
+        } catch (e) { /* probe failed, continue with defaults */ }
+    }
+
+    // Audio passthrough — check if audio is already AAC (no re-encode needed)
     // If audio is not AAC, re-encode to AAC for MSE compatibility
     // If AAC but >2 channels (5.1), downmix to stereo (webOS MSE can't handle multichannel)
     // If sample rate > 48000 Hz (e.g. 96kHz), re-encode — MSE decoders don't support high sample rates
-    const movie = mediaDB.getMovie(filename);
     const audioCodec = movie ? movie.audio_codec : null;
     const audioChannels = movie ? movie.audio_channels : null;
     const audioSampleRate = movie ? movie.audio_sample_rate : null;
@@ -333,14 +347,26 @@ app.get('/stream-fmp4/:filename', jwtAuthMiddleware, (req, res) => {
         ? ['-c:a', 'copy']
         : ['-c:a', 'aac', '-ar', '48000', '-ac', '2', '-b:a', '192k'];
 
+    // Video encoding: copy for original, re-encode for lower quality profiles
+    let videoOpt;
+    if (quality === 'medium') {
+        videoOpt = ['-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '2500k', '-maxrate', '3000k', '-bufsize', '6000k', '-vf', 'scale=-2:720'];
+    } else if (quality === 'low') {
+        videoOpt = ['-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '1000k', '-maxrate', '1200k', '-bufsize', '2400k', '-vf', 'scale=-2:480'];
+    } else {
+        videoOpt = ['-c:v', 'copy'];
+    }
+
     const outputOpts = [
-        '-c:v', 'copy',
+        '-map', '0:v:0',
+        '-map', '0:a:0',
+        ...videoOpt,
         ...audioOpt,
         '-movflags', 'frag_keyframe+empty_moov+default_base_moof',
         '-f', 'mp4'
     ];
     cmd.outputOptions(outputOpts)
-    .on('start', () => console.log('▶️ fMP4 FFmpeg started'))
+    .on('start', () => console.log(`▶️ fMP4 FFmpeg started (quality=${quality})`))
     .on('error', (err) => {
         if (!err.message.includes('SIGKILL') && !err.message.includes('SIGTERM')) {
             console.error('❌ fMP4 FFmpeg error:', err.message);
@@ -394,6 +420,22 @@ app.get('/video-info/:filename', jwtAuthMiddleware, (req, res) => {
             duration: info ? info.duration_seconds : 0
         });
     });
+});
+
+// Get available quality profiles for ABR (based on bitrate/resolution in DB)
+app.get('/video-profiles/:filename', jwtAuthMiddleware, (req, res) => {
+    const filename = decodeURIComponent(req.params.filename);
+    const movie = mediaDB.getMovie(filename);
+    const profiles = [{ id: 'original', label: 'Original', bitrate: movie ? movie.bitrate : null, width: movie ? movie.width : null, height: movie ? movie.height : null }];
+    if (movie && movie.bitrate) {
+        if (movie.bitrate > 4000) {
+            profiles.push({ id: 'medium', label: '720p', bitrate: 2500, width: 1280, height: 720 });
+        }
+        if (movie.bitrate > 2000) {
+            profiles.push({ id: 'low', label: '480p', bitrate: 1000, width: 854, height: 480 });
+        }
+    }
+    res.json({ success: true, profiles });
 });
 
 // Get video duration for TV player (quick FFprobe)
@@ -489,6 +531,7 @@ var token=getParam('token');
 var ext=getParam('ext');
 var vcodec=getParam('vcodec');
 var acodec=getParam('acodec');
+var urlQuality=getParam('quality')||'original';
 // directMode: disabled — webOS enableVideoHole conflicts with direct v.src in iframe
 // Force MSE/fMP4 mode for all files; falls back to direct if MSE unavailable
 var directMode=false;
@@ -571,6 +614,7 @@ if(token)u+='&token='+encodeURIComponent(token);
 if(ext)u+='&ext='+ext;
 if(vcodec)u+='&vcodec='+vcodec;
 if(acodec)u+='&acodec='+acodec;
+if(abrCurrent&&abrCurrent!=='original')u+='&quality='+abrCurrent;
 location.href=u;
 }
 });
@@ -580,11 +624,46 @@ ctrl.addEventListener('mouseenter',function(){if(ht){clearTimeout(ht);ht=null;}}
 ctrl.addEventListener('mouseleave',function(){if(!v.paused){ht=setTimeout(function(){ctrl.classList.add('hid');tb.classList.add('hid');},3000);}});
 
 // Buffer limits — TV has ~1.5GB RAM shared with OS
-// Tuned for WiFi stability (nuevaTV uses WiFi via Archer router)
+// Dynamic: adjusted based on measured throughput
 var MAX_QUEUE_BYTES=5*1024*1024;   // 5MB max pending in JS queue
-var MAX_BUFFER_AHEAD=30;           // 30s ahead before pausing fetch
-var RESUME_BUFFER=15;              // resume fetching when only 15s buffered ahead
+var MAX_BUFFER_AHEAD=30;           // 30s ahead before pausing fetch (dynamic)
+var RESUME_BUFFER=15;              // resume fetching when only 15s buffered ahead (dynamic)
 var CLEAN_BEHIND=10;               // keep 10s behind
+
+// Throughput measurement (sliding window)
+var tpSamples=[];        // [{bytes,ts}]
+var tpWindow=10000;      // 10s sliding window
+var tpKbps=0;            // current throughput in kbps
+var tpStableCount=0;     // cycles with stable classification
+var tpMode='normal';     // 'fast','normal','slow'
+
+function measureThroughput(bytes){
+var now=Date.now();
+tpSamples.push({bytes:bytes,ts:now});
+// Trim samples outside window
+while(tpSamples.length>0&&(now-tpSamples[0].ts)>tpWindow)tpSamples.shift();
+if(tpSamples.length<2)return;
+var totalB=0;
+for(var i=0;i<tpSamples.length;i++)totalB+=tpSamples[i].bytes;
+var elapsed=(now-tpSamples[0].ts)/1000;
+if(elapsed>0)tpKbps=Math.round((totalB*8/1000)/elapsed);
+}
+
+function adjustBuffers(){
+var newMode;
+if(tpKbps>5000)newMode='fast';
+else if(tpKbps<1000)newMode='slow';
+else newMode='normal';
+if(newMode===tpMode){tpStableCount++;} else {tpStableCount=0;}
+// Only change after 2 stable cycles (~6s)
+if(tpStableCount>=2&&newMode!==tpMode){
+tpMode=newMode;
+if(tpMode==='fast'){MAX_BUFFER_AHEAD=45;RESUME_BUFFER=20;}
+else if(tpMode==='slow'){MAX_BUFFER_AHEAD=60;RESUME_BUFFER=30;}
+else{MAX_BUFFER_AHEAD=30;RESUME_BUFFER=15;}
+log('Buffer mode: '+tpMode+' ('+tpKbps+'kbps) ahead='+MAX_BUFFER_AHEAD+'s resume='+RESUME_BUFFER+'s');
+}
+}
 
 function log(m){console.log('[TVPlayer] '+m);if(dbg)dbg.textContent+=m+'\\n';}
 function fmt(s){if(!s||isNaN(s))return'0:00';s=Math.floor(s);var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;if(h>0)return h+':'+(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;return m+':'+(sc<10?'0':'')+sc;}
@@ -651,12 +730,58 @@ startDirect();
 directMode=true;
 startDirect();
 }else{
-var fmp4Url='/stream-fmp4/'+encodeURIComponent(file);
+// ABR: quality profiles and switching
+var abrProfiles=null;
+var abrCurrent=urlQuality||'original';
+var abrLastSwitch=0;
+var abrMinInterval=30000; // min 30s between quality switches
+
+function buildFmp4Url(quality){
+var u='/stream-fmp4/'+encodeURIComponent(file);
 var qs=[];
-if(pos>0)qs.push('t='+pos);
+var curPos=absTime();
+if(curPos>0)qs.push('t='+Math.floor(curPos));
+else if(pos>0)qs.push('t='+pos);
 if(series)qs.push('series='+encodeURIComponent(series));
 if(token)qs.push('token='+token);
-if(qs.length>0)fmp4Url+='?'+qs.join('&');
+if(quality&&quality!=='original')qs.push('quality='+quality);
+if(qs.length>0)u+='?'+qs.join('&');
+return u;
+}
+
+function checkABR(){
+if(!abrProfiles||abrProfiles.length<=1)return;
+var now=Date.now();
+if((now-abrLastSwitch)<abrMinInterval)return;
+var origBitrate=abrProfiles[0].bitrate;
+if(!origBitrate)return;
+var target=null;
+// Downgrade: throughput < 80% of current quality bitrate for 10s+
+var curBitrate=origBitrate;
+for(var i=0;i<abrProfiles.length;i++){if(abrProfiles[i].id===abrCurrent)curBitrate=abrProfiles[i].bitrate||origBitrate;}
+if(tpKbps>0&&tpKbps<curBitrate*0.8){
+// Find best profile that fits
+for(var j=abrProfiles.length-1;j>=0;j--){
+if(abrProfiles[j].bitrate&&tpKbps>abrProfiles[j].bitrate*0.8){target=abrProfiles[j].id;break;}
+}
+if(!target)target=abrProfiles[abrProfiles.length-1].id;
+}
+// Upgrade: throughput > 150% of next higher profile for 15s+
+if(tpKbps>0&&tpStableCount>=5){
+for(var k=0;k<abrProfiles.length;k++){
+if(abrProfiles[k].bitrate&&tpKbps>abrProfiles[k].bitrate*1.5){target=abrProfiles[k].id;}
+}
+}
+if(target&&target!==abrCurrent){
+log('ABR switch: '+abrCurrent+' -> '+target+' (tp='+tpKbps+'kbps)');
+abrCurrent=target;
+abrLastSwitch=now;
+// Reload iframe at current position with new quality
+msg('quality-change',{quality:target,position:absTime()});
+}
+}
+
+var fmp4Url=buildFmp4Url(abrCurrent);
 log('fMP4 URL: '+fmp4Url);
 
 var ms=new MediaSource();
@@ -758,6 +883,7 @@ try{if(ms.readyState==='open')ms.endOfStream();}catch(e){}
 return;
 }
 totalBytes+=result.value.byteLength;
+measureThroughput(result.value.byteLength);
 queue.push(result.value);
 queueBytes+=result.value.byteLength;
 feedNext();
@@ -773,15 +899,34 @@ if(e.name!=='AbortError')log('Read error: '+e.message);
 });
 }
 
-// Periodic aggressive buffer cleanup every 3s
+// Periodic buffer management every 3s
 setInterval(function(){
 if(v.currentTime>CLEAN_BEHIND+2){cleanBuffer();}
+adjustBuffers();
+checkABR();
 // Also resume pump if needed
 if(paused&&!streamDone&&bufferedAhead()<RESUME_BUFFER){
 paused=false;
 pump();
 }
 },3000);
+
+// Load ABR profiles (non-blocking, best-effort)
+try{
+var profXhr=new XMLHttpRequest();
+var profUrl='/video-profiles/'+encodeURIComponent(file);
+if(token)profUrl+='?token='+encodeURIComponent(token);
+profXhr.open('GET',profUrl,false); // sync to have profiles before first fetch
+profXhr.timeout=2000;
+profXhr.send();
+if(profXhr.status===200){
+var profData=JSON.parse(profXhr.responseText);
+if(profData.profiles&&profData.profiles.length>1){
+abrProfiles=profData.profiles;
+log('ABR profiles: '+abrProfiles.map(function(p){return p.id+'('+p.bitrate+'kbps)';}).join(', '));
+}
+}
+}catch(e){log('ABR profiles load failed: '+e.message);}
 
 log('Fetching fMP4...');
 if(typeof fetch==='function'){
@@ -852,7 +997,7 @@ case 415:v.play();icon('\\u25B6');showC();break;
 case 19:v.pause();icon('\\u23F8');showC();break;
 case 37:case 412:doRw();break;
 case 39:case 417:doFf();break;
-case 461:case 413:doStop();break;
+case 461:case 413:case 27:case 8:doStop();break;
 default:showC();}
 // Notify parent of key press so it can show OSD
 parent.postMessage({type:'keyInIframe',keyCode:k},'*');
@@ -866,9 +1011,7 @@ app.use(require('./routes/streaming')({
 }));
 
 app.use('/api/convert', require('./routes/conversion')({
-    conversionJobs, TEMP_DIR, storageConfig,
-    readCache, writeCache,
-    readCollections, writeCollections
+    conversionJobs, TEMP_DIR, storageConfig, mediaDB
 }));
 
 // DLNA/Cast a TV (opcional via DLNA_ENABLED env var)
@@ -894,6 +1037,164 @@ app.use('/tv-app', express.static(path.join(__dirname, 'tv-app'), {
     maxAge: 0,
     etag: true
 }));
+
+// ========== TV WEB APP (Chromecast, navegadores) ==========
+app.get('/tv', (req, res) => {
+    const proto = req.get('x-forwarded-proto') || req.protocol;
+    const serverUrl = proto + '://' + req.get('host');
+    res.send(`<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IsiPrime TV</title>
+    <link rel="stylesheet" href="/tv-app/css/styles.css">
+    <style>
+    html,body{margin:0;padding:0;overflow:hidden;background:#1a1a2e;width:1920px;height:1080px;transform-origin:0 0}
+    </style>
+    <script>
+    (function(){
+        function applyScale(){
+            var w=window.innerWidth,h=window.innerHeight;
+            var s=Math.min(w/1920,h/1080);
+            document.documentElement.style.transform='scale('+s+')';
+            document.body.style.transform='scale(1)';
+        }
+        applyScale();
+        window.addEventListener('resize',applyScale);
+    })();
+    </script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <img class="loading-logo" src="/tv-app/assets/icon-hd.png" alt="IsiPrime">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Cargando...</div>
+    </div>
+
+    <!-- Login View -->
+    <div id="login-view" class="view login-view" style="display:none">
+        <div class="login-card">
+            <div class="login-logo-container">
+                <img src="/tv-app/assets/icon.png" alt="IsiPrime" class="login-logo">
+            </div>
+            <h1 class="login-title">IsiPrime</h1>
+            <p class="login-subtitle">Introduce tus credenciales para acceder</p>
+            <div class="login-field">
+                <label class="login-label" for="login-username">Usuario</label>
+                <input type="text" id="login-username" class="login-input focusable" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <div class="login-field">
+                <label class="login-label" for="login-password">Contraseña</label>
+                <input type="password" id="login-password" class="login-input focusable" autocomplete="off">
+            </div>
+            <button id="login-btn" class="login-btn focusable">Iniciar sesión</button>
+            <div id="login-error" class="login-error"></div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" style="display:none">
+        <nav id="nav-bar" class="nav-bar">
+            <div class="nav-logo">
+                <img class="nav-logo-icon" src="/tv-app/assets/icon.png" alt="">
+                <img class="nav-logo-img" src="/tv-app/assets/logo.svg" alt="IsiPrime">
+                <span id="nav-version" class="nav-version"></span>
+            </div>
+            <div class="nav-items">
+                <div class="nav-item focusable active" data-view="home">Películas</div>
+                <div class="nav-item focusable" data-view="series">Series</div>
+                <div class="nav-item focusable" data-view="genres">Géneros</div>
+                <div class="nav-item focusable" data-view="years">Años</div>
+                <div class="nav-item focusable" data-view="sagas">Sagas</div>
+                <div class="nav-item focusable" data-view="favorites">Favoritos</div>
+                <div class="nav-item focusable" data-view="search">Buscar</div>
+                <div class="nav-item focusable" data-view="requests">Peticiones</div>
+            </div>
+        </nav>
+        <div id="home-view" class="view home-view"></div>
+        <div id="genre-view" class="view genre-view" style="display:none"></div>
+        <div id="years-view" class="view genre-view" style="display:none"></div>
+        <div id="sagas-view" class="view genre-view" style="display:none"></div>
+        <div id="detail-overlay" class="view detail-overlay" style="display:none"></div>
+        <div id="player-view" class="view player-view" style="display:none"></div>
+        <div id="series-view" class="view series-view" style="display:none"></div>
+        <div id="search-view" class="view search-view" style="display:none"></div>
+        <div id="actor-view" class="view actor-view" style="display:none"></div>
+        <div id="requests-view" class="view requests-view" style="display:none"></div>
+    </div>
+
+    <!-- Config inline (sin archivo separado) -->
+    <script>
+    window.App = window.App || {};
+    App.Config = {
+        SERVER_URL: '${serverUrl}',
+        APP_VERSION: 'web',
+        KEYS: {
+            LEFT:37, UP:38, RIGHT:39, DOWN:40, OK:13, BACK:461, EXIT:10182,
+            RED:403, GREEN:404, YELLOW:405, BLUE:406,
+            PLAY:415, PAUSE:19, STOP:413, FF:417, RW:412
+        },
+        POSTER_WIDTH: 230, POSTER_GAP: 16, VISIBLE_BUFFER: 5,
+        PROGRESS_SAVE_INTERVAL: 10000,
+        PLACEHOLDER_IMG: '/tv-app/assets/placeholder.svg',
+        TMDB_IMG: 'https://image.tmdb.org/t/p/',
+        posterUrl: function(path, size) {
+            if (!path) return this.PLACEHOLDER_IMG;
+            if (path.indexOf('/api/img/') === 0) return this.SERVER_URL + path;
+            if (path.indexOf('http') === 0) return path;
+            return this.TMDB_IMG + (size || 'w342') + path;
+        },
+        backdropUrl: function(path) {
+            if (!path) return '';
+            if (path.indexOf('/api/img/') === 0) return this.SERVER_URL + path;
+            if (path.indexOf('http') === 0) return path;
+            return this.TMDB_IMG + 'w1280' + path;
+        }
+    };
+    </script>
+
+    <!-- Prevent default key handling + map Backspace/BrowserBack to BACK -->
+    <script>
+    (function() {
+        var mk = {37:1,38:1,39:1,40:1,13:1,461:1,10182:1,403:1,404:1,405:1,406:1,415:1,19:1,413:1,417:1,412:1};
+        var backKeys = {8:1, 27:1, 166:1}; // Backspace, Escape, BrowserBack
+        document.addEventListener('keydown', function(e) {
+            var tag = e.target.tagName;
+            var inInput = (tag === 'INPUT' || tag === 'TEXTAREA');
+            // Don't block navigation keys or back keys when typing in inputs
+            if (mk[e.keyCode] && !inInput) e.preventDefault();
+            // Back keys: only when NOT in an input field
+            if (backKeys[e.keyCode] && !inInput) {
+                e.preventDefault();
+                if (window.App && App.Router && App.Router.back) App.Router.back();
+            }
+        }, true);
+    })();
+    </script>
+
+    <!-- Module loader (sequential, same as IPK but no local fallback) -->
+    <script>
+    (function() {
+        var modules = ['api','login','images','focus','nav-bar','sidebar-grid-view','keyboard',
+            'carousel','router','home','genre','years','sagas','detail','player',
+            'series','search','requests','actor','app'];
+        var v = Date.now(), i = 0;
+        function next() {
+            if (i >= modules.length) return;
+            var s = document.createElement('script');
+            s.src = '/tv-app/js/' + modules[i] + '.js?v=' + v;
+            s.onload = function() { i++; next(); };
+            s.onerror = function() { console.error('Failed to load: ' + modules[i]); i++; next(); };
+            document.body.appendChild(s);
+        }
+        next();
+    })();
+    </script>
+</body>
+</html>`);
+});
 
 // Servir archivos estáticos del frontend en producción
 if (process.env.NODE_ENV === 'production') {
@@ -964,10 +1265,25 @@ async function startServer() {
         try { usersDB.cleanExpiredSessions(); } catch (e) {}
     }, 60 * 60 * 1000);
 
+    // Limpiar progreso completado antiguo (>30 días) al arrancar
+    try { usersDB.cleanCompletedProgress(); } catch (e) {}
+
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Servidor IsiPrime activo en puerto ${PORT}`);
         console.log(`📍 Escuchando en http://0.0.0.0:${PORT} (accesible desde la red)`);
         console.log('⏳ Servidor en ejecución... (presiona Ctrl+C para detener)');
+
+        // Limpiar entradas huérfanas de movies_cache (archivos que ya no existen)
+        const fsPromises = require('fs').promises;
+        fsPromises.readdir(storageConfig.localPath).then(files => {
+            return cleanupCache(files);
+        }).then(result => {
+            if (result && result.removed > 0) {
+                console.log(`🧹 Startup cleanup: ${result.removed} entradas huérfanas eliminadas`);
+            }
+        }).catch(err => {
+            console.warn('⚠️ Startup cleanup error:', err.message);
+        });
 
         // Prewarm poster cache en background (no bloquea el arranque)
         posterCache.prewarm(mediaDB).catch(err => {

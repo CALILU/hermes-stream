@@ -205,7 +205,13 @@ module.exports = function createAuthRoutes(deps) {
             res.json({
                 success: true,
                 accessToken: newAccessToken,
-                refreshToken: newRefreshToken
+                refreshToken: newRefreshToken,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    role: user.role,
+                    displayName: user.display_name || user.username
+                }
             });
         } catch (err) {
             console.error('[Auth] Error en refresh:', err);
@@ -391,7 +397,23 @@ module.exports = function createAuthRoutes(deps) {
     router.get('/users', authenticate, adminOnly, (req, res) => {
         try {
             const users = usersDB.getAllUsers();
-            res.json({ success: true, data: users });
+            const allTVs = usersDB.getAllTVs();
+            const tvsByUser = {};
+            allTVs.forEach(tv => {
+                if (!tvsByUser[tv.user_id]) tvsByUser[tv.user_id] = [];
+                tvsByUser[tv.user_id].push(tv);
+            });
+            const activeViewers = usersDB.getActiveViewers();
+            const watchingByUser = {};
+            activeViewers.forEach(v => {
+                if (!watchingByUser[v.user_id]) watchingByUser[v.user_id] = v;
+            });
+            const enriched = users.map(u => ({
+                ...u,
+                tvs: tvsByUser[u.id] || [],
+                watching: watchingByUser[u.id] || null
+            }));
+            res.json({ success: true, data: enriched });
         } catch (err) {
             console.error('[Auth] Error listando usuarios:', err);
             res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
@@ -510,7 +532,7 @@ module.exports = function createAuthRoutes(deps) {
                 return res.status(404).json({ error: 'Usuario no encontrado', code: 'NOT_FOUND' });
             }
 
-            const { email, emailNotifications } = req.body;
+            const { email, emailNotifications, displayName, role } = req.body;
 
             // Validate email format if provided
             if (email && email.trim()) {
@@ -520,7 +542,18 @@ module.exports = function createAuthRoutes(deps) {
                 }
             }
 
-            usersDB.updateUserEmail(userId, email !== undefined ? (email.trim() || null) : undefined, emailNotifications);
+            // Update email fields
+            if (email !== undefined || emailNotifications !== undefined) {
+                usersDB.updateUserEmail(userId, email !== undefined ? (email.trim() || null) : undefined, emailNotifications);
+            }
+
+            // Update other user fields (displayName, role)
+            const userUpdates = {};
+            if (displayName !== undefined) userUpdates.display_name = displayName || null;
+            if (role !== undefined && ['admin', 'viewer'].includes(role)) userUpdates.role = role;
+            if (Object.keys(userUpdates).length > 0) {
+                usersDB.updateUser(userId, userUpdates);
+            }
 
             res.json({ success: true });
         } catch (err) {
@@ -596,6 +629,77 @@ module.exports = function createAuthRoutes(deps) {
             res.json({ success: true });
         } catch (err) {
             console.error('[Auth] Error eliminando invitacion:', err);
+            res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
+        }
+    });
+
+    // ============================================
+    // USER TVs ENDPOINTS
+    // ============================================
+
+    /**
+     * POST /users/:id/tvs
+     * Add a TV to a user (admin only)
+     */
+    router.post('/users/:id/tvs', authenticate, adminOnly, (req, res) => {
+        try {
+            const userId = parseInt(req.params.id);
+            if (isNaN(userId)) {
+                return res.status(400).json({ error: 'ID de usuario invalido', code: 'INVALID_ID' });
+            }
+
+            const user = usersDB.getUserById(userId);
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado', code: 'NOT_FOUND' });
+            }
+
+            const { model } = req.body;
+            if (!model || !model.trim()) {
+                return res.status(400).json({ error: 'El modelo de TV es requerido', code: 'MISSING_MODEL' });
+            }
+
+            const tvId = usersDB.upsertUserTV(userId, {
+                brand: req.body.brand,
+                model: model.trim(),
+                serial_number: req.body.serialNumber || null,
+                webos_version: req.body.webosVersion || null,
+                chromium_version: req.body.chromiumVersion || null,
+                year: req.body.year ? parseInt(req.body.year) : null,
+                power: req.body.power || null,
+                connection_type: req.body.connectionType || null,
+                ip_address: req.body.ipAddress || null,
+                dev_mode_token: req.body.devModeToken || null,
+                ares_passphrase: req.body.aresPassphrase || null,
+                ares_device_name: req.body.aresDeviceName || null,
+                notes: req.body.notes || null
+            });
+
+            res.status(201).json({ success: true, data: { id: tvId } });
+        } catch (err) {
+            console.error('[Auth] Error añadiendo TV:', err);
+            res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
+        }
+    });
+
+    /**
+     * DELETE /users/:id/tvs/:tvId
+     * Remove a TV from a user (admin only)
+     */
+    router.delete('/users/:id/tvs/:tvId', authenticate, adminOnly, (req, res) => {
+        try {
+            const tvId = parseInt(req.params.tvId);
+            if (isNaN(tvId)) {
+                return res.status(400).json({ error: 'ID de TV invalido', code: 'INVALID_ID' });
+            }
+
+            const deleted = usersDB.deleteUserTV(tvId);
+            if (!deleted) {
+                return res.status(404).json({ error: 'TV no encontrada', code: 'NOT_FOUND' });
+            }
+
+            res.json({ success: true });
+        } catch (err) {
+            console.error('[Auth] Error eliminando TV:', err);
             res.status(500).json({ error: 'Error interno del servidor', code: 'SERVER_ERROR' });
         }
     });
